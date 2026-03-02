@@ -32,7 +32,7 @@ def load_all_clog_data():
                     data = json.load(f)
                     for k, v in data.items():
                         if k.lower() in ["true", "false", "0", "1"]: continue
-                        if "ekc" in v and (v["ekc"] is None or math.isnan(float(v["ekc"]))):
+                        if "ekc" in v and (v["ekc"] is None or (isinstance(v["ekc"], float) and math.isnan(v["ekc"]))):
                             v["ekc"] = 0.0
                         v["type"] = activity_type
                         combined[k] = v
@@ -55,8 +55,6 @@ def fetch_player_kc(player_name):
 def fetch_exact_temple_clog(player_name, categories_list):
     clean_keys = [k for k in categories_list if isinstance(k, str) and k.lower() not in ['true', 'false', '0', '1']]
     categories_str = ",".join(clean_keys)
-    if "nightmare" not in categories_str.lower(): categories_str += ",nightmare"
-
     url = f"https://templeosrs.com/api/collection-log/player_collection_log.php?player={player_name}&categories={categories_str}"
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
@@ -82,38 +80,37 @@ def get_clog_counts(clog_payload, boss_key, local_info):
 
     total = local_info.get("slots", 0)
     if total > 0 and actual > total: actual = total
-
     return actual, total
 
-# --- DUAL S-CURVE & RNG ISOLATION MATH ---
-def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name="", free_slots=0, mega_rares=0):
-    if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
-        return "Not Started", 1.0, 0.0
+# --- TIME-WEIGHTED LUCK MATH ---
+def determine_luck_v3(actual_kc, info, actual_slots):
+    expected_kc = info.get("ekc", 0)
+    total_slots = info.get("slots", 0)
+    free_slots = info.get("free_slots", 0)
+    mega_rares = info.get("mega_rares", 0)
+    kph = info.get("kph", 1.0)
+    name = info.get("name", "")
+
+    if expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
+        return "Not Started", 1.0, 0.0, 0.0
 
     p = actual_kc / expected_kc
-
     rng_total_slots = max(1, total_slots - free_slots)
     rng_actual_slots = max(0, actual_slots - free_slots)
-
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_slots_count = rng_total_slots - safe_mega_rares
 
-    if safe_mega_rares > 0:
-        c_normal = 0.03
-        c_mega = 0.80
-    else:
-        c_normal = 0.05 if "barrows" in name.lower() or "clue" in name.lower() else 0.15
-        c_mega = 0.80
+    # Dual S-Curve constants
+    c_normal = 0.03 if safe_mega_rares > 0 else (0.05 if "clue" in name.lower() else 0.15)
+    c_mega = 0.80
 
-    s_fraction_normal = (p ** 2) / ((p ** 2) + c_normal)
-    s_fraction_mega = (p ** 2) / ((p ** 2) + c_mega)
+    s_frac_normal = (p ** 2) / ((p ** 2) + c_normal)
+    s_frac_mega = (p ** 2) / ((p ** 2) + c_mega)
 
-    exp_normal_slots = normal_slots_count * s_fraction_normal
-    exp_mega_slots = safe_mega_rares * s_fraction_mega
+    exp_rng_slots = (normal_slots_count * s_frac_normal) + (safe_mega_rares * s_frac_mega)
+    exp_slots_display = free_slots + min(exp_rng_slots, rng_total_slots)
 
-    exp_rng_slots = min(exp_normal_slots + exp_mega_slots, rng_total_slots)
-    exp_slots_display = free_slots + exp_rng_slots
-
+    # Base Luck Ratio
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
     elif rng_actual_slots == 0:
@@ -121,18 +118,26 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
     else:
         ratio = exp_rng_slots / rng_actual_slots
 
+    # --- TIME WEIGHTING ---
+    # Hours required to greenlog this boss
+    total_ehc_weight = expected_kc / max(kph, 0.1)
+
+    # Spoon Points: How many "Efficient Hours" have you gained or lost due to luck?
+    # Negative = Hours saved (Spoon), Positive = Hours wasted (Dry)
+    spoon_points = (ratio - 1.0) * total_ehc_weight
+
     if ratio <= 0.5: status = "Spooned 🥄"
     elif ratio <= 0.85: status = "Wet 💧"
     elif ratio <= 1.15: status = "On-Rate 🎯"
     elif ratio <= 1.5: status = "Dry 🏜️"
     else: status = "Very Dry 💀"
 
-    return status, ratio, exp_slots_display
+    return status, ratio, exp_slots_display, spoon_points
 
 # --- MAIN UI ---
 def main():
-    st.title("OSRS Clog Luck Analyzer")
-    st.markdown("Comparing KC to Expected KC (EKC) using a Dual S-Curve for standard vs mega-rare log progress. Compare multiple players at once!")
+    st.title("OSRS Time-Weighted Luck Analyzer")
+    st.markdown("Luck Ratio weighted by **Efficient Hours (EHC)**. High-effort grinds count for more!")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -145,173 +150,81 @@ def main():
 
     if analyze:
         player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
+        if not player_names: return
 
-        if not player_names:
-            st.warning("Please enter at least one username.")
-            return
-
-        with st.spinner("Fetching data for all players..."):
+        with st.spinner("Fetching data..."):
             all_player_tables = {}
             summary_stats = []
 
             for player_name in player_names:
                 kc_api = fetch_player_kc(player_name)
                 clog_response = fetch_exact_temple_clog(player_name, api_keys)
-
-                if not kc_api:
-                    st.error(f"No hiscore data found for **{player_name}**.")
-                    continue
+                if not kc_api: continue
 
                 clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
-
                 flat_kc = {}
                 for k, v in kc_api.items():
-                    if isinstance(v, dict):
-                        flat_kc.update({str(sub_k).lower(): sub_v for sub_k, sub_v in v.items()})
-                    else:
-                        flat_kc[str(k).lower()] = v
+                    if isinstance(v, dict): flat_kc.update({sk.lower(): sv for sk, sv in v.items()})
+                    else: flat_kc[k.lower()] = v
 
                 results = []
-                total_r, count = 0, 0
+                total_spoon_points = 0
+                count = 0
 
                 for key, info in clog_data.items():
                     if filter_type != "All" and info["type"] != filter_type: continue
 
-                    kc_keys_to_try = [
-                        key.lower(),
-                        key.lower().replace("the_", ""),
-                        info["name"].lower().replace(" ", "_"),
-                        info["name"].lower().replace("'", "")
-                    ]
-
-                    if "nightmare" in key.lower():
-                        kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
-
+                    # KC Mapping
+                    kc_keys = [key.lower(), key.lower().replace("the_", ""), info["name"].lower().replace(" ", "_")]
+                    if "nightmare" in key.lower(): kc_keys.extend(["phosani's nightmare", "phosani"])
                     if info.get("type") == "Clue":
-                        tier = info["name"].lower().replace(" clues", "").replace(" clue", "").strip()
-                        if tier:
-                            kc_keys_to_try.extend([f"clue scrolls ({tier})", f"clue_{tier}", f"clues_{tier}"])
+                        tier = info["name"].lower().replace(" clues", "").strip()
+                        kc_keys.extend([f"clue scrolls ({tier})", f"clue_{tier}"])
 
-                    actual_kc = 0.0 # Changed to float to handle Master Clue Equivalents
-
-                    # 1. Grab Base KC
-                    for k in kc_keys_to_try:
+                    actual_kc = 0
+                    for k in kc_keys:
                         if k in flat_kc:
-                            actual_kc = float(flat_kc[k])
+                            actual_kc = int(flat_kc[k])
                             if actual_kc > 0: break
-
-                    # 2. Additive KC Combiner
-                    for combine_key in info.get("combine_kc_keys", []):
-                        ck = combine_key.lower()
-                        if ck in flat_kc:
-                            actual_kc += float(flat_kc[ck])
-                        elif ck.replace(" ", "_") in flat_kc:
-                            actual_kc += float(flat_kc[ck.replace(" ", "_")])
-
-                    # --- CLUE META CATEGORY CALCULATOR (WITH WEIGHTS) ---
-                    if info.get("type") == "Clue" and actual_kc <= 0:
-                        clue_tiers_to_sum = []
-                        is_mega_meta = False
-
-                        if "shared" in key.lower():
-                            clue_tiers_to_sum = ["beginner", "easy", "medium", "hard", "elite", "master"]
-                        elif "3rd" in key.lower() or "third" in key.lower() or "gilded" in key.lower():
-                            clue_tiers_to_sum = ["hard", "elite", "master"]
-                            is_mega_meta = True # Triggers the weight scaling
-                        elif "elite_mega" in key.lower():
-                            clue_tiers_to_sum = ["elite"]
-                        elif "master_mega" in key.lower():
-                            clue_tiers_to_sum = ["master"]
-
-                        for c_tier in clue_tiers_to_sum:
-                            for variant in [f"clue scrolls ({c_tier})", f"clue_{c_tier}", f"clues_{c_tier}"]:
-                                if variant in flat_kc:
-                                    added_kc = float(flat_kc[variant])
-
-                                    # Normalize Hard and Elite clues to "Master Clue Equivalents"
-                                    if is_mega_meta:
-                                        if c_tier == "hard": added_kc *= 0.086
-                                        elif c_tier == "elite": added_kc *= 0.33
-
-                                    actual_kc += added_kc
-                                    break
+                    for ck in info.get("combine_kc_keys", []):
+                        if ck.lower() in flat_kc: actual_kc += int(flat_kc[ck.lower()])
 
                     if actual_kc <= 0: continue
 
-                    free_slots = info.get("free_slots", 0)
-                    mega_rares = info.get("mega_rares", 0)
                     actual_slots, total_slots = get_clog_counts(clog_api, key, info)
-
-                    missing_total = (total_slots == 0)
-                    if missing_total: total_slots = max(actual_slots, 1)
-
-                    status, ratio, exp_slots = determine_luck_v2(
-                        actual_kc, info["ekc"], actual_slots, total_slots, info["name"], free_slots, mega_rares
-                    )
+                    status, ratio, exp_slots, s_points = determine_luck_v3(actual_kc, info, actual_slots)
 
                     results.append({
                         "Activity": info["name"],
-                        "Clog Progress": f"{actual_slots}/{total_slots}" if not missing_total else f"{actual_slots}/?",
-                        "Expected Slots": f"{exp_slots:.2f}" if not missing_total else "⚠️ Check JSON",
-                        "Your KC": f"{int(actual_kc):,}", # Cast to int for clean display
-                        "Luck Ratio": f"{ratio:.2f}" if not missing_total else "N/A",
-                        "Status": status if not missing_total else "N/A"
+                        "Clog": f"{actual_slots}/{total_slots}",
+                        "Exp Slots": f"{exp_slots:.2f}",
+                        "KC": f"{actual_kc:,}",
+                        "Ratio": f"{ratio:.2f}",
+                        "Spoon Points": round(s_points, 1),
+                        "Status": status
                     })
-
-                    if not missing_total:
-                        total_r += ratio
-                        count += 1
+                    total_spoon_points += s_points
+                    count += 1
 
                 if results:
-                    df = pd.DataFrame(results).sort_values("Luck Ratio", ascending=False)
+                    df = pd.DataFrame(results).sort_values("Spoon Points", ascending=True)
                     all_player_tables[player_name] = df
-
-                    avg = total_r / count if count > 0 else 0
-                    if avg <= 0.85: overall = "Spooned 🥄"
-                    elif avg >= 1.15: overall = "Dry 🏜️"
-                    else: overall = "On-Rate 🎯"
-
-                    ehc_val = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
-
                     summary_stats.append({
                         "Player": player_name,
-                        "Avg Luck Ratio": round(avg, 2),
-                        "Account Luck": overall,
-                        "Temple EHC": f"{ehc_val:,.1f}",
-                        "Activities Analyzed": count,
-                        "_raw_ehc": ehc_val,
-                        "_raw_avg": avg
+                        "Total Spoon Score": round(total_spoon_points, 1),
+                        "Status": "Legendary Spoon 🥄" if total_spoon_points < -100 else "Standard" if total_spoon_points < 100 else "Deep Sea Dry 💀",
+                        "EHC": clog_api.get('ehc', 0)
                     })
-                else:
-                    st.info(f"No matching data found for **{player_name}**.")
 
             if summary_stats:
-                st.subheader("🏆 Multi-Player Comparison")
-                summary_df = pd.DataFrame(summary_stats)
-
-                col1, col2 = st.columns([1, 2])
-                with col1:
-                    display_df = summary_df.drop(columns=["_raw_ehc", "_raw_avg"]).sort_values("Avg Luck Ratio", ascending=False)
-                    st.dataframe(display_df, hide_index=True)
-                with col2:
-                    chart_data = summary_df.set_index("Player")[["Avg Luck Ratio"]]
-                    st.bar_chart(chart_data)
-
-                st.divider()
-                st.subheader("🔍 Detailed Breakdowns")
+                st.subheader("🏆 Multi-Player Spoon Leaderboard")
+                st.write("Spoon Score = (Ratio - 1) * Hours for Log. Lower is more 'Spoon' (hours saved).")
+                summary_df = pd.DataFrame(summary_stats).sort_values("Total Spoon Score")
+                st.table(summary_df[["Player", "Total Spoon Score", "Status", "EHC"]])
 
                 tabs = st.tabs(list(all_player_tables.keys()))
-
                 for tab, p_name in zip(tabs, all_player_tables.keys()):
                     with tab:
-                        p_summary = next(item for item in summary_stats if item["Player"] == p_name)
-
-                        c1, c2, c3, c4 = st.columns(4)
-                        c1.metric("Account Luck", p_summary["Account Luck"])
-                        c2.metric("Avg Luck Ratio", f"{p_summary['_raw_avg']:.2f}")
-                        c3.metric("Activities Analyzed", p_summary["Activities Analyzed"])
-                        c4.metric("Temple EHC", f"{p_summary['_raw_ehc']:,.1f} hrs")
-
                         st.table(all_player_tables[p_name])
 
 if __name__ == "__main__":
