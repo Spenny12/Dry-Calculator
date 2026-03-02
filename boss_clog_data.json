@@ -3,7 +3,7 @@
         "name": "Abyssal Sire",
         "ekc": 2873.0,
         "kph": 45.0,
-        "slots": 9
+        "slots": 9,
         "free_slots": 1
     },
     "alchemical_hydra": {
@@ -16,21 +16,21 @@
         "name": "Amoxliatl",
         "ekc": 3003.0,
         "kph": 75.0,
-        "slots": 4
+        "slots": 4,
         "free_slots": 2
     },
     "araxxor": {
         "name": "Araxxor",
         "ekc": 2655.0,
         "kph": 40.0,
-        "slots": 10
+        "slots": 10,
         "free_slots": 3
     },
     "barrows_chests": {
         "name": "Barrows (BROKEN FOR NOW)",
         "ekc": 1321.0,
         "kph": 24.0,
-        "slots": 25
+        "slots": 25,
         "free_slots": 1
     },
     "bryophyta": {
@@ -43,35 +43,35 @@
         "name": "Callisto and Artio",
         "ekc": 3173.0,
         "kph": 65.0,
-        "slots": 6
+        "slots": 6,
         "free_slots": 2
     },
     "cerberus": {
         "name": "Cerberus",
         "ekc": 3883.0,
         "kph": 65.0,
-        "slots": 7
+        "slots": 7,
         "free_slots": 1
     },
     "chaos_elemental": {
         "name": "Chaos Elemental",
         "ekc": 211.7,
         "kph": 60.0,
-        "slots": 3
+        "slots": 3,
         "free_slots": 2
     },
     "chaos_fanatic": {
         "name": "Chaos Fanatic",
         "ekc": 384.0,
         "kph": 100.0,
-        "slots": 3
+        "slots": 3,
         "free_slots": 1
     },
     "commander_zilyana": {
         "name": "Commander Zilyana",
         "ekc": 5087.0,
         "kph": 55.0,
-        "slots": 8
+        "slots": 8,
         "free_slots": 3
     },
     "corporeal_beast": {
@@ -96,84 +96,84 @@
         "name": "Duke Sucellus",
         "ekc": 2734.0,
         "kph": 30.0,
-        "slots": 10
+        "slots": 10,
         "free_slots": 2
     },
     "the_fight_caves": {
         "name": "The Fight Caves",
         "ekc": 67.0,
         "kph": 2.5,
-        "slots": 2
+        "slots": 2,
         "free_slots": 1
     },
     "fortis_colosseum": {
         "name": "Fortis Colosseum",
         "ekc": 139.7,
         "kph": 2.5,
-        "slots": 9
+        "slots": 9,
         "free_slots": 2
     },
     "the_gauntlet": {
         "name": "Gauntlet",
         "ekc": 934.0,
         "kph": 7.0,
-        "slots": 5
+        "slots": 5,
         "free_slots": 1
     },
     "general_graardor": {
         "name": "General Graardor",
         "ekc": 5092.0,
         "kph": 55.0,
-        "slots": 8
+        "slots": 8,
         "free_slots": 3
     },
     "giant_mole": {
         "name": "Giant Mole",
         "ekc": 3000.0,
         "kph": 100.0,
-        "slots": 3
+        "slots": 3,
         "free_slots": 2
     },
     "grotesque_guardians": {
         "name": "Grotesque Guardians",
         "ekc": 6143.0,
         "kph": 36.0,
-        "slots": 7
+        "slots": 7,
         "free_slots": 1
     },
     "hespori": {
         "name": "Hespori",
         "ekc": 36.0,
         "kph": 90.0,
-        "slots": 4
+        "slots": 4,
         "free_slots": 3
     },
     "hueycoatl": {
         "name": "The Hueycoatl",
         "ekc": 480.0,
         "kph": 10.0,
-        "slots": 6
+        "slots": 6,
         "free_slots": 1
     },
     "the_inferno": {
         "name": "The Inferno",
         "ekc": 43.0,
         "kph": 0.8,
-        "slots": 2
+        "slots": 2,
         "free_slots": 1
     },
     "kalphite_queen": {
         "name": "Kalphite Queen",
         "ekc": 3801.0,
         "kph": 50.0,
-        "slots": 6
+        "slots": 6,
         "free_slots": 2
     },
     "king_black_dragon": {
         "name": "King Black Dragon",
         "ekc": 3005.0,
         "kph": 120.0,
-        "slots": 4
+        "slots": 4,
         "free_slots": 1
     },
     "kraken": {
@@ -186,14 +186,14 @@
         "name": "Kree'arra",
         "ekc": 5092.0,
         "kph": 40.0,
-        "slots": 8
+        "slots": 8,
         "free_slots": 3
     },
     "kril_tsutsaroth": {
         "name": "K'ril Tsutsaroth",
         "ekc": 5083.0,
         "kph": 65.0,
-        "slots": 8
+        "slots": 8,
         "free_slots": 3
     },
     "the_leviathan": {
@@ -207,7 +207,7 @@
         "name": "Moons of Peril",
         "ekc": 500.0,
         "kph": 15.0,
-        "slots": 13
+        "slots": 13,
         "free_slots": 1
     },
     "nex": {
@@ -220,7 +220,7 @@
         "name": "The Nightmare",
         "ekc": 5315.0,
         "kph": 7.5,
-        "slots": 12
+        "slots": 12,
         "free_slots": 1
     },
     "obor": {
@@ -233,21 +233,21 @@
         "name": "Phantom Muspah",
         "ekc": 2504.0,
         "kph": 30.0,
-        "slots": 6
+        "slots": 6,
         "free_slots": 3
     },
     "royal_titans": {
         "name": "Royal Titans",
         "ekc": 221.0,
         "kph": 30.0,
-        "slots": 7
+        "slots": 7,
         "free_slots": 1
     },
     "sarachnis": {
         "name": "Sarachnis",
         "ekc": 3812.0,
         "kph": 100.0,
-        "slots": 5
+        "slots": 5,
         "free_slots": 1
     },
     "scorpia": {
@@ -260,20 +260,21 @@
         "name": "Scurrius",
         "ekc": 3000.0,
         "kph": 60.0,
-        "slots": 2
+        "slots": 2,
+        "free_slots": 1
     },
     "skotizo": {
         "name": "Skotizo",
         "ekc": 259.0,
         "kph": 45.0,
-        "slots": 6
+        "slots": 6,
         "free_slots": 1
     },
     "tempoross": {
         "name": "Tempoross",
         "ekc": 8466.0,
         "kph": 85.0,
-        "slots": 12
+        "slots": 12,
         "free_slots": 5
     },
     "thermonuclear_smoke_devil": {
@@ -286,21 +287,21 @@
         "name": "Vardorvis",
         "ekc": 3419.0,
         "kph": 37.0,
-        "slots": 10
+        "slots": 10,
         "free_slots": 2
     },
     "venenatis_and_spindel": {
         "name": "Venenatis and Spindel",
         "ekc": 3173.0,
         "kph": 55.0,
-        "slots": 6
+        "slots": 6,
         "free_slots": 2
     },
     "vetion_and_calvarion": {
         "name": "Vet'ion and Calvar'ion",
         "ekc": 3173.0,
         "kph": 55.0,
-        "slots": 6
+        "slots": 6,
         "free_slots": 2
     },
     "vorkath": {
@@ -313,7 +314,7 @@
         "name": "The Whisperer",
         "ekc": 2155.0,
         "kph": 21.0,
-        "slots": 10
+        "slots": 10,
         "free_slots": 2
     },
     "wintertodt": {
@@ -338,7 +339,7 @@
         "name": "Zulrah",
         "ekc": 10993.0,
         "kph": 44.0,
-        "slots": 10
+        "slots": 10,
         "free_slots": 2
     }
 }
