@@ -9,9 +9,9 @@ st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
 RAIDS_DATA = {
-    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17, "free_slots": 0},
-    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 7, "free_slots": 0},
-    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 8, "free_slots": 0}
+    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 23, "free_slots": 7},
+    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 6},
+    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 33, "free_slots": 15}
 }
 
 def load_all_clog_data():

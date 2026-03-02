@@ -200,7 +200,7 @@
         "name": "The Leviathan",
         "ekc": 2762.0,
         "kph": 32.0,
-        "slots": 10
+        "slots": 10,
         "free_slots": 2
     },
     "moons_of_peril": {
