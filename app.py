@@ -23,14 +23,9 @@ def load_all_clog_data():
                 with open(filename, "r") as f:
                     data = json.load(f)
                     for k, v in data.items():
-                        # Skip phantom boolean keys that break the API
-                        if k.lower() in ["true", "false", "0", "1"]:
-                            continue
-
-                        # Handle JSON 'NaN' gracefully to prevent math crashes
+                        if k.lower() in ["true", "false", "0", "1"]: continue
                         if "ekc" in v and (v["ekc"] is None or math.isnan(float(v["ekc"]))):
                             v["ekc"] = 0.0
-
                         v["type"] = activity_type
                         combined[k] = v
             except Exception as e:
@@ -71,8 +66,6 @@ def get_clog_counts(clog_payload, boss_key, local_info):
     boss_api_list = items_dict.get(search_key, [])
 
     if isinstance(boss_api_list, list):
-        # THE FIX: Only count items where count > 0.
-        # Temple includes unobtained items for some minigames with a count of 0!
         actual = sum(1 for item in boss_api_list if item.get("count", 0) > 0)
     elif isinstance(boss_api_list, dict):
         actual = boss_api_list.get("obtained", 0)
@@ -80,16 +73,11 @@ def get_clog_counts(clog_payload, boss_key, local_info):
         actual = 0
 
     total = local_info.get("slots", 0)
-
-    # Optional safeguard: Prevent visual overflows (like Hespori showing 4/3)
-    # if Temple tracks extra untradeables/pets not defined in your slots count.
-    if total > 0 and actual > total:
-        actual = total
+    if total > 0 and actual > total: actual = total
 
     return actual, total
 
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
-    # Safely guard against Not-a-Number or missing EKC entries
     if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
         return "Not Started", 1.0, 0.0
 
@@ -144,16 +132,26 @@ def main():
         for key, info in clog_data.items():
             if filter_type != "All" and info["type"] != filter_type: continue
 
-            kc_keys = [key.lower(), key.lower().replace("the_", ""), "phosani's nightmare", "phosanis nightmare"]
+            # THE FIX: Only build base keys normally
+            kc_keys_to_try = [
+                key.lower(),
+                key.lower().replace("the_", ""),
+                info["name"].lower().replace(" ", "_"),
+                info["name"].lower().replace("'", "")
+            ]
+
+            # Conditionally add Phosani ONLY if we are looking at Nightmare
+            if "nightmare" in key.lower():
+                kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
+
             actual_kc = 0
-            for k in kc_keys:
+            for k in kc_keys_to_try:
                 if k in flat_kc:
                     actual_kc = int(flat_kc[k])
                     if actual_kc > 0: break
 
             if actual_kc <= 0: continue
 
-            # Use the protected parser
             actual_slots, total_slots = get_clog_counts(clog_api, key, info)
 
             missing_total = (total_slots == 0)
@@ -181,16 +179,4 @@ def main():
 
             if count > 0:
                 avg = total_r / count
-                overall = "Overall Spooned 🥄" if avg <= 0.85 else "Overall Dry 🏜️" if avg >= 1.15 else "Overall On-Rate 🎯"
-                ehc_val = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
-
-                c1, c2, c3, c4 = st.columns(4)
-                c1.metric("Account Luck", overall)
-                c2.metric("Avg Luck Ratio", f"{avg:.2f}")
-                c3.metric("Activities Analyzed", count)
-                c4.metric("Temple EHC", f"{ehc_val:,.1f} hrs")
-        else:
-            st.info("No matching data found.")
-
-if __name__ == "__main__":
-    main()
+                overall = "Overall Spooned 🥄" if avg <= 0.8
