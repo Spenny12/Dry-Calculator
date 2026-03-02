@@ -87,7 +87,7 @@
         "ekc": 7095.0,
         "kph": 60.0,
         "slots": 7,
-        "mega_rares": 2
+        "mega_rares": 3
     },
     "crazy_archaeologist": {
         "name": "Crazy Archaeologist",
@@ -153,7 +153,7 @@
         "kph": 36.0,
         "slots": 7,
         "free_slots": 1,
-        "mega_rares": 1
+        "mega_rares": 2
     },
     "hespori": {
         "name": "Hespori",
@@ -310,7 +310,7 @@
         "ekc": 3826.0,
         "kph": 125.0,
         "slots": 5,
-        "mega_rares": 1
+        "mega_rares": 2
     },
     "vardorvis": {
         "name": "Vardorvis",
@@ -342,7 +342,7 @@
         "kph": 34.0,
         "slots": 6,
         "free_slots": 1,
-        "mega_rares": 1
+        "mega_rares": 2
     },
     "the_whisperer": {
         "name": "The Whisperer",
@@ -380,6 +380,6 @@
         "kph": 44.0,
         "slots": 10,
         "free_slots": 3,
-        "mega_rares": 3
+        "mega_rares": 4
     }
 }
