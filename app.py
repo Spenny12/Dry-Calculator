@@ -12,15 +12,15 @@ st.set_page_config(page_title="OSRS Luck & Time Analyzer", layout="wide")
 RAIDS_DATA = {
     "chambers_of_xeric": {
         "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17, "free_slots": 0, "mega_rares": 3,
-        "combine_kc_keys": ["chambers_of_xeric_challenge_mode"]
+        "combine_kc_keys": ["Chambers of Xeric Challenge Mode"]
     },
     "theatre_of_blood": {
         "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 0, "mega_rares": 2,
-        "combine_kc_keys": ["theatre_of_blood_hard_mode"]
+        "combine_kc_keys": ["Theatre of Blood Hard Mode"]
     },
     "tombs_of_amascut": {
         "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 16, "free_slots": 0, "mega_rares": 2,
-        "combine_kc_keys": ["tombs_of_amascut_expert"]
+        "combine_kc_keys": ["Tombs of Amascut: Expert Mode"]
     }
 }
 
@@ -55,8 +55,8 @@ def fetch_player_data(player_name):
 
 @st.cache_data(ttl=600)
 def fetch_temple_clog(player_name):
-    # CHANGED: Using 'all' prevents the "URL Too Long" hang
-    url = f"https://templeosrs.com/api/collection-log/player_collection_log.php?player={player_name}&categories=all"
+    # Using your specific requested API structure
+    url = f"https://templeosrs.com/api/collection-log/player_collection_log.php?player={player_name}&categories=bosses,raids,clues"
     try:
         r = requests.get(url, timeout=15)
         return r.json().get("data", {})
@@ -67,15 +67,14 @@ def fetch_temple_clog(player_name):
 # --- HELPER: KEY NORMALIZATION ---
 def norm(text):
     if not text: return ""
-    return str(text).lower().replace(" ", "").replace("_", "").replace("'", "").replace("the", "")
+    return str(text).lower().replace(" ", "").replace("_", "").replace(":", "").replace("'", "").replace("the", "")
 
 # --- MATH ENGINE ---
 def determine_luck_v3(actual_kc, info, actual_slots):
     ekc, slots, kph = info.get("ekc", 0), info.get("slots", 0), info.get("kph", 1.0)
     free, mega = info.get("free_slots", 0), info.get("mega_rares", 0)
 
-    if ekc <= 0 or actual_kc <= 0 or slots <= 0:
-        return "Not Started", 1.0, 0.0, 0.0
+    if ekc <= 0 or actual_kc <= 0 or slots <= 0: return "Not Started", 1.0, 0.0, 0.0
 
     p = actual_kc / ekc
     rng_total = max(1, slots - free)
@@ -130,18 +129,20 @@ def main():
 
             with st.spinner("Analyzing data..."):
                 for player in players:
-                    raw_kc = fetch_player_data(player)
+                    raw_kc_data = fetch_player_data(player)
                     clog_api = fetch_temple_clog(player)
 
-                    if not raw_kc: continue
+                    if not raw_kc_data: continue
 
-                    # Flatten Hiscores
+                    # Flatten Hiscores with absolute normalization
                     flat_kc = {}
-                    for folder in raw_kc.values():
+                    for folder in raw_kc_data.values():
                         if isinstance(folder, dict):
                             for k, v in folder.items(): flat_kc[norm(k)] = v
+                        else:
+                            flat_kc[norm(folder)] = folder
 
-                    # Fetch items dictionary
+                    # Gather item lists from Temple for matching
                     items_dict = clog_api.get("items", {})
 
                     player_results = []
@@ -150,13 +151,16 @@ def main():
                     for key, info in clog_data.items():
                         if filter_type != "All" and info["type"] != filter_type: continue
 
-                        # KC Mapping
+                        # KC MATCHING: Search by JSON Key, then by Human Name
                         actual_kc = float(flat_kc.get(norm(key), 0))
-                        if actual_kc == 0: actual_kc = float(flat_kc.get(norm(info["name"]), 0))
+                        if actual_kc == 0:
+                            actual_kc = float(flat_kc.get(norm(info["name"]), 0))
+
+                        # COMBINE EXTRA MODES (Challenge/Expert)
                         for ck in info.get("combine_kc_keys", []):
                             actual_kc += float(flat_kc.get(norm(ck), 0))
 
-                        # 3rd Age/Meta Clue Logic
+                        # META CLUE AGGREGATOR
                         if info["type"] == "Clue" and actual_kc == 0:
                             tiers = []
                             if "shared" in key: tiers = ["beginner", "easy", "medium", "hard", "elite", "master"]
@@ -170,13 +174,21 @@ def main():
 
                         if actual_kc <= 0: continue
 
-                        # Pull obtained slots from API
-                        search_key = "nightmare" if "nightmare" in key.lower() else key.lower()
-                        api_list = items_dict.get(search_key, [])
-                        if isinstance(api_list, list):
-                            actual_slots = sum(1 for item in api_list if item.get("count", 0) > 0)
-                        else:
-                            actual_slots = 0
+                        # SLOT MATCHING: Loop through Temple categories to find the matching boss name
+                        actual_slots = 0
+                        found_match = False
+                        for api_cat_name, api_item_list in items_dict.items():
+                            if norm(api_cat_name) == norm(info["name"]) or norm(api_cat_name) == norm(key):
+                                if isinstance(api_item_list, list):
+                                    actual_slots = sum(1 for item in api_item_list if item.get("count", 0) > 0)
+                                    found_match = True
+                                    break
+
+                        # Final fallback for cases like Nightmare where naming is complex
+                        if not found_match and "nightmare" in key.lower():
+                            api_list = items_dict.get("nightmare", [])
+                            if isinstance(api_list, list):
+                                actual_slots = sum(1 for item in api_list if item.get("count", 0) > 0)
 
                         status, ratio, exp, pts = determine_luck_v3(actual_kc, info, actual_slots)
 
@@ -191,12 +203,10 @@ def main():
                         df = pd.DataFrame(player_results).sort_values("Spoon Points")
                         all_player_results[player] = df
                         summary_list.append({
-                            "Player": player,
-                            "Spoon Score": round(total_pts, 1),
+                            "Player": player, "Spoon Score": round(total_pts, 1),
                             "EHC": f"{clog_api.get('ehc', 0):.1f}"
                         })
 
-            # Rendering Results
             if summary_list:
                 st.subheader("🏆 Leaderboard")
                 st.table(pd.DataFrame(summary_list).sort_values("Spoon Score"))
@@ -206,10 +216,10 @@ def main():
                     with tab:
                         st.table(all_player_results[p_name])
             else:
-                st.warning("No data found for the provided player(s).")
+                st.warning("No data found. Check that usernames are spelled correctly.")
 
         except Exception:
-            st.error("An unexpected error occurred:")
+            st.error("Traceback error detected:")
             st.code(traceback.format_exc())
 
 if __name__ == "__main__":
