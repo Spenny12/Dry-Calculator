@@ -5,7 +5,7 @@ import json
 import os
 import math
 
-st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
+st.set_page_config(page_title="OSRS Luck & Time Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
 RAIDS_DATA = {
@@ -97,25 +97,26 @@ def determine_luck_v6(actual_kc, info, actual_slots):
 
     p = actual_kc / expected_kc
 
+    # --- RNG ISOLATION ---
+    # We remove free slots entirely from the grading logic
     rng_total_slots = max(1, total_slots - free_slots)
     rng_actual_slots = max(0, actual_slots - free_slots)
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_slots_count = rng_total_slots - safe_mega_rares
 
-    # Normal S-Curve: Inflection at 15% progress, Degree 2.2
-    # This creates a slight "grace period" before ramping up.
-    s_frac_normal = (p ** 2.2) / (p ** 2.2 + 0.15 ** 2.2)
-
-    # Mega-Rare S-Curve: Inflection at 60% progress, Degree 4.0
-    # This keeps expectations very low for a long time.
-    s_frac_mega = (p ** 4.0) / (p ** 4.0 + 0.6 ** 4.0)
+    # Asymmetric Sigmoid:Degree 3 makes the start much flatter
+    #     s_frac_normal = (p ** 3) / (p ** 3 + 0.15 ** 3)
+    s_frac_mega = (p ** 5) / (p ** 5 + 0.6 ** 5)
 
     exp_rng_total = (normal_slots_count * s_frac_normal) + (safe_mega_rares * s_frac_mega)
+
+    # We re-add free slots ONLY for the display column 'Expected Slots'
     exp_slots_display = free_slots + min(exp_rng_total, rng_total_slots)
 
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
     elif rng_actual_slots == 0:
+        # If you have 0 RNG slots, your ratio is effectively your expectation
         ratio = max(1.0, exp_rng_total)
     else:
         ratio = exp_rng_total / rng_actual_slots
@@ -135,7 +136,6 @@ def determine_luck_v6(actual_kc, info, actual_slots):
 # --- MAIN UI ---
 def main():
     st.title("OSRS Time-Weighted Luck Analyzer")
-    st.markdown("Math: **Asymmetric S-Curve**. Forgiving at start, aggressive in middle, heavy tapering for pets/megas.")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -150,7 +150,7 @@ def main():
         player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
         if not player_names: return
 
-        with st.spinner("Calculating Multi-Player Outcomes..."):
+        with st.spinner("Calculating..."):
             all_player_tables = {}
             summary_stats = []
 
@@ -173,7 +173,6 @@ def main():
                 for key, info in clog_data.items():
                     if filter_type != "All" and info["type"] != filter_type: continue
 
-                    # Preserve naming logic (the_hueycoatl, nightmare, etc)
                     kc_keys_to_try = [
                         key.lower(),
                         key.lower().replace("the_", ""),
@@ -232,7 +231,7 @@ def main():
                     summary_stats.append({
                         "Player": player_name,
                         "Spoon Score": int(round(total_spoon_score)),
-                        "Account Status": "Legendary Spoon 🥄" if total_spoon_score < -100 else "Standard" if total_spoon_score < 100 else "Deep Sea Dry 🏜️",
+                        "Status": "Legendary Spoon 🥄" if total_spoon_score < -250 else "Standard" if total_spoon_score < 250 else "Deep Sea Dry 🏜️",
                         "EHC": f"{clog_api.get('ehc', 0):.1f}"
                     })
 
