@@ -23,7 +23,7 @@
         "kph": 40.0,
         "slots": 10
     },
-    "barrows": {
+    "barrows_chests": {
         "name": "Barrows",
         "ekc": 1321.0,
         "kph": 24.0,
@@ -101,7 +101,7 @@
         "kph": 2.5,
         "slots": 9
     },
-    "gauntlet": {
+    "the_gauntlet": {
         "name": "Gauntlet",
         "ekc": 934.0,
         "kph": 7.0,
@@ -131,7 +131,7 @@
         "kph": 90.0,
         "slots": 4
     },
-    "the_hueycoatl": {
+    "hueycoatl": {
         "name": "The Hueycoatl",
         "ekc": 480.0,
         "kph": 10.0,
@@ -161,7 +161,7 @@
         "kph": 100.0,
         "slots": 4
     },
-    "kreearra": {
+    "kree_arra": {
         "name": "Kree'arra",
         "ekc": 5092.0,
         "kph": 40.0,
@@ -191,7 +191,7 @@
         "kph": 2.87,
         "slots": 8
     },
-    "phosanis_nightmare": {
+    "the_nightmare": {
         "name": "The Nightmare",
         "ekc": 5315.0,
         "kph": 7.5,
