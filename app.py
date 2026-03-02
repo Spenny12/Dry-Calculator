@@ -85,34 +85,34 @@ def get_clog_counts(clog_payload, boss_key, local_info):
 
     return actual, total
 
-# --- DUAL S-CURVE & RNG ISOLATION MATH ---
-def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name="", free_slots=0, mega_rares=0):
-    if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
-        return "Not Started", 1.0, 0.0
+# --- TIME-WEIGHTED DUAL S-CURVE MATH ---
+def determine_luck_v3(actual_kc, info, actual_slots):
+    expected_kc = info.get("ekc", 0)
+    total_slots = info.get("slots", 0)
+    free_slots = info.get("free_slots", 0)
+    mega_rares = info.get("mega_rares", 0)
+    kph = info.get("kph", 1.0)
+    name = info.get("name", "")
+
+    if expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
+        return "Not Started", 1.0, 0.0, 0.0
 
     p = actual_kc / expected_kc
 
     rng_total_slots = max(1, total_slots - free_slots)
     rng_actual_slots = max(0, actual_slots - free_slots)
-
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_slots_count = rng_total_slots - safe_mega_rares
 
-    if safe_mega_rares > 0:
-        c_normal = 0.03
-        c_mega = 0.80
-    else:
-        c_normal = 0.05 if "barrows" in name.lower() or "clue" in name.lower() else 0.15
-        c_mega = 0.80
+    # Dual Curve Steepness
+    c_normal = 0.03 if safe_mega_rares > 0 else (0.05 if info["type"] == "Clue" else 0.15)
+    c_mega = 0.80
 
     s_fraction_normal = (p ** 2) / ((p ** 2) + c_normal)
     s_fraction_mega = (p ** 2) / ((p ** 2) + c_mega)
 
-    exp_normal_slots = normal_slots_count * s_fraction_normal
-    exp_mega_slots = safe_mega_rares * s_fraction_mega
-
-    exp_rng_slots = min(exp_normal_slots + exp_mega_slots, rng_total_slots)
-    exp_slots_display = free_slots + exp_rng_slots
+    exp_rng_slots = (normal_slots_count * s_fraction_normal) + (safe_mega_rares * s_fraction_mega)
+    exp_slots_display = free_slots + min(exp_rng_slots, rng_total_slots)
 
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
@@ -121,18 +121,25 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
     else:
         ratio = exp_rng_slots / rng_actual_slots
 
+    # --- TIME WEIGHTING ---
+    # Total Hours expected to finish this log
+    total_ehc_weight = expected_kc / max(kph, 0.1)
+
+    # Spoon Points: Ratio deviation scaled by total hours of the grind
+    spoon_points = (ratio - 1.0) * total_ehc_weight
+
     if ratio <= 0.5: status = "Spooned 🥄"
     elif ratio <= 0.85: status = "Wet 💧"
     elif ratio <= 1.15: status = "On-Rate 🎯"
     elif ratio <= 1.5: status = "Dry 🏜️"
     else: status = "Very Dry 💀"
 
-    return status, ratio, exp_slots_display
+    return status, ratio, exp_slots_display, spoon_points
 
 # --- MAIN UI ---
 def main():
-    st.title("OSRS Clog Luck Analyzer")
-    st.markdown("Comparing KC to Expected KC (EKC) using a Dual S-Curve for standard vs mega-rare log progress. Compare multiple players at once!")
+    st.title("OSRS Time-Weighted Luck Analyzer")
+    st.markdown("Luck Ratio weighted by **Efficient Hours (EHC)**. Longer grinds affect your score more significantly!")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -163,8 +170,6 @@ def main():
                     continue
 
                 clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
-
-                # We flatten the nested dictionary so that clues aren't hidden deep inside hiscore folders
                 flat_kc = {}
                 for k, v in kc_api.items():
                     if isinstance(v, dict):
@@ -173,7 +178,8 @@ def main():
                         flat_kc[str(k).lower()] = v
 
                 results = []
-                total_r, count = 0, 0
+                total_spoon_score = 0
+                count = 0
 
                 for key, info in clog_data.items():
                     if filter_type != "All" and info["type"] != filter_type: continue
@@ -188,21 +194,17 @@ def main():
                     if "nightmare" in key.lower():
                         kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
 
-                    # --- OFFICIAL HISCORES CLUE TRANSLATOR ---
                     if info.get("type") == "Clue":
                         tier = info["name"].lower().replace(" clues", "").replace(" clue", "").strip()
                         if tier:
                             kc_keys_to_try.extend([f"clue scrolls ({tier})", f"clue_{tier}", f"clues_{tier}"])
 
                     actual_kc = 0
-
-                    # 1. Grab Base KC
                     for k in kc_keys_to_try:
                         if k in flat_kc:
                             actual_kc = int(flat_kc[k])
                             if actual_kc > 0: break
 
-                    # 2. Additive KC Combiner
                     for combine_key in info.get("combine_kc_keys", []):
                         ck = combine_key.lower()
                         if ck in flat_kc:
@@ -210,101 +212,61 @@ def main():
                         elif ck.replace(" ", "_") in flat_kc:
                             actual_kc += int(flat_kc[ck.replace(" ", "_")])
 
-                    # --- CLUE META CATEGORY CALCULATOR ---
                     if info.get("type") == "Clue" and actual_kc <= 0:
                         clue_tiers_to_sum = []
+                        is_mega_meta = False
                         if "shared" in key.lower():
                             clue_tiers_to_sum = ["beginner", "easy", "medium", "hard", "elite", "master"]
-                        elif "3rd" in key.lower() or "third" in key.lower() or "gilded" in key.lower():
+                        elif "3rd" in key.lower() or "gilded" in key.lower():
                             clue_tiers_to_sum = ["hard", "elite", "master"]
-                        elif "elite_mega" in key.lower():
-                            clue_tiers_to_sum = ["elite"]
-                        elif "master_mega" in key.lower():
-                            clue_tiers_to_sum = ["master"]
+                            is_mega_meta = True
 
-                        # Sums up the specific tiers to calculate your true KC for these categories
                         for c_tier in clue_tiers_to_sum:
                             for variant in [f"clue scrolls ({c_tier})", f"clue_{c_tier}", f"clues_{c_tier}"]:
                                 if variant in flat_kc:
-                                    actual_kc += int(flat_kc[variant])
+                                    val = int(flat_kc[variant])
+                                    if is_mega_meta:
+                                        if c_tier == "hard": val *= 0.086
+                                        elif c_tier == "elite": val *= 0.33
+                                    actual_kc += val
                                     break
 
                     if actual_kc <= 0: continue
 
-                    free_slots = info.get("free_slots", 0)
-                    mega_rares = info.get("mega_rares", 0)
                     actual_slots, total_slots = get_clog_counts(clog_api, key, info)
-
-                    missing_total = (total_slots == 0)
-                    if missing_total: total_slots = max(actual_slots, 1)
-
-                    status, ratio, exp_slots = determine_luck_v2(
-                        actual_kc, info["ekc"], actual_slots, total_slots, info["name"], free_slots, mega_rares
-                    )
+                    status, ratio, exp, s_points = determine_luck_v3(actual_kc, info, actual_slots)
 
                     results.append({
                         "Activity": info["name"],
-                        "Clog Progress": f"{actual_slots}/{total_slots}" if not missing_total else f"{actual_slots}/?",
-                        "Expected Slots": f"{exp_slots:.2f}" if not missing_total else "⚠️ Check JSON",
+                        "Clog Progress": f"{actual_slots}/{total_slots}",
+                        "Expected Slots": f"{exp:.2f}",
                         "Your KC": f"{actual_kc:,}",
-                        "Luck Ratio": f"{ratio:.2f}" if not missing_total else "N/A",
-                        "Status": status if not missing_total else "N/A"
+                        "Luck Ratio": f"{ratio:.2f}",
+                        "Spoon Points": round(s_points, 1),
+                        "Status": status
                     })
-
-                    if not missing_total:
-                        total_r += ratio
-                        count += 1
+                    total_spoon_score += s_points
+                    count += 1
 
                 if results:
-                    df = pd.DataFrame(results).sort_values("Luck Ratio", ascending=False)
+                    df = pd.DataFrame(results).sort_values("Spoon Points", ascending=True)
                     all_player_tables[player_name] = df
-
-                    avg = total_r / count if count > 0 else 0
-                    if avg <= 0.85: overall = "Spooned 🥄"
-                    elif avg >= 1.15: overall = "Dry 🏜️"
-                    else: overall = "On-Rate 🎯"
-
-                    ehc_val = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
-
                     summary_stats.append({
                         "Player": player_name,
-                        "Avg Luck Ratio": round(avg, 2),
-                        "Account Luck": overall,
-                        "Temple EHC": f"{ehc_val:,.1f}",
-                        "Activities Analyzed": count,
-                        "_raw_ehc": ehc_val,
-                        "_raw_avg": avg
+                        "Spoon Score": round(total_spoon_score, 1),
+                        "Status": "Legendary Spoon 🥄" if total_spoon_score < -100 else "Standard" if total_spoon_score < 100 else "Deep Sea Dry 🏜️",
+                        "EHC": f"{clog_api.get('ehc', 0):.1f}"
                     })
-                else:
-                    st.info(f"No matching data found for **{player_name}**.")
 
             if summary_stats:
-                st.subheader("🏆 Multi-Player Comparison")
-                summary_df = pd.DataFrame(summary_stats)
-
-                col1, col2 = st.columns([1, 2])
-                with col1:
-                    display_df = summary_df.drop(columns=["_raw_ehc", "_raw_avg"]).sort_values("Avg Luck Ratio", ascending=False)
-                    st.dataframe(display_df, hide_index=True)
-                with col2:
-                    chart_data = summary_df.set_index("Player")[["Avg Luck Ratio"]]
-                    st.bar_chart(chart_data)
-
-                st.divider()
-                st.subheader("🔍 Detailed Breakdowns")
+                st.subheader("🏆 Spoon Leaderboard")
+                st.write("Spoon Score = (Luck Ratio - 1) * Hours for Log. Lower is better (more hours saved).")
+                summary_df = pd.DataFrame(summary_stats).sort_values("Spoon Score")
+                st.table(summary_df)
 
                 tabs = st.tabs(list(all_player_tables.keys()))
-
                 for tab, p_name in zip(tabs, all_player_tables.keys()):
                     with tab:
-                        p_summary = next(item for item in summary_stats if item["Player"] == p_name)
-
-                        c1, c2, c3, c4 = st.columns(4)
-                        c1.metric("Account Luck", p_summary["Account Luck"])
-                        c2.metric("Avg Luck Ratio", f"{p_summary['_raw_avg']:.2f}")
-                        c3.metric("Activities Analyzed", p_summary["Activities Analyzed"])
-                        c4.metric("Temple EHC", f"{p_summary['_raw_ehc']:,.1f} hrs")
-
                         st.table(all_player_tables[p_name])
 
 if __name__ == "__main__":
