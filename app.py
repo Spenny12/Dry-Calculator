@@ -5,7 +5,7 @@ import json
 import os
 import math
 
-st.set_page_config(page_title="OSRS Luck & Time Analyzer", layout="wide")
+st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
 RAIDS_DATA = {
@@ -84,8 +84,8 @@ def get_clog_counts(clog_payload, boss_key, local_info):
     if total > 0 and actual > total: actual = total
     return actual, total
 
-# --- THE BINOMIAL POWER CURVE MATH ---
-def determine_luck_v7(actual_kc, info, actual_slots):
+# --- THE UPDATED MATH ENGINE ---
+def determine_luck_v8(actual_kc, info, actual_slots):
     expected_kc = info.get("ekc", 0)
     total_slots = info.get("slots", 0)
     free_slots = info.get("free_slots", 0)
@@ -93,30 +93,28 @@ def determine_luck_v7(actual_kc, info, actual_slots):
     kph = info.get("kph", 1.0)
 
     if expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
-        return "Not Started", 1.0, 0.0, 0.0
+        return "Not Started", 1.0, 0.0, 0
 
-    p_completion = actual_kc / expected_kc
+    p = actual_kc / expected_kc
 
-    # RNG ISOLATION
+    # RNG Isolation
     rng_total_slots = max(1, total_slots - free_slots)
     rng_actual_slots = max(0, actual_slots - free_slots)
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_rng_slots = rng_total_slots - safe_mega_rares
 
-    # BINOMIAL POWER CURVE
-    # We use a power curve (0.75) which is much more forgiving at low KC than an S-Curve.
-    # It assumes you get 'easy' uniques faster but 'megas' much slower.
-    exp_normal = normal_rng_slots * (p_completion ** 0.75)
-    exp_mega = safe_mega_rares * (p_completion ** 2)
+    # Binomial Power Curve Math
+    exp_normal = normal_rng_slots * (p ** 0.75)
+    exp_mega = safe_mega_rares * (p ** 1.5)
 
-    # We apply a 'Probability Floor': If you are under 10% of EKC, we assume
-    # seeing 1 unique is within 1 standard deviation of 'On-Rate'.
+    # Probability Floor for low KC
     exp_rng_total = exp_normal + exp_mega
-    if p_completion < 0.10:
-        exp_rng_total = max(exp_rng_total, min(rng_actual_slots, 1.0) * (p_completion * 10))
+    if p < 0.10:
+        exp_rng_total = max(exp_rng_total, min(rng_actual_slots, 1.0) * (p * 10))
 
     exp_slots_display = free_slots + min(exp_rng_total, rng_total_slots)
 
+    # Ratio
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
     elif rng_actual_slots == 0:
@@ -124,22 +122,23 @@ def determine_luck_v7(actual_kc, info, actual_slots):
     else:
         ratio = exp_rng_total / rng_actual_slots
 
-    # TIME WEIGHTING (Spoon Points)
+    # Spoon Points (Time Weighting)
     total_ehc_weight = expected_kc / max(kph, 0.1)
-    spoon_points = (ratio - 1.0) * total_ehc_weight
+    pts = int(round((ratio - 1.0) * total_ehc_weight))
 
-    if ratio <= 0.6: status = "Spooned 🥄"
-    elif ratio <= 0.85: status = "Wet 💧"
-    elif ratio <= 1.15: status = "On-Rate 🎯"
-    elif ratio <= 1.6: status = "Dry 🏜️"
-    else: status = "Very Dry 💀"
+    # --- NEW STATUS LOGIC BASED ON POINTS ---
+    if pts <= -100: status = "Spooned 🥄"
+    elif pts <= -20: status = "Wet 💧"
+    elif pts >= 100: status = "Very Dry 💀"
+    elif pts >= 20: status = "Dry 🏜️"
+    else: status = "On-Rate 🎯"
 
-    return status, ratio, exp_slots_display, spoon_points
+    return status, ratio, exp_slots_display, pts
 
 # --- MAIN UI ---
 def main():
     st.title("OSRS Luck & Time Analyzer")
-    st.markdown("Math: **Binomial Power Curve**. Fixed 'Spooned' bias for low KC bossing and clues.")
+    st.markdown("Statuses are now tied directly to **Spoon Score** (Time Invested).")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -154,7 +153,7 @@ def main():
         player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
         if not player_names: return
 
-        with st.spinner("Calculating..."):
+        with st.spinner("Analyzing grinds..."):
             all_player_tables = {}
             summary_stats = []
 
@@ -193,16 +192,18 @@ def main():
                             if actual_kc > 0: break
 
                     for ck in info.get("combine_kc_keys", []):
-                        if ck.lower() in flat_kc: actual_kc += int(flat_kc[ck.lower()])
+                        ck_low = ck.lower()
+                        if ck_low in flat_kc:
+                            actual_kc += int(flat_kc[ck_low])
+                        elif ck_low.replace(" ", "_") in flat_kc:
+                            actual_kc += int(flat_kc[ck_low.replace(" ", "_")])
 
-                    # 3rd Age/Gilded/Shared Clue Logic
                     if info.get("type") == "Clue" and actual_kc <= 0:
                         clue_tiers = []
                         is_mega_meta = False
                         if "shared" in key.lower(): clue_tiers = ["beginner", "easy", "medium", "hard", "elite", "master"]
                         elif "3rd" in key.lower() or "gilded" in key.lower():
-                            clue_tiers = ["hard", "elite", "master"]
-                            is_mega_meta = True
+                            clue_tiers = ["hard", "elite", "master"]; is_mega_meta = True
 
                         for ct in clue_tiers:
                             for var in [f"clue scrolls ({ct})", f"clue_{ct}", f"clues_{ct}"]:
@@ -210,13 +211,12 @@ def main():
                                     val = int(flat_kc[var])
                                     if is_mega_meta:
                                         val *= 0.086 if ct == "hard" else 0.33 if ct == "elite" else 1.0
-                                    actual_kc += val
-                                    break
+                                    actual_kc += val; break
 
                     if actual_kc <= 0: continue
 
                     actual_slots, total_slots = get_clog_counts(clog_api, key, info)
-                    status, ratio, exp, s_points = determine_luck_v7(actual_kc, info, actual_slots)
+                    status, ratio, exp, pts = determine_luck_v8(actual_kc, info, actual_slots)
 
                     results.append({
                         "Activity": info["name"],
@@ -224,24 +224,23 @@ def main():
                         "Expected": f"{exp:.2f}",
                         "KC": f"{actual_kc:,}",
                         "Ratio": f"{ratio:.2f}",
-                        "Spoon Points": int(round(s_points)),
+                        "Spoon Points": pts,
                         "Status": status
                     })
-                    total_spoon_score += s_points
+                    total_spoon_score += pts
 
                 if results:
                     df = pd.DataFrame(results).sort_values("Spoon Points", ascending=True)
                     all_player_tables[player_name] = df
                     summary_stats.append({
                         "Player": player_name,
-                        "Spoon Score": int(round(total_spoon_score)),
-                        "Status": "Legendary Spoon 🥄" if total_spoon_score < -250 else "Standard" if total_spoon_score < 250 else "Deep Sea Dry 🏜️",
+                        "Total Spoon Score": int(round(total_spoon_score)),
                         "EHC": f"{clog_api.get('ehc', 0):.1f}"
                     })
 
             if summary_stats:
                 st.subheader("🏆 Leaderboard")
-                st.table(pd.DataFrame(summary_stats).sort_values("Spoon Score"))
+                st.table(pd.DataFrame(summary_stats).sort_values("Total Spoon Score"))
 
                 tabs = st.tabs(list(all_player_tables.keys()))
                 for tab, p_name in zip(tabs, all_player_tables.keys()):
