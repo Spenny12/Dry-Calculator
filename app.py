@@ -32,7 +32,7 @@ def load_all_clog_data():
                     data = json.load(f)
                     for k, v in data.items():
                         if k.lower() in ["true", "false", "0", "1"]: continue
-                        if "ekc" in v and (v["ekc"] is None or math.isnan(float(v["ekc"]))):
+                        if "ekc" in v and (v["ekc"] is None or (isinstance(v["ekc"], float) and math.isnan(v["ekc"]))):
                             v["ekc"] = 0.0
                         v["type"] = activity_type
                         combined[k] = v
@@ -55,7 +55,8 @@ def fetch_player_kc(player_name):
 def fetch_exact_temple_clog(player_name, categories_list):
     clean_keys = [k for k in categories_list if isinstance(k, str) and k.lower() not in ['true', 'false', '0', '1']]
     categories_str = ",".join(clean_keys)
-    if "nightmare" not in categories_str.lower(): categories_str += ",nightmare"
+    if "the_nightmare" not in categories_str.lower() and "nightmare" not in categories_str.lower():
+        categories_str += ",the_nightmare"
 
     url = f"https://templeosrs.com/api/collection-log/player_collection_log.php?player={player_name}&categories={categories_str}"
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -70,8 +71,13 @@ def fetch_exact_temple_clog(player_name, categories_list):
 # --- THE PARSER ---
 def get_clog_counts(clog_payload, boss_key, local_info):
     items_dict = clog_payload.get("items", {}) if isinstance(clog_payload, dict) else {}
-    search_key = "nightmare" if "nightmare" in boss_key.lower() else boss_key.lower()
-    boss_api_list = items_dict.get(search_key, [])
+
+    # Try the exact boss_key from JSON first (fixes the_nightmare issue)
+    boss_api_list = items_dict.get(boss_key, [])
+
+    # Fallback to search if nightmare-related
+    if not boss_api_list and "nightmare" in boss_key.lower():
+        boss_api_list = items_dict.get("nightmare", items_dict.get("the_nightmare", []))
 
     if isinstance(boss_api_list, list):
         actual = sum(1 for item in boss_api_list if item.get("count", 0) > 0)
@@ -84,7 +90,7 @@ def get_clog_counts(clog_payload, boss_key, local_info):
     if total > 0 and actual > total: actual = total
     return actual, total
 
-# --- THE SPOON MATH V10 (ASIMYETRIC TAPERED) ---
+# --- THE SPOON MATH V10 (ASYMMETRIC TAPERED) ---
 def determine_luck_v10(actual_kc, info, actual_slots):
     expected_kc = info.get("ekc", 0)
     total_slots = info.get("slots", 0)
@@ -104,8 +110,8 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     # 1. Forward Curve (What should you have at your KC?)
     # Normal uniques condensed into start (0.5 power), Megas tapered to end (2.5 power)
     p = actual_kc / expected_kc
-    exp_normal = normal_rng_slots * (p ** 0.6)
-    exp_mega = safe_mega_rares * (p ** 2.4)
+    exp_normal = normal_rng_slots * (p ** 0.5)
+    exp_mega = safe_mega_rares * (p ** 2.5)
 
     exp_rng_total = min(exp_normal + exp_mega, rng_total_slots)
     exp_slots_display = free_slots + exp_rng_total
@@ -118,11 +124,11 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     # 3. Spoon Points = Hours Saved/Lost
     pts = int(round((actual_kc - expected_kc_for_progress) / max(kph, 0.1)))
 
-    # Ratio calculation for display
-    # (Higher ratio means you are 'dryer' in terms of time expected vs spent)
+    # Display Ratio calculation (Expected KC / Spent KC)
+    # Higher means luckier
     display_ratio = expected_kc_for_progress / max(actual_kc, 1.0)
 
-    # --- STATUS LOGIC ---
+    # --- STATUS LOGIC TIED TO POINTS ---
     if pts <= -100: status = "Spooned 🥄"
     elif pts <= -20: status = "Wet 💧"
     elif pts >= 100: status = "Very Dry 💀"
@@ -172,28 +178,52 @@ def main():
                 for key, info in clog_data.items():
                     if filter_type != "All" and info["type"] != filter_type: continue
 
-                    # Name matching variants
                     kc_keys_to_try = [
                         key.lower(), key.lower().replace("the_", ""),
                         info["name"].lower().replace(" ", "_"),
                         info["name"].lower().replace("'", ""),
-                        "colosseum" if "colosseum" in key.lower() else ""
                     ]
 
                     actual_kc = 0
+                    # Standard matching (grabs first match found)
                     for k in kc_keys_to_try:
-                        if k and k in flat_kc:
-                            actual_kc = int(flat_kc[k]); break
+                        if k in flat_kc:
+                            actual_kc = int(flat_kc[k])
+                            if actual_kc > 0: break
 
-                    # ADDITIVE KC: Nightmare + Phosani
+                    # ADDITIVE KC Combiner (Nightmare + Phosani)
                     if "nightmare" in key.lower():
-                        for pk in ["phosani's nightmare", "phosanis nightmare", "phosani"]:
-                            if pk in flat_kc: actual_kc += int(flat_kc[pk]); break
+                        phosani_keys = ["phosani's nightmare", "phosani", "phosanis nightmare"]
+                        for pk in phosani_keys:
+                            if pk in flat_kc:
+                                actual_kc += int(flat_kc[pk])
+                                break
 
+                    # RAID / MODE Combiner
                     for ck in info.get("combine_kc_keys", []):
                         ck_low = ck.lower()
-                        if ck_low in flat_kc: actual_kc += int(flat_kc[ck_low])
-                        elif ck_low.replace(" ", "_") in flat_kc: actual_kc += int(flat_kc[ck_low.replace(" ", "_")])
+                        if ck_low in flat_kc:
+                            actual_kc += int(flat_kc[ck_low])
+                        elif ck_low.replace(" ", "_") in flat_kc:
+                            actual_kc += int(flat_kc[ck_low.replace(" ", "_")])
+
+                    # CLUE META CALCULATOR
+                    if info.get("type") == "Clue" and actual_kc <= 0:
+                        clue_tiers = []
+                        if "shared" in key.lower():
+                            clue_tiers = ["beginner", "easy", "medium", "hard", "elite", "master"]
+                        elif "3rd" in key.lower() or "third" in key.lower() or "gilded" in key.lower():
+                            clue_tiers = ["hard", "elite", "master"]
+                        elif "elite_mega" in key.lower():
+                            clue_tiers = ["elite"]
+                        elif "master_mega" in key.lower():
+                            clue_tiers = ["master"]
+
+                        for ct in clue_tiers:
+                            for var in [f"clue scrolls ({ct})", f"clue_{ct}", f"clues_{ct}"]:
+                                if var in flat_kc:
+                                    actual_kc += int(flat_kc[var])
+                                    break
 
                     if actual_kc <= 0: continue
 
@@ -216,7 +246,7 @@ def main():
                     summary_stats.append({
                         "Player": player_name,
                         "Total Spoon Score": int(round(total_spoon_score)),
-                        "EHC": f"{clog_api.get('ehc', 0):.1f}"
+                        "EHC": f"{clog_api.get('ehc', 0):.1f}" if isinstance(clog_api, dict) else "0.0"
                     })
 
             if summary_stats:
