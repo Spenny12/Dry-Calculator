@@ -9,9 +9,9 @@ st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
 RAIDS_DATA = {
-    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17},
-    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 7},
-    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 8}
+    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17, "free_slots": 0},
+    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 7, "free_slots": 0},
+    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 8, "free_slots": 0}
 }
 
 def load_all_clog_data():
@@ -76,28 +76,32 @@ def get_clog_counts(clog_payload, boss_key, local_info):
 
     return actual, total
 
-# --- THE S-CURVE MATH ---
-def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
+# --- S-CURVE & RNG ISOLATION MATH ---
+def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name="", free_slots=0):
     if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
         return "Not Started", 1.0, 0.0
 
     p = actual_kc / expected_kc
-
-    # 'c' controls the curve. 0.05 is faster (Clues/Barrows). 0.15 is slower (Bosses).
     c = 0.05 if "barrows" in name.lower() or "clue" in name.lower() else 0.15
-
-    # The Algebraic S-Curve
     s_fraction = (p ** 2) / ((p ** 2) + c)
-    exp_slots = min(total_slots * s_fraction, total_slots)
 
-    # The True Ratio Fix
+    # Isolate the slots that actually require RNG
+    rng_total_slots = max(1, total_slots - free_slots)
+    rng_actual_slots = max(0, actual_slots - free_slots)
+
+    # Calculate Expected slots based strictly on the RNG slots
+    exp_rng_slots = min(rng_total_slots * s_fraction, rng_total_slots)
+
+    # Re-add the free slots for the visual UI display (e.g., expecting 1.5 slots instead of 0.5)
+    exp_slots_display = free_slots + exp_rng_slots
+
+    # True Ratio Math (Graded ONLY on RNG items)
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
-    elif actual_slots == 0:
-        # If you have 0 slots, you get a free pass if expected is low, but punished if expected is high.
-        ratio = max(1.0, exp_slots)
+    elif rng_actual_slots == 0:
+        ratio = max(1.0, exp_rng_slots)
     else:
-        ratio = exp_slots / actual_slots
+        ratio = exp_rng_slots / rng_actual_slots
 
     if ratio <= 0.5: status = "Spooned 🥄"
     elif ratio <= 0.85: status = "Wet 💧"
@@ -105,7 +109,7 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
     elif ratio <= 1.5: status = "Dry 🏜️"
     else: status = "Very Dry 💀"
 
-    return status, ratio, exp_slots
+    return status, ratio, exp_slots_display
 
 # --- MAIN UI ---
 def main():
@@ -170,12 +174,15 @@ def main():
 
                     if actual_kc <= 0: continue
 
+                    # Fetch specific boss free slots (defaults to 0 if not added to JSON)
+                    free_slots = info.get("free_slots", 0)
                     actual_slots, total_slots = get_clog_counts(clog_api, key, info)
 
                     missing_total = (total_slots == 0)
                     if missing_total: total_slots = max(actual_slots, 1)
 
-                    status, ratio, exp_slots = determine_luck_v2(actual_kc, info["ekc"], actual_slots, total_slots, info["name"])
+                    # Pass the free_slots parameter into the math engine
+                    status, ratio, exp_slots = determine_luck_v2(actual_kc, info["ekc"], actual_slots, total_slots, info["name"], free_slots)
 
                     results.append({
                         "Activity": info["name"],
