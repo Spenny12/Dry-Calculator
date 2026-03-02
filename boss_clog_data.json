@@ -136,7 +136,7 @@
         "ekc": 5092.0,
         "kph": 55.0,
         "slots": 8,
-        "free_slots": 3
+        "free_slots": 3,
         "mega_rares": 1
     },
     "giant_mole": {
@@ -166,7 +166,7 @@
         "ekc": 480.0,
         "kph": 10.0,
         "slots": 6,
-        "free_slots": 2
+        "free_slots": 2,
         "mega_rares": 1
     },
     "the_inferno": {
