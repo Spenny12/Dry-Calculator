@@ -5,7 +5,7 @@ import json
 import os
 import math
 
-st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
+st.set_page_config(page_title="Chungies Spoon Calc!!!!!!!!", layout="wide")
 
 # --- DATA & CONSTANTS ---
 RAIDS_DATA = {
@@ -138,7 +138,7 @@ def determine_luck_v8(actual_kc, info, actual_slots):
 
 # --- MAIN UI ---
 def main():
-    st.title("OSRS Luck & Time Analyzer")
+    st.title("Spoon Calc")
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
 
@@ -146,7 +146,7 @@ def main():
         st.header("Player Info")
         player_names_input = st.text_input("Username(s)", value="Spencejliv")
         filter_type = st.selectbox("Category", ["All", "Boss", "Raid", "Clue"])
-        analyze = st.button("Analyze Account(s)", type="primary", use_container_width=True)
+        analyze = st.button("Run", type="primary", use_container_width=True)
 
     if analyze:
         player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
