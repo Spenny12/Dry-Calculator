@@ -118,26 +118,33 @@ def main():
     # Optional filtering
     filter_type = st.radio("Filter By:", ["All", "Boss", "Raid", "Clue"], horizontal=True)
 
-    if st.button("Analyze Account", type="primary"):
+if st.button("Analyze Account", type="primary"):
         with st.spinner(f"Fetching hiscores for {player_name}..."):
             player_stats = fetch_player_data(player_name)
-            
-        if player_stats:
+
+        # --- NEW ERROR HANDLING LOGIC ---
+        if player_stats is None:
+            # The API call failed completely (e.g., timeout or TempleOSRS is down)
+            st.error(f"Failed to fetch data for '{player_name}'. TempleOSRS might be down.")
+
+        elif not player_stats:
+            # The API returned an empty dictionary (player not tracked on TempleOSRS)
+            st.warning(f"No tracked data found for '{player_name}'. They might not exist on TempleOSRS, or their profile needs to be updated on the site first!")
+
+        else:
+            # Data was found, proceed with processing
             results = []
             total_ratio = 0
             valid_activities = 0
-            
+
             # 3. Process Data
             for api_key, details in clog_data.items():
-                # Apply UI Filter
                 if filter_type != "All" and details.get("type") != filter_type:
                     continue
-                
-                # Retrieve actual KC from Temple (defaults to 0 if not found)
+
                 actual_kc = player_stats.get(api_key, 0)
                 expected_kc = details["ekc"]
-                
-                # Only show activities the player has actually started doing
+
                 if actual_kc > 0:
                     status, ratio = determine_luck(actual_kc, expected_kc)
                     results.append({
@@ -150,17 +157,14 @@ def main():
                     })
                     total_ratio += ratio
                     valid_activities += 1
-            
+
             # 4. Display Results
             if results:
                 df_results = pd.DataFrame(results)
-                
-                # Sort by Ratio (Highest to Lowest, so driest is at the top)
                 df_results = df_results.sort_values(by="Ratio", ascending=False).reset_index(drop=True)
-                
-                # Style the dataframe slightly
+
                 st.dataframe(
-                    df_results, 
+                    df_results,
                     use_container_width=True,
                     column_config={
                         "Ratio": st.column_config.NumberColumn(
@@ -170,21 +174,22 @@ def main():
                         )
                     }
                 )
-                
-                # 5. Overall Account Summary
+
+                # Overall Account Summary
                 st.divider()
                 st.subheader(f"Overall Account Luck: {player_name}")
-                
+
                 overall_ratio = total_ratio / valid_activities
-                overall_status, _ = determine_luck(overall_ratio, 1.0) # Base is 1.0 for the ratio average
-                
+                overall_status, _ = determine_luck(overall_ratio, 1.0)
+
                 col1, col2, col3 = st.columns(3)
                 col1.metric("Overall Status", overall_status)
                 col2.metric("Average Ratio", f"{overall_ratio:.2f}")
                 col3.metric("Activities Logged", valid_activities)
-                
+
             else:
-                st.warning("No tracked KC found for this player in the selected categories.")
+                # The player exists, but has 0 KC in the specific categories being filtered
+                st.info(f"We found '{player_name}', but they have 0 KC in the selected categories.")
 
 if __name__ == "__main__":
     main()
