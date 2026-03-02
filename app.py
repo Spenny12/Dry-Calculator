@@ -5,13 +5,14 @@ import json
 import os
 import math
 
-st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
+st.set_page_config(page_title="Chungies Spoon Calc!!!!!!!!!!!!!!!!!!!", layout="wide")
 
 # --- DATA & CONSTANTS ---
+# Adding mega_rares to the Raids defaults (Olmlet/Dust/Capes)
 RAIDS_DATA = {
-    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 23, "free_slots": 7},
-    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 6},
-    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 33, "free_slots": 15}
+    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 23, "free_slots": 7, "mega_rares": 4},
+    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 6, "mega_rares": 2},
+    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 27, "free_slots": 19, "mega_rares": 2}
 }
 
 def load_all_clog_data():
@@ -76,26 +77,42 @@ def get_clog_counts(clog_payload, boss_key, local_info):
 
     return actual, total
 
-# --- S-CURVE & RNG ISOLATION MATH ---
-def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name="", free_slots=0):
+# --- DUAL S-CURVE & RNG ISOLATION MATH ---
+def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name="", free_slots=0, mega_rares=0):
     if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
         return "Not Started", 1.0, 0.0
 
     p = actual_kc / expected_kc
-    c = 0.05 if "barrows" in name.lower() or "clue" in name.lower() else 0.15
-    s_fraction = (p ** 2) / ((p ** 2) + c)
 
-    # Isolate the slots that actually require RNG
+    # 1. Isolate the RNG slots
     rng_total_slots = max(1, total_slots - free_slots)
     rng_actual_slots = max(0, actual_slots - free_slots)
 
-    # Calculate Expected slots based strictly on the RNG slots
-    exp_rng_slots = min(rng_total_slots * s_fraction, rng_total_slots)
+    # 2. Split RNG slots into "Normal" and "Mega Rare"
+    safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
+    normal_slots_count = rng_total_slots - safe_mega_rares
 
-    # Re-add the free slots for the visual UI display (e.g., expecting 1.5 slots instead of 0.5)
+    # 3. Define the Dual Curves
+    if safe_mega_rares > 0:
+        c_normal = 0.03 # Very fast expected completion for common items
+        c_mega = 0.80   # Very slow expected completion for pets/megas
+    else:
+        c_normal = 0.05 if "barrows" in name.lower() or "clue" in name.lower() else 0.15
+        c_mega = 0.80   # Unused if no mega rares
+
+    s_fraction_normal = (p ** 2) / ((p ** 2) + c_normal)
+    s_fraction_mega = (p ** 2) / ((p ** 2) + c_mega)
+
+    # 4. Calculate Expected RNG Slots
+    exp_normal_slots = normal_slots_count * s_fraction_normal
+    exp_mega_slots = safe_mega_rares * s_fraction_mega
+
+    exp_rng_slots = min(exp_normal_slots + exp_mega_slots, rng_total_slots)
+
+    # 5. Re-add the free slots for the visual UI display
     exp_slots_display = free_slots + exp_rng_slots
 
-    # True Ratio Math (Graded ONLY on RNG items)
+    # 6. True Ratio Math (Graded ONLY on RNG items)
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
     elif rng_actual_slots == 0:
@@ -114,7 +131,7 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
 # --- MAIN UI ---
 def main():
     st.title("OSRS Clog Luck Analyzer")
-    st.markdown("Comparing KC to Expected KC (EKC) using an S-Curve for realistic log progress. Compare multiple players at once!")
+    st.markdown("Comparing KC to Expected KC (EKC) using a Dual S-Curve for standard vs mega-rare log progress.")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -174,15 +191,17 @@ def main():
 
                     if actual_kc <= 0: continue
 
-                    # Fetch specific boss free slots (defaults to 0 if not added to JSON)
+                    # Fetch JSON configurations
                     free_slots = info.get("free_slots", 0)
+                    mega_rares = info.get("mega_rares", 0)
                     actual_slots, total_slots = get_clog_counts(clog_api, key, info)
 
                     missing_total = (total_slots == 0)
                     if missing_total: total_slots = max(actual_slots, 1)
 
-                    # Pass the free_slots parameter into the math engine
-                    status, ratio, exp_slots = determine_luck_v2(actual_kc, info["ekc"], actual_slots, total_slots, info["name"], free_slots)
+                    status, ratio, exp_slots = determine_luck_v2(
+                        actual_kc, info["ekc"], actual_slots, total_slots, info["name"], free_slots, mega_rares
+                    )
 
                     results.append({
                         "Activity": info["name"],
