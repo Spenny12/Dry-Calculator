@@ -119,7 +119,7 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     # 2. Inverse Curve (How much KC is expected for your current progress?)
     # Using a quadratic (2.0) power to heavily weight the 'final items'
     progress_ratio = rng_actual_slots / rng_total_slots
-    expected_kc_for_progress = expected_kc * (progress_ratio ** 2.0)
+    expected_kc_for_progress = expected_kc * (progress_ratio ** 2.5)
 
     # 3. Spoon Points = Hours Saved/Lost
     pts = int(round((actual_kc - expected_kc_for_progress) / max(kph, 0.1)))
