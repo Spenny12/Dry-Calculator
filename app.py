@@ -77,17 +77,13 @@ def get_clog_counts(clog_payload, boss_key, local_info):
 
     return actual, total
 
-# --- THE HYPER-LOGARITHMIC MATH FIX ---
+# --- LUCK LOGIC ---
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
     if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
         return "Not Started", 1.0, 0.0
 
     p = actual_kc / expected_kc
-
-    # 'a' dictates the steepness of the curve.
-    # Clues/Barrows are more linear (so a=5). Bosses are heavily pet-skewed (a=150).
     a = 5 if "barrows" in name.lower() or "clue" in name.lower() else 150
-
     s = math.log(1 + a * p) / math.log(1 + a)
     exp_slots = min(total_slots * s, total_slots)
 
@@ -106,101 +102,152 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
 # --- MAIN UI ---
 def main():
     st.title("OSRS Clog Luck Analyzer")
-    st.markdown("Comparing KC to Expected KC (EKC) using weighted logarithmic log progress.")
+    st.markdown("Comparing KC to Expected KC (EKC) using weighted logarithmic log progress. You can now compare multiple players at once!")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
 
     with st.sidebar:
         st.header("Player Info")
-        player_name = st.text_input("Username", value="Spencejliv")
+        # Updated to accept comma-separated inputs
+        player_names_input = st.text_input("Username(s) - Comma separated", value="Spencejliv")
         filter_type = st.selectbox("Category", ["All", "Boss", "Raid", "Clue"])
-        analyze = st.button("Analyze Account", type="primary", use_container_width=True)
+        analyze = st.button("Analyze Account(s)", type="primary", use_container_width=True)
 
     if analyze:
-        with st.spinner("Fetching data..."):
-            kc_api = fetch_player_kc(player_name)
-            clog_response = fetch_exact_temple_clog(player_name, api_keys)
+        # Clean up the list of players to remove extra spaces
+        player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
 
-        if not kc_api:
-            st.error("No hiscore data found.")
+        if not player_names:
+            st.warning("Please enter at least one username.")
             return
 
-        clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
-        flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
+        with st.spinner("Fetching data for all players..."):
+            all_player_tables = {}
+            summary_stats = []
 
-        if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
-            flat_kc.update({k.lower(): v for k, v in flat_kc["bosses"].items()})
+            # 1. Loop through each player
+            for player_name in player_names:
+                kc_api = fetch_player_kc(player_name)
+                clog_response = fetch_exact_temple_clog(player_name, api_keys)
 
-        results = []
-        total_r, count = 0, 0
+                if not kc_api:
+                    st.error(f"No hiscore data found for **{player_name}**.")
+                    continue
 
-        for key, info in clog_data.items():
-            if filter_type != "All" and info["type"] != filter_type: continue
+                clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
+                flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
 
-            kc_keys_to_try = [
-                key.lower(),
-                key.lower().replace("the_", ""),
-                info["name"].lower().replace(" ", "_"),
-                info["name"].lower().replace("'", "")
-            ]
+                if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
+                    flat_kc.update({k.lower(): v for k, v in flat_kc["bosses"].items()})
 
-            if "nightmare" in key.lower():
-                kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
+                results = []
+                total_r, count = 0, 0
 
-            actual_kc = 0
-            for k in kc_keys_to_try:
-                if k in flat_kc:
-                    actual_kc = int(flat_kc[k])
-                    if actual_kc > 0: break
+                for key, info in clog_data.items():
+                    if filter_type != "All" and info["type"] != filter_type: continue
 
-            if actual_kc <= 0: continue
+                    kc_keys_to_try = [
+                        key.lower(),
+                        key.lower().replace("the_", ""),
+                        info["name"].lower().replace(" ", "_"),
+                        info["name"].lower().replace("'", "")
+                    ]
 
-            actual_slots, total_slots = get_clog_counts(clog_api, key, info)
+                    if "nightmare" in key.lower():
+                        kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
 
-            missing_total = (total_slots == 0)
-            if missing_total: total_slots = max(actual_slots, 1)
+                    actual_kc = 0
+                    for k in kc_keys_to_try:
+                        if k in flat_kc:
+                            actual_kc = int(flat_kc[k])
+                            if actual_kc > 0: break
 
-            status, ratio, exp_slots = determine_luck_v2(actual_kc, info["ekc"], actual_slots, total_slots, info["name"])
+                    if actual_kc <= 0: continue
 
-            results.append({
-                "Activity": info["name"],
-                "Clog Progress": f"{actual_slots}/{total_slots}" if not missing_total else f"{actual_slots}/?",
-                "Expected Slots": f"{exp_slots:.1f}" if not missing_total else "⚠️ Check JSON Slots",
-                "Your KC": f"{actual_kc:,}",
-                "Luck Ratio": f"{ratio:.2f}" if not missing_total else "N/A",
-                "Status": status if not missing_total else "N/A"
-            })
+                    actual_slots, total_slots = get_clog_counts(clog_api, key, info)
 
-            if not missing_total:
-                total_r += ratio
-                count += 1
+                    missing_total = (total_slots == 0)
+                    if missing_total: total_slots = max(actual_slots, 1)
 
-        if results:
-            df = pd.DataFrame(results).sort_values("Luck Ratio", ascending=False)
-            st.table(df)
-            st.divider()
+                    status, ratio, exp_slots = determine_luck_v2(actual_kc, info["ekc"], actual_slots, total_slots, info["name"])
 
-            if count > 0:
-                avg = total_r / count
+                    results.append({
+                        "Activity": info["name"],
+                        "Clog Progress": f"{actual_slots}/{total_slots}" if not missing_total else f"{actual_slots}/?",
+                        "Expected Slots": f"{exp_slots:.1f}" if not missing_total else "⚠️ Check JSON Slots",
+                        "Your KC": f"{actual_kc:,}",
+                        "Luck Ratio": f"{ratio:.2f}" if not missing_total else "N/A",
+                        "Status": status if not missing_total else "N/A"
+                    })
 
-                # Standard if/elif/else format to prevent Syntax errors
-                if avg <= 0.85:
-                    overall = "Overall Spooned 🥄"
-                elif avg >= 1.15:
-                    overall = "Overall Dry 🏜️"
+                    if not missing_total:
+                        total_r += ratio
+                        count += 1
+
+                # Save Data for this specific player
+                if results:
+                    df = pd.DataFrame(results).sort_values("Luck Ratio", ascending=False)
+                    all_player_tables[player_name] = df
+
+                    avg = total_r / count if count > 0 else 0
+                    if avg <= 0.85: overall = "Spooned 🥄"
+                    elif avg >= 1.15: overall = "Dry 🏜️"
+                    else: overall = "On-Rate 🎯"
+
+                    ehc_val = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
+
+                    summary_stats.append({
+                        "Player": player_name,
+                        "Avg Luck Ratio": round(avg, 2),
+                        "Account Luck": overall,
+                        "Temple EHC": f"{ehc_val:,.1f}",
+                        "Activities Analyzed": count,
+                        "_raw_ehc": ehc_val,
+                        "_raw_avg": avg
+                    })
                 else:
-                    overall = "Overall On-Rate 🎯"
+                    st.info(f"No matching data found for **{player_name}**.")
 
-                ehc_val = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
+            # 2. Render the Multi-Player Dashboards
+            if summary_stats:
 
-                c1, c2, c3, c4 = st.columns(4)
-                c1.metric("Account Luck", overall)
-                c2.metric("Avg Luck Ratio", f"{avg:.2f}")
-                c3.metric("Activities Analyzed", count)
-                c4.metric("Temple EHC", f"{ehc_val:,.1f} hrs")
-        else:
-            st.info("No matching data found.")
+                # --- SUMMARY SECTION ---
+                st.subheader("🏆 Multi-Player Comparison")
+                summary_df = pd.DataFrame(summary_stats)
+
+                col1, col2 = st.columns([1, 2])
+                with col1:
+                    # Sorts the table by worst luck to best luck
+                    display_df = summary_df.drop(columns=["_raw_ehc", "_raw_avg"]).sort_values("Avg Luck Ratio", ascending=False)
+                    st.dataframe(display_df, hide_index=True)
+                with col2:
+                    # Plots a clean bar chart comparing everyone's luck
+                    chart_data = summary_df.set_index("Player")[["Avg Luck Ratio"]]
+                    st.bar_chart(chart_data)
+
+                st.divider()
+
+                # --- INDIVIDUAL TABS ---
+                st.subheader("🔍 Detailed Breakdowns")
+
+                # Creates a horizontal row of tabs based on the players queried
+                tabs = st.tabs(list(all_player_tables.keys()))
+
+                for tab, p_name in zip(tabs, all_player_tables.keys()):
+                    with tab:
+                        # Find the player's summary stats
+                        p_summary = next(item for item in summary_stats if item["Player"] == p_name)
+
+                        # Show metric cards at the top of their tab
+                        c1, c2, c3, c4 = st.columns(4)
+                        c1.metric("Account Luck", p_summary["Account Luck"])
+                        c2.metric("Avg Luck Ratio", f"{p_summary['_raw_avg']:.2f}")
+                        c3.metric("Activities Analyzed", p_summary["Activities Analyzed"])
+                        c4.metric("Temple EHC", f"{p_summary['_raw_ehc']:,.1f} hrs")
+
+                        # Show their specific boss table
+                        st.table(all_player_tables[p_name])
 
 if __name__ == "__main__":
     main()
