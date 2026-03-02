@@ -133,7 +133,7 @@ def determine_luck_v10(actual_kc, info, actual_slots):
 # --- MAIN UI ---
 def main():
     st.title("Spoon Calc")
-    st.markdown("Math: **Strict Power Curve**. Sensitive to low-KC progress.")
+    st.markdown("ReadMe coming soon")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
