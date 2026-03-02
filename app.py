@@ -110,8 +110,8 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     # 1. Forward Curve (What should you have at your KC?)
     # Normal uniques condensed into start (0.5 power), Megas tapered to end (2.5 power)
     p = actual_kc / expected_kc
-    exp_normal = normal_rng_slots * (p ** 0.5)
-    exp_mega = safe_mega_rares * (p ** 2.5)
+    exp_normal = normal_rng_slots * (p ** 0.6)
+    exp_mega = safe_mega_rares * (p ** 2.4)
 
     exp_rng_total = min(exp_normal + exp_mega, rng_total_slots)
     exp_slots_display = free_slots + exp_rng_total
@@ -129,10 +129,10 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     display_ratio = expected_kc_for_progress / max(actual_kc, 1.0)
 
     # --- STATUS LOGIC TIED TO POINTS ---
-    if pts <= -100: status = "Spooned 🥄"
-    elif pts <= -20: status = "Wet 💧"
-    elif pts >= 100: status = "Very Dry 💀"
-    elif pts >= 20: status = "Dry 🏜️"
+    if pts <= -25: status = "Spooned 🥄"
+    elif pts <= -10: status = "Wet 💧"
+    elif pts >= 25: status = "Very Dry 💀"
+    elif pts >= 10: status = "Dry 🏜️"
     else: status = "On-Rate 🎯"
 
     return status, display_ratio, exp_slots_display, pts
