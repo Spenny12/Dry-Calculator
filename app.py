@@ -122,9 +122,9 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     display_ratio = expected_kc_for_progress / max(actual_kc, 1.0)
 
     # --- STATUS LOGIC ---
-    if pts <= -100: status = "Spooned 🥄"
+    if pts <= -25: status = "Spooned 🥄"
     elif pts <= -10: status = "Wet 💧" # Tightened from -20 to -10
-    elif pts >= 100: status = "Very Dry 💀"
+    elif pts >= 25: status = "Very Dry 💀"
     elif pts >= 10: status = "Dry 🏜️" # Tightened from 20 to 10
     else: status = "On-Rate 🎯"
 
