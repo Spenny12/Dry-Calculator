@@ -113,8 +113,8 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     # 3. Tapered Forward Curve (For the 'Expected' Column)
     # Exponent 0.5 = Front-loaded ( filler items )
     # Exponent 2.5 = Back-loaded ( mega rares )
-    exp_normal = normal_rng_slots * (p ** 0.5)
-    exp_mega = safe_mega_rares * (p ** 2.5)
+    exp_normal = normal_rng_slots * (p ** 0.25)
+    exp_mega = safe_mega_rares * (p ** 2.75)
     exp_rng_total = min(exp_normal + exp_mega, rng_total_slots)
     exp_slots_display = free_slots + exp_rng_total
 
