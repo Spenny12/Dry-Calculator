@@ -12,6 +12,7 @@
         "ekc": 3967.0,
         "kph": 33.0,
         "slots": 11,
+        "free_slots": 2
         "mega_rares": 1
     },
     "amoxliatl": {
@@ -20,7 +21,7 @@
         "kph": 75.0,
         "slots": 4,
         "free_slots": 2,
-        "mega+rares": 1
+        "mega_rares": 1
     },
     "araxxor": {
         "name": "Araxxor",

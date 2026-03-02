@@ -5,14 +5,23 @@ import json
 import os
 import math
 
-st.set_page_config(page_title="Chungies Spoon Calc!!!!!!!!!!!!!!!!!!!", layout="wide")
+st.set_page_config(page_title="Chungies Spoon Calc!!!!!", layout="wide")
 
 # --- DATA & CONSTANTS ---
-# Adding mega_rares to the Raids defaults (Olmlet/Dust/Capes)
+# Added combine_kc_keys so the app automatically sums Normal + Challenge/Expert modes
 RAIDS_DATA = {
-    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 23, "free_slots": 7, "mega_rares": 4},
-    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 6, "mega_rares": 2},
-    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 27, "free_slots": 19, "mega_rares": 2}
+    "chambers_of_xeric": {
+        "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 23, "free_slots": 7, "mega_rares": 4,
+        "combine_kc_keys": ["chambers_of_xeric_challenge_mode"]
+    },
+    "theatre_of_blood": {
+        "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 6, "mega_rares": 2,
+        "combine_kc_keys": ["theatre_of_blood_hard_mode"]
+    },
+    "tombs_of_amascut": {
+        "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 27, "free_slots": 19, "mega_rares": 2,
+        "combine_kc_keys": ["tombs_of_amascut_expert"]
+    }
 }
 
 def load_all_clog_data():
@@ -84,35 +93,28 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
 
     p = actual_kc / expected_kc
 
-    # 1. Isolate the RNG slots
     rng_total_slots = max(1, total_slots - free_slots)
     rng_actual_slots = max(0, actual_slots - free_slots)
 
-    # 2. Split RNG slots into "Normal" and "Mega Rare"
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_slots_count = rng_total_slots - safe_mega_rares
 
-    # 3. Define the Dual Curves
     if safe_mega_rares > 0:
-        c_normal = 0.03 # Very fast expected completion for common items
-        c_mega = 0.80   # Very slow expected completion for pets/megas
+        c_normal = 0.03
+        c_mega = 0.80
     else:
         c_normal = 0.05 if "barrows" in name.lower() or "clue" in name.lower() else 0.15
-        c_mega = 0.80   # Unused if no mega rares
+        c_mega = 0.80
 
     s_fraction_normal = (p ** 2) / ((p ** 2) + c_normal)
     s_fraction_mega = (p ** 2) / ((p ** 2) + c_mega)
 
-    # 4. Calculate Expected RNG Slots
     exp_normal_slots = normal_slots_count * s_fraction_normal
     exp_mega_slots = safe_mega_rares * s_fraction_mega
 
     exp_rng_slots = min(exp_normal_slots + exp_mega_slots, rng_total_slots)
-
-    # 5. Re-add the free slots for the visual UI display
     exp_slots_display = free_slots + exp_rng_slots
 
-    # 6. True Ratio Math (Graded ONLY on RNG items)
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
     elif rng_actual_slots == 0:
@@ -131,7 +133,7 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
 # --- MAIN UI ---
 def main():
     st.title("OSRS Clog Luck Analyzer")
-    st.markdown("Comparing KC to Expected KC (EKC) using a Dual S-Curve for standard vs mega-rare log progress.")
+    st.markdown("Comparing KC to Expected KC (EKC) using a Dual S-Curve for standard vs mega-rare log progress. Compare multiple players at once!")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -184,14 +186,23 @@ def main():
                         kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
 
                     actual_kc = 0
+
+                    # 1. Grab Base KC
                     for k in kc_keys_to_try:
                         if k in flat_kc:
                             actual_kc = int(flat_kc[k])
                             if actual_kc > 0: break
 
+                    # 2. Additive KC Combiner (Normal + Expert/Challenge/Hard modes)
+                    for combine_key in info.get("combine_kc_keys", []):
+                        ck = combine_key.lower()
+                        if ck in flat_kc:
+                            actual_kc += int(flat_kc[ck])
+                        elif ck.replace(" ", "_") in flat_kc:
+                            actual_kc += int(flat_kc[ck.replace(" ", "_")])
+
                     if actual_kc <= 0: continue
 
-                    # Fetch JSON configurations
                     free_slots = info.get("free_slots", 0)
                     mega_rares = info.get("mega_rares", 0)
                     actual_slots, total_slots = get_clog_counts(clog_api, key, info)
