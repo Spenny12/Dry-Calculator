@@ -152,7 +152,7 @@ def main():
         player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
         if not player_names: return
 
-        with st.spinner("Hunting for DT2 Bosses..."):
+        with st.spinner("Pretending Ryan is spooned"):
             all_player_tables = {}
             summary_stats = []
 
