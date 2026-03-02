@@ -82,9 +82,10 @@ def get_clog_counts(clog_payload, boss_key, local_info):
 
     total = local_info.get("slots", 0)
     if total > 0 and actual > total: actual = total
+
     return actual, total
 
-# --- THE UPDATED MATH ENGINE ---
+# --- TIME-WEIGHTED BINOMIAL POWER CURVE MATH ---
 def determine_luck_v8(actual_kc, info, actual_slots):
     expected_kc = info.get("ekc", 0)
     total_slots = info.get("slots", 0)
@@ -122,11 +123,11 @@ def determine_luck_v8(actual_kc, info, actual_slots):
     else:
         ratio = exp_rng_total / rng_actual_slots
 
-    # Spoon Points (Time Weighting)
+    # Spoon Points (Time Weighting based on EHC)
     total_ehc_weight = expected_kc / max(kph, 0.1)
     pts = int(round((ratio - 1.0) * total_ehc_weight))
 
-    # --- NEW STATUS LOGIC BASED ON POINTS ---
+    # STATUS TIED DIRECTLY TO SPOON SCORE
     if pts <= -100: status = "Spooned 🥄"
     elif pts <= -20: status = "Wet 💧"
     elif pts >= 100: status = "Very Dry 💀"
@@ -138,8 +139,6 @@ def determine_luck_v8(actual_kc, info, actual_slots):
 # --- MAIN UI ---
 def main():
     st.title("OSRS Luck & Time Analyzer")
-    st.markdown("Statuses are now tied directly to **Spoon Score** (Time Invested).")
-
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
 
@@ -182,14 +181,23 @@ def main():
                         info["name"].lower().replace(" ", "_"),
                         info["name"].lower().replace("'", "")
                     ]
-                    if "nightmare" in key.lower():
-                        kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
+
+                    # FIXED: Always check Phosani's Nightmare and add to total KC
+                    is_nightmare = "nightmare" in key.lower()
 
                     actual_kc = 0
                     for k in kc_keys_to_try:
                         if k in flat_kc:
                             actual_kc = int(flat_kc[k])
                             if actual_kc > 0: break
+
+                    # Add Phosani's Nightmare to standard Nightmare total
+                    if is_nightmare:
+                        phosani_keys = ["phosani's nightmare", "phosani", "phosanis nightmare"]
+                        for pk in phosani_keys:
+                            if pk in flat_kc:
+                                actual_kc += int(flat_kc[pk])
+                                break
 
                     for ck in info.get("combine_kc_keys", []):
                         ck_low = ck.lower()
@@ -200,17 +208,16 @@ def main():
 
                     if info.get("type") == "Clue" and actual_kc <= 0:
                         clue_tiers = []
-                        is_mega_meta = False
-                        if "shared" in key.lower(): clue_tiers = ["beginner", "easy", "medium", "hard", "elite", "master"]
+                        if "shared" in key.lower():
+                            clue_tiers = ["beginner", "easy", "medium", "hard", "elite", "master"]
                         elif "3rd" in key.lower() or "gilded" in key.lower():
-                            clue_tiers = ["hard", "elite", "master"]; is_mega_meta = True
+                            clue_tiers = ["hard", "elite", "master"]
 
                         for ct in clue_tiers:
                             for var in [f"clue scrolls ({ct})", f"clue_{ct}", f"clues_{ct}"]:
                                 if var in flat_kc:
                                     val = int(flat_kc[var])
-                                    if is_mega_meta:
-                                        val *= 0.086 if ct == "hard" else 0.33 if ct == "elite" else 1.0
+                                    # Master Clue Equivalents logic could go here if desired
                                     actual_kc += val; break
 
                     if actual_kc <= 0: continue
@@ -224,13 +231,13 @@ def main():
                         "Expected": f"{exp:.2f}",
                         "KC": f"{actual_kc:,}",
                         "Ratio": f"{ratio:.2f}",
-                        "Spoon Points": pts,
+                        "Spoon Score": pts,
                         "Status": status
                     })
                     total_spoon_score += pts
 
                 if results:
-                    df = pd.DataFrame(results).sort_values("Spoon Points", ascending=True)
+                    df = pd.DataFrame(results).sort_values("Spoon Score", ascending=True)
                     all_player_tables[player_name] = df
                     summary_stats.append({
                         "Player": player_name,
@@ -241,7 +248,6 @@ def main():
             if summary_stats:
                 st.subheader("🏆 Leaderboard")
                 st.table(pd.DataFrame(summary_stats).sort_values("Total Spoon Score"))
-
                 tabs = st.tabs(list(all_player_tables.keys()))
                 for tab, p_name in zip(tabs, all_player_tables.keys()):
                     with tab:
