@@ -9,7 +9,6 @@ import math
 st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
-# Total slots for Raids (Denominator source)
 RAIDS_DATA = {
     "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17},
     "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 7},
@@ -24,6 +23,14 @@ def load_all_clog_data():
                 with open(filename, "r") as f:
                     data = json.load(f)
                     for k, v in data.items():
+                        # Skip phantom boolean keys that break the API
+                        if k.lower() in ["true", "false", "0", "1"]:
+                            continue
+
+                        # Handle JSON 'NaN' gracefully to prevent math crashes
+                        if "ekc" in v and (v["ekc"] is None or math.isnan(float(v["ekc"]))):
+                            v["ekc"] = 0.0
+
                         v["type"] = activity_type
                         combined[k] = v
             except Exception as e:
@@ -57,31 +64,33 @@ def fetch_exact_temple_clog(player_name, categories_list):
     except: pass
     return {"success": False}
 
-# --- CORRECTED PARSER ---
+# --- THE CORRECTED PARSER ---
 def get_clog_counts(clog_payload, boss_key, local_info):
-    """
-    Numerators: Count items in the TempleOSRS list.
-    Denominators: Pull 'slots' from the local JSON.
-    """
     items_dict = clog_payload.get("items", {}) if isinstance(clog_payload, dict) else {}
-
-    # Check for Phosani/Nightmare grouping
     search_key = "nightmare" if "nightmare" in boss_key.lower() else boss_key.lower()
     boss_api_list = items_dict.get(search_key, [])
 
-    # 1. OBTAINED: Count only what's in the list
     if isinstance(boss_api_list, list):
-        actual = len(boss_api_list)
+        # THE FIX: Only count items where count > 0.
+        # Temple includes unobtained items for some minigames with a count of 0!
+        actual = sum(1 for item in boss_api_list if item.get("count", 0) > 0)
+    elif isinstance(boss_api_list, dict):
+        actual = boss_api_list.get("obtained", 0)
     else:
         actual = 0
 
-    # 2. TOTAL: Pulled strictly from your local JSON
     total = local_info.get("slots", 0)
+
+    # Optional safeguard: Prevent visual overflows (like Hespori showing 4/3)
+    # if Temple tracks extra untradeables/pets not defined in your slots count.
+    if total > 0 and actual > total:
+        actual = total
 
     return actual, total
 
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
-    if actual_kc <= 0 or expected_kc <= 0 or total_slots <= 0:
+    # Safely guard against Not-a-Number or missing EKC entries
+    if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
         return "Not Started", 1.0, 0.0
 
     p = actual_kc / expected_kc
@@ -89,7 +98,6 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
     s = math.log(1 + a * p) / math.log(1 + a)
     exp_slots = min(total_slots * s, total_slots)
 
-    # Luck calculation: Ratio of Expected vs Actual
     ratio = exp_slots / max(actual_slots, 0.1)
     if actual_slots >= total_slots: ratio = actual_kc / expected_kc
 
@@ -136,7 +144,6 @@ def main():
         for key, info in clog_data.items():
             if filter_type != "All" and info["type"] != filter_type: continue
 
-            # Match boss names (handles The_Nightmare, Phosani, etc.)
             kc_keys = [key.lower(), key.lower().replace("the_", ""), "phosani's nightmare", "phosanis nightmare"]
             actual_kc = 0
             for k in kc_keys:
@@ -146,7 +153,7 @@ def main():
 
             if actual_kc <= 0: continue
 
-            # --- USE THE CORRECTED PARSER ---
+            # Use the protected parser
             actual_slots, total_slots = get_clog_counts(clog_api, key, info)
 
             missing_total = (total_slots == 0)
