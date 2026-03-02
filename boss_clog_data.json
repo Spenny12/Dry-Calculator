@@ -182,7 +182,7 @@
         "ekc": 3801.0,
         "kph": 50.0,
         "slots": 6,
-        "free_slots": 3,
+        "free_slots": 4,
         "mega_rares": 1
     },
     "king_black_dragon": {
@@ -310,6 +310,7 @@
         "ekc": 3826.0,
         "kph": 125.0,
         "slots": 5,
+        "free_slots": 1,
         "mega_rares": 2
     },
     "vardorvis": {
