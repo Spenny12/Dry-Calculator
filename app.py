@@ -77,17 +77,20 @@ def get_clog_counts(clog_payload, boss_key, local_info):
 
     return actual, total
 
-# --- LUCK LOGIC ---
+# --- THE MATH FIX ---
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
     if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
         return "Not Started", 1.0, 0.0
 
     p = actual_kc / expected_kc
+
     a = 5 if "barrows" in name.lower() or "clue" in name.lower() else 150
     s = math.log(1 + a * p) / math.log(1 + a)
     exp_slots = min(total_slots * s, total_slots)
 
-    ratio = exp_slots / max(actual_slots, 0.1)
+    # THE FIX: using 1.0 instead of 0.1 to prevent insane multipliers on 0 slots
+    ratio = exp_slots / max(actual_slots, 1.0)
+
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
 
@@ -109,13 +112,11 @@ def main():
 
     with st.sidebar:
         st.header("Player Info")
-        # Updated to accept comma-separated inputs
         player_names_input = st.text_input("Username(s) - Comma separated", value="Spencejliv")
         filter_type = st.selectbox("Category", ["All", "Boss", "Raid", "Clue"])
         analyze = st.button("Analyze Account(s)", type="primary", use_container_width=True)
 
     if analyze:
-        # Clean up the list of players to remove extra spaces
         player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
 
         if not player_names:
@@ -126,7 +127,6 @@ def main():
             all_player_tables = {}
             summary_stats = []
 
-            # 1. Loop through each player
             for player_name in player_names:
                 kc_api = fetch_player_kc(player_name)
                 clog_response = fetch_exact_temple_clog(player_name, api_keys)
@@ -185,7 +185,6 @@ def main():
                         total_r += ratio
                         count += 1
 
-                # Save Data for this specific player
                 if results:
                     df = pd.DataFrame(results).sort_values("Luck Ratio", ascending=False)
                     all_player_tables[player_name] = df
@@ -209,44 +208,33 @@ def main():
                 else:
                     st.info(f"No matching data found for **{player_name}**.")
 
-            # 2. Render the Multi-Player Dashboards
             if summary_stats:
-
-                # --- SUMMARY SECTION ---
                 st.subheader("🏆 Multi-Player Comparison")
                 summary_df = pd.DataFrame(summary_stats)
 
                 col1, col2 = st.columns([1, 2])
                 with col1:
-                    # Sorts the table by worst luck to best luck
                     display_df = summary_df.drop(columns=["_raw_ehc", "_raw_avg"]).sort_values("Avg Luck Ratio", ascending=False)
                     st.dataframe(display_df, hide_index=True)
                 with col2:
-                    # Plots a clean bar chart comparing everyone's luck
                     chart_data = summary_df.set_index("Player")[["Avg Luck Ratio"]]
                     st.bar_chart(chart_data)
 
                 st.divider()
-
-                # --- INDIVIDUAL TABS ---
                 st.subheader("🔍 Detailed Breakdowns")
 
-                # Creates a horizontal row of tabs based on the players queried
                 tabs = st.tabs(list(all_player_tables.keys()))
 
                 for tab, p_name in zip(tabs, all_player_tables.keys()):
                     with tab:
-                        # Find the player's summary stats
                         p_summary = next(item for item in summary_stats if item["Player"] == p_name)
 
-                        # Show metric cards at the top of their tab
                         c1, c2, c3, c4 = st.columns(4)
                         c1.metric("Account Luck", p_summary["Account Luck"])
                         c2.metric("Avg Luck Ratio", f"{p_summary['_raw_avg']:.2f}")
                         c3.metric("Activities Analyzed", p_summary["Activities Analyzed"])
                         c4.metric("Temple EHC", f"{p_summary['_raw_ehc']:,.1f} hrs")
 
-                        # Show their specific boss table
                         st.table(all_player_tables[p_name])
 
 if __name__ == "__main__":
