@@ -53,8 +53,8 @@
         "kph": 1.0,
         "slots": 15
     },
-    "3rd_age": {
-        "name": "3rd Age (BROKEN FOR NOW)",
+    "third_age": {
+        "name": "3rd Age",
         "ekc": 10000.0,
         "kph": 1.0,
         "slots": 23
