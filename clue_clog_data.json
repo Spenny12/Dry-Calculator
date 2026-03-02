@@ -1,0 +1,72 @@
+{
+    "beginner_clues": {
+        "name": "Beginner Clues",
+        "ekc": 597.0,
+        "kph": 60.0
+    },
+    "true": {
+        "name": "TRUE",
+        "ekc": NaN,
+        "kph": NaN
+    },
+    "false": {
+        "name": "FALSE",
+        "ekc": NaN,
+        "kph": NaN
+    },
+    "easy_clues": {
+        "name": "Easy Clues",
+        "ekc": 7907.0,
+        "kph": 50.0
+    },
+    "medium_clues": {
+        "name": "Medium Clues",
+        "ekc": 2076.0,
+        "kph": 30.0
+    },
+    "hard_clues": {
+        "name": "Hard Clues",
+        "ekc": 5484.0,
+        "kph": 20.0
+    },
+    "elite_clues": {
+        "name": "Elite Clues",
+        "ekc": 7469.0,
+        "kph": 2.3
+    },
+    "master_clues": {
+        "name": "Master Clues",
+        "ekc": 7532.0,
+        "kph": 2.0
+    },
+    "elite_mega_rares": {
+        "name": "Elite Mega Rares",
+        "ekc": 663.0,
+        "kph": 2.3
+    },
+    "master_mega_rares": {
+        "name": "Master Mega Rares",
+        "ekc": 315.0,
+        "kph": 2.0
+    },
+    "gilded": {
+        "name": "Gilded",
+        "ekc": 0.0,
+        "kph": 0.0
+    },
+    "no_3rd_age": {
+        "name": "No 3rd Age",
+        "ekc": 0.0,
+        "kph": 0.0
+    },
+    "3rd_age": {
+        "name": "3rd Age",
+        "ekc": 0.0,
+        "kph": 0.0
+    },
+    "shared_clues": {
+        "name": "Shared Clues",
+        "ekc": NaN,
+        "kph": NaN
+    }
+}

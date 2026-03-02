@@ -1,0 +1,267 @@
+{
+    "abyssal_sire": {
+        "name": "Abyssal Sire",
+        "ekc": 2873.0,
+        "kph": 45.0
+    },
+    "false": {
+        "name": "FALSE",
+        "ekc": NaN,
+        "kph": NaN
+    },
+    "true": {
+        "name": "TRUE",
+        "ekc": NaN,
+        "kph": NaN
+    },
+    "amoxliatl": {
+        "name": "Amoxliatl",
+        "ekc": 3003.0,
+        "kph": 75.0
+    },
+    "alchemical_hydra": {
+        "name": "Alchemical Hydra",
+        "ekc": 3967.0,
+        "kph": 33.0
+    },
+    "araxxor": {
+        "name": "Araxxor",
+        "ekc": 2655.0,
+        "kph": 40.0
+    },
+    "barrows": {
+        "name": "Barrows",
+        "ekc": 1321.0,
+        "kph": 24.0
+    },
+    "bryophyta": {
+        "name": "Bryophyta",
+        "ekc": 118.0,
+        "kph": 8.0
+    },
+    "callisto_and_artio": {
+        "name": "Callisto and Artio",
+        "ekc": 3173.0,
+        "kph": 65.0
+    },
+    "cerberus": {
+        "name": "Cerberus",
+        "ekc": 3883.0,
+        "kph": 65.0
+    },
+    "chaos_elemental": {
+        "name": "Chaos Elemental",
+        "ekc": 211.7,
+        "kph": 60.0
+    },
+    "chaos_fanatic": {
+        "name": "Chaos Fanatic",
+        "ekc": 384.0,
+        "kph": 100.0
+    },
+    "chaos_elemental__fanatic": {
+        "name": "Chaos Elemental + Fanatic",
+        "ekc": 0.0,
+        "kph": 0.0
+    },
+    "commander_zilyana": {
+        "name": "Commander Zilyana",
+        "ekc": 5087.0,
+        "kph": 55.0
+    },
+    "corporeal_beast": {
+        "name": "Corporeal Beast",
+        "ekc": 7095.0,
+        "kph": 60.0
+    },
+    "crazy_archaeologist": {
+        "name": "Crazy Archaeologist",
+        "ekc": 405.0,
+        "kph": 85.0
+    },
+    "dagganoth_kings": {
+        "name": "Dagganoth Kings",
+        "ekc": 15017.0,
+        "kph": 100.0
+    },
+    "duke_sucellus": {
+        "name": "Duke Sucellus",
+        "ekc": 2734.0,
+        "kph": 30.0
+    },
+    "the_fight_caves": {
+        "name": "The Fight Caves",
+        "ekc": 67.0,
+        "kph": 2.5
+    },
+    "fortis_colosseum": {
+        "name": "Fortis Colosseum",
+        "ekc": 139.7,
+        "kph": 2.5
+    },
+    "gauntlet": {
+        "name": "Gauntlet",
+        "ekc": 934.0,
+        "kph": 7.0
+    },
+    "general_graardor": {
+        "name": "General Graardor",
+        "ekc": 5092.0,
+        "kph": 55.0
+    },
+    "giant_mole": {
+        "name": "Giant Mole",
+        "ekc": 3000.0,
+        "kph": 100.0
+    },
+    "grotesque_guardians": {
+        "name": "Grotesque Guardians",
+        "ekc": 6143.0,
+        "kph": 36.0
+    },
+    "hespori": {
+        "name": "Hespori",
+        "ekc": 36.0,
+        "kph": 90.0
+    },
+    "the_hueycoatl": {
+        "name": "The Hueycoatl",
+        "ekc": 480.0,
+        "kph": 10.0
+    },
+    "the_inferno": {
+        "name": "The Inferno",
+        "ekc": 43.0,
+        "kph": 0.8
+    },
+    "kalphite_queen": {
+        "name": "Kalphite Queen",
+        "ekc": 3801.0,
+        "kph": 50.0
+    },
+    "king_black_dragon": {
+        "name": "King Black Dragon",
+        "ekc": 3005.0,
+        "kph": 120.0
+    },
+    "kraken": {
+        "name": "Kraken",
+        "ekc": 3307.0,
+        "kph": 100.0
+    },
+    "kreearra": {
+        "name": "Kree'arra",
+        "ekc": 5092.0,
+        "kph": 40.0
+    },
+    "kril_tsutsaroth": {
+        "name": "K'ril Tsutsaroth",
+        "ekc": 5083.0,
+        "kph": 65.0
+    },
+    "the_leviathan": {
+        "name": "The Leviathan",
+        "ekc": 2762.0,
+        "kph": 32.0
+    },
+    "moons_of_peril": {
+        "name": "Moons of Peril",
+        "ekc": 0.0,
+        "kph": 0.0
+    },
+    "nex": {
+        "name": "Nex",
+        "ekc": 902.0,
+        "kph": 2.87
+    },
+    "the_nightmare": {
+        "name": "The Nightmare",
+        "ekc": 5315.0,
+        "kph": 7.5
+    },
+    "obor": {
+        "name": "Obor",
+        "ekc": 118.0,
+        "kph": 8.0
+    },
+    "phantom_muspah": {
+        "name": "Phantom Muspah",
+        "ekc": 2504.0,
+        "kph": 30.0
+    },
+    "sarachnis": {
+        "name": "Sarachnis",
+        "ekc": 3812.0,
+        "kph": 100.0
+    },
+    "scorpia": {
+        "name": "Scorpia",
+        "ekc": 2066.0,
+        "kph": 130.0
+    },
+    "scurrius": {
+        "name": "Scurrius",
+        "ekc": 3000.0,
+        "kph": 60.0
+    },
+    "skotizo": {
+        "name": "Skotizo",
+        "ekc": 259.0,
+        "kph": 45.0
+    },
+    "tempoross": {
+        "name": "Tempoross",
+        "ekc": 8466.0,
+        "kph": 85.0
+    },
+    "thermonuclear_smoke_devil": {
+        "name": "Thermonuclear Smoke Devil",
+        "ekc": 3826.0,
+        "kph": 125.0
+    },
+    "vardorvis": {
+        "name": "Vardorvis",
+        "ekc": 3419.0,
+        "kph": 37.0
+    },
+    "venenatis_and_spindel": {
+        "name": "Venenatis and Spindel",
+        "ekc": 3173.0,
+        "kph": 55.0
+    },
+    "vetion_and_calvarion": {
+        "name": "Vet'ion and Calvar'ion",
+        "ekc": 3173.0,
+        "kph": 55.0
+    },
+    "vorkath": {
+        "name": "Vorkath",
+        "ekc": 6939.0,
+        "kph": 34.0
+    },
+    "the_whisperer": {
+        "name": "The Whisperer",
+        "ekc": 2155.0,
+        "kph": 21.0
+    },
+    "wintertodt": {
+        "name": "Wintertodt",
+        "ekc": 5171.0,
+        "kph": 48.0
+    },
+    "yama": {
+        "name": "Yama",
+        "ekc": 3339.0,
+        "kph": 20.0
+    },
+    "zalcano": {
+        "name": "Zalcano",
+        "ekc": 2563.0,
+        "kph": 16.0
+    },
+    "zulrah": {
+        "name": "Zulrah",
+        "ekc": 10993.0,
+        "kph": 44.0
+    }
+}
