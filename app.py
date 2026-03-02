@@ -5,7 +5,6 @@ import json
 import os
 import math
 
-# 1. Page Config MUST be the very first command
 st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
@@ -35,17 +34,22 @@ def load_all_clog_data():
 @st.cache_data(ttl=3600)
 def fetch_player_kc(player_name):
     url = f"https://templeosrs.com/api/player_stats.php?player={player_name}&bosses=1"
+    headers = {'User-Agent': 'OSRS Luck Analyzer Tool - Streamlit'}
     try:
-        r = requests.get(url, timeout=10)
+        r = requests.get(url, headers=headers, timeout=10)
         return r.json().get("data", {})
     except: return None
 
 @st.cache_data(ttl=3600)
 def fetch_clog_slots(player_name):
     url = f"https://api.collectionlog.net/collectionlog/user/{player_name}"
+    # The crucial fix: Some OSRS APIs block requests without a proper User-Agent
+    headers = {'User-Agent': 'OSRS Luck Analyzer Tool - Streamlit'}
     try:
-        r = requests.get(url, timeout=10)
-        if r.status_code != 200: return None
+        r = requests.get(url, headers=headers, timeout=10)
+        if r.status_code != 200:
+            return None # Fails gracefully if user isn't on collectionlog.net
+
         data = r.json()
         clog_stats = {}
         tabs = data.get("collectionLog", {}).get("tabs", {})
@@ -106,6 +110,14 @@ def main():
             st.error("No hiscore data found. Check the name spelling.")
             return
 
+        # NEW: Explicit warning if the player isn't on collectionlog.net
+        if not clog_api:
+            st.warning(f"⚠️ We couldn't find Collection Log data for '{player_name}'. They may not have synced their log to collectionlog.net via RuneLite. Defaulting to 1/1 (pure KC math) for luck calculations.")
+
+        with st.expander("🔍 Debug: Raw Clog Data"):
+            st.write("If this says 'None', the API rejected the request or the player doesn't exist there.")
+            st.json(clog_api)
+
         flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
         if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
             flat_kc.update({k.lower(): v for k, v in flat_kc["bosses"].items()})
@@ -120,7 +132,6 @@ def main():
             actual_kc = flat_kc.get(key.lower(), 0)
             if actual_kc <= 0: continue
 
-            # --- THE FIX: Safe dict lookup ---
             if clog_api and isinstance(clog_api, dict):
                 clog_info = clog_api.get(info["name"].lower(), {"actual": 1, "total": 1})
             else:
@@ -130,10 +141,13 @@ def main():
                 actual_kc, info["ekc"], clog_info["actual"], clog_info["total"], info["name"]
             )
 
+            # Make sure Expected Slots looks clean if we are falling back to 1/1
+            display_exp_slots = "N/A" if (not clog_api or clog_info["total"] == 1) else round(exp_slots, 1)
+
             results.append({
                 "Activity": info["name"],
                 "Clog Progress": f"{clog_info['actual']}/{clog_info['total']}",
-                "Expected Slots": round(exp_slots, 1),
+                "Expected Slots": display_exp_slots,
                 "Your KC": actual_kc,
                 "Luck Ratio": round(ratio, 2),
                 "Status": status
