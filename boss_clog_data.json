@@ -101,6 +101,15 @@
         "kph": 100.0,
         "slots": 10
     },
+        },
+    "shellbane_gryphon": {
+        "name": "Shellbane Gryphon",
+        "ekc": 3000,
+        "kph": 50,
+        "slots": 4,
+        "free_slots": 1,
+        "mega_rares": 1
+    },
     "duke_sucellus": {
         "name": "Duke Sucellus (complex to calculate)",
         "ekc": 2734.0,
