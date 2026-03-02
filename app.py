@@ -5,205 +5,148 @@ import json
 import os
 import math
 
-# --- 1. HARDCODED RAIDS DATA ---
+# 1. Page Config MUST be the first Streamlit command
+st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
+
+# --- DATA & CONSTANTS ---
 RAIDS_DATA = {
-    "chambers_of_xeric": {
-        "name": "Chambers of Xeric",
-        "type": "Raid",
-        "ekc": round(850 / (30 / 60)),
-        "kph": 2.0
-    },
-    "theatre_of_blood": {
-        "name": "Theatre of Blood",
-        "type": "Raid",
-        "ekc": round(636 / (20 / 60)),
-        "kph": 3.0
-    },
-    "tombs_of_amascut": {
-        "name": "Tombs of Amascut",
-        "type": "Raid",
-        "ekc": round(692 / (35 / 60)),
-        "kph": round(60 / 35, 2)
-    }
+    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0},
+    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0},
+    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71}
 }
 
-# --- 2. DATA LOADING ---
 @st.cache_data
 def load_all_clog_data():
-    combined_data = {}
+    combined = {}
+    for filename, activity_type in [("boss_clog_data.json", "Boss"), ("clue_clog_data.json", "Clue")]:
+        if os.path.exists(filename):
+            try:
+                with open(filename, "r") as f:
+                    data = json.load(f)
+                    for k, v in data.items():
+                        v["type"] = activity_type
+                        combined[k] = v
+            except Exception as e:
+                st.error(f"Error loading {filename}: {e}")
+    combined.update(RAIDS_DATA)
+    return combined
 
-    if os.path.exists("boss_clog_data.json"):
-        with open("boss_clog_data.json", "r") as f:
-            bosses = json.load(f)
-            for k, v in bosses.items():
-                v["type"] = "Boss"
-            combined_data.update(bosses)
-
-    if os.path.exists("clue_clog_data.json"):
-        with open("clue_clog_data.json", "r") as f:
-            clues = json.load(f)
-            for k, v in clues.items():
-                v["type"] = "Clue"
-            combined_data.update(clues)
-
-    combined_data.update(RAIDS_DATA)
-    return combined_data
-
-# --- 3. TEMPLEOSRS API (KC DATA) ---
+# --- API FUNCTIONS ---
 @st.cache_data(ttl=3600)
 def fetch_player_kc(player_name):
     url = f"https://templeosrs.com/api/player_stats.php?player={player_name}&bosses=1"
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        return data.get("data", {})
-    except Exception:
-        return None
+        r = requests.get(url, timeout=10)
+        return r.json().get("data", {})
+    except: return None
 
-# --- 4. COLLECTIONLOG.NET API (SLOT DATA) ---
 @st.cache_data(ttl=3600)
 def fetch_clog_slots(player_name):
     url = f"https://api.collectionlog.net/collectionlog/user/{player_name}"
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
+        r = requests.get(url, timeout=10)
+        if r.status_code != 200: return None
+        data = r.json()
         clog_stats = {}
         tabs = data.get("collectionLog", {}).get("tabs", {})
-
-        for tab_name, pages in tabs.items():
-            for page_name, page_data in pages.items():
+        for tab in tabs.values():
+            for page_name, page_data in tab.items():
                 items = page_data.get("items", [])
-                total_slots = len(items)
-                actual_slots = sum(1 for item in items if item.get("obtained"))
-
                 clog_stats[page_name.lower()] = {
-                    "actual_slots": actual_slots,
-                    "total_slots": total_slots
+                    "actual": sum(1 for i in items if i.get("obtained")),
+                    "total": len(items)
                 }
         return clog_stats
-    except Exception:
-        return None
+    except: return None
 
-# --- 5. PROGRESS-WEIGHTED LUCK LOGIC (LOGARITHMIC) ---
-def determine_progress_luck(actual_kc, expected_kc, actual_slots, total_slots, activity_name=""):
-    if actual_kc == 0 or expected_kc == 0 or total_slots == 0:
-        return "Not Started", 0.0, 0.0
+# --- LOGARITHMIC MATH ---
+def determine_progress_luck(actual_kc, expected_kc, actual_slots, total_slots, name=""):
+    if actual_kc <= 0 or expected_kc <= 0 or total_slots <= 0:
+        return "Not Started", 1.0, 0.0
 
-    kc_percent = actual_kc / expected_kc
+    p = actual_kc / expected_kc
+    a = 2 if "barrows" in name.lower() else 15
+    s = math.log(1 + a * p) / math.log(1 + a)
 
-    # 1. Determine the curve steepness (a)
-    # Barrows has no pets/mega-rares, so it gets a flatter curve.
-    a = 2 if "barrows" in activity_name.lower() else 15
+    exp_slots = min(total_slots * s, total_slots)
 
-    # 2. Apply the Logarithmic Formula
-    s = math.log(1 + a * kc_percent) / math.log(1 + a)
+    # Avoid 0 division if player has 0 slots
+    safe_actual = max(actual_slots, 0.1)
 
-    # 3. Calculate Expected Slots and cap it at the Total Slots
-    expected_slots_at_kc = total_slots * s
-    if expected_slots_at_kc > total_slots:
-        expected_slots_at_kc = total_slots
-
-    # 4. Calculate Luck Ratio
-    if actual_slots == total_slots:
-        # Greenlogged! Math simplifies to actual / expected
+    if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
-    elif actual_slots == 0:
-        # No drops yet. Are they dry for a drop, or is it too early?
-        if expected_slots_at_kc <= 1.0:
-            ratio = 1.0 # On-Rate
-        else:
-            ratio = expected_slots_at_kc # Dry by the number of slots missed
     else:
-        # Core Formula: What you should have / What you actually have
-        ratio = expected_slots_at_kc / actual_slots
+        ratio = exp_slots / safe_actual
 
-    # 5. Determine Status
     if ratio <= 0.5: status = "Spooned 🥄"
     elif ratio <= 0.9: status = "Wet 💧"
     elif ratio <= 1.1: status = "On-Rate 🎯"
     elif ratio <= 1.5: status = "Dry 🏜️"
     else: status = "Very Dry 💀"
+    return status, ratio, exp_slots
 
-    return status, ratio, expected_slots_at_kc
-
-# --- 6. MAIN APP ---
+# --- UI RENDERING ---
 def main():
-    st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
-    st.title("OSRS Collection Log Luck Analyzer")
-    st.markdown("Analyze how 'wet' or 'dry' your account is based on expected hours and your actual Collection Log progress using a logarithmic curve.")
+    st.title("OSRS Clog Luck Analyzer")
 
     clog_data = load_all_clog_data()
 
-    player_name = st.text_input("Enter OSRS Username:", value="Spencejliv", key="user_input_name")
-    filter_type = st.radio("Filter By:", ["All", "Boss", "Raid", "Clue"], horizontal=True, key="filter_selection")
+    with st.sidebar:
+        st.header("Settings")
+        player_name = st.text_input("Username", value="Spencejliv")
+        filter_type = st.selectbox("Category", ["All", "Boss", "Raid", "Clue"])
+        analyze = st.button("Analyze", type="primary", use_container_width=True)
 
-    if st.button("Analyze Account", type="primary", key="main_analyze_btn"):
-        if not player_name:
-            st.warning("Please enter a username.")
+    if analyze:
+        with st.spinner("Fetching data..."):
+            kc_data = fetch_player_kc(player_name)
+            clog_api = fetch_clog_slots(player_name)
+
+        if not kc_data:
+            st.error("No hiscore data found. Is the name correct?")
             return
 
-        with st.spinner(f"Fetching hiscores and Collection Log for {player_name}..."):
-            player_stats = fetch_player_kc(player_name)
-            clog_api_data = fetch_clog_slots(player_name)
-
-        with st.expander("🔍 API Debug (Click to view raw TempleOSRS data)"):
-            if player_stats:
-                st.json(player_stats)
-            else:
-                st.write("No data returned from API.")
-
-        if player_stats is None:
-            st.error("Could not connect to TempleOSRS. The API might be down.")
-            return
-        elif not player_stats:
-            st.warning(f"No hiscore data found for '{player_name}'. Make sure they are tracked on TempleOSRS.")
-            return
-
-        has_clog_data = True
-        if not clog_api_data:
-            has_clog_data = False
-            st.warning(f"⚠️ We couldn't find Collection Log data for '{player_name}' on collectionlog.net. Luck is being calculated assuming all logs are completed! (Upload your log via the RuneLite plugin for accuracy).")
+        # Flatten TempleOSRS data
+        flat_kc = {str(k).lower(): v for k, v in kc_data.items()}
+        if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
+            flat_kc.update({k.lower(): v for k, v in flat_kc["bosses"].items()})
 
         results = []
-        total_ratio = 0
-        valid_activities = 0
+        total_r, count = 0, 0
 
-        # Flatten and lowercase API stats
-        safe_stats = {str(k).lower(): v for k, v in player_stats.items()}
-        if "bosses" in safe_stats and isinstance(safe_stats["bosses"], dict):
-            for k, v in safe_stats["bosses"].items():
-                safe_stats[str(k).lower()] = v
-
-        for api_key, details in clog_data.items():
-            if filter_type != "All" and details.get("type") != filter_type:
+        for key, info in clog_data.items():
+            if filter_type != "All" and info["type"] != filter_type:
                 continue
 
-            actual_kc = safe_stats.get(api_key.lower(), 0)
-            expected_kc = details.get("ekc", 0)
-            page_name = details["name"].lower()
+            actual_kc = flat_kc.get(key.lower(), 0)
+            if actual_kc <= 0: continue
 
-            # Extract actual vs total slots
-            if has_clog_data and page_name in clog_api_data:
-                actual_slots = clog_api_data[page_name]["actual_slots"]
-                total_slots = clog_api_data[page_name]["total_slots"]
-            else:
-                actual_slots = 1
-                total_slots = 1
+            clog_info = clog_api.get(info["name"].lower(), {"actual": 1, "total": 1}) if clog_api else {"actual": 1, "total": 1}
 
-            if actual_kc > 0 and expected_kc > 0:
-                status, ratio, exp_slots = determine_progress_luck(
-                    actual_kc, expected_kc, actual_slots, total_slots, details["name"]
-                )
+            status, ratio, exp_s = determine_progress_luck(
+                actual_kc, info["ekc"], clog_info["actual"], clog_info["total"], info["name"]
+            )
 
-                results.append({
-                    "Activity": details["name"],
-                    "Clog Progress": f"{actual_slots}/{total_slots}" if has_clog_data else "Unknown",
-                    "Expected Slots": round(exp_slots, 1) if has_clog_data else "N/A",
-                    "Actual KC": actual_kc,
-                    "Expected KC": expected_kc,
-                    "Ratio": round(ratio, 2),
-                    "Status": status
-                })
+            results.append({
+                "Activity": info["name"],
+                "Clog": f"{clog_info['actual']}/{clog_info['total']}",
+                "Expected Slots": round(exp_s, 1),
+                "KC": actual_kc,
+                "Ratio": ratio,
+                "Status": status
+            })
+            total_r += ratio
+            count += 1
+
+        if results:
+            df = pd.DataFrame(results).sort_values("Ratio", ascending=False)
+            st.table(df) # Using st.table for maximum stability
+
+            st.divider()
+            avg = total_r / count
+            st.metric("Overall Luck", "Spooned 🥄" if avg < 0.9 else "Dry 🏜️" if avg > 1.1 else "On-Rate 🎯", f"{avg:.2f} Ratio")
+        else:
+            st.warning("No matching activity data found for this player.")
+
+if __name__ == "__main__":
+    main()
