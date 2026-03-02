@@ -34,34 +34,46 @@ def load_all_clog_data():
 @st.cache_data(ttl=3600)
 def fetch_player_kc(player_name):
     url = f"https://templeosrs.com/api/player_stats.php?player={player_name}&bosses=1"
-    headers = {'User-Agent': 'OSRS Luck Analyzer Tool - Streamlit'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
     try:
         r = requests.get(url, headers=headers, timeout=10)
         return r.json().get("data", {})
     except: return None
 
 @st.cache_data(ttl=3600)
-def fetch_temple_clog(player_name):
-    """Fetches Collection Log data directly from TempleOSRS."""
-    headers = {'User-Agent': 'OSRS Luck Analyzer Tool - Streamlit'}
+def fetch_temple_clog_hunter(player_name):
+    """Hunts for the correct TempleOSRS Clog endpoint and returns valid JSON."""
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
-    # We try both common PHP naming conventions just in case
+    # We test all logical TempleOSRS API naming conventions
     endpoints = [
         f"https://templeosrs.com/api/player_collection_log.php?player={player_name}",
-        f"https://templeosrs.com/api/player_collectionlog.php?player={player_name}"
+        f"https://templeosrs.com/api/player_collectionlog.php?player={player_name}",
+        f"https://templeosrs.com/api/collectionlog.php?player={player_name}",
+        f"https://templeosrs.com/api/collection_log.php?player={player_name}",
+        f"https://templeosrs.com/api/player_clog.php?player={player_name}"
     ]
+
+    debug_logs = {}
 
     for url in endpoints:
         try:
-            r = requests.get(url, headers=headers, timeout=10)
+            r = requests.get(url, headers=headers, timeout=5)
             if r.status_code == 200:
-                data = r.json()
-                if "error" not in data:
-                    return data.get("data", data) # Return data payload
-        except Exception:
-            continue
+                try:
+                    data = r.json()
+                    if "error" not in data:
+                        return {"success": True, "url": url, "data": data, "debug": debug_logs}
+                    else:
+                        debug_logs[url] = f"API Error: {data['error']}"
+                except ValueError:
+                    debug_logs[url] = "Status 200, but returned HTML instead of JSON (Wrong URL)"
+            else:
+                debug_logs[url] = f"Failed with status code: {r.status_code}"
+        except Exception as e:
+            debug_logs[url] = f"Network Exception: {str(e)}"
 
-    return None
+    return {"success": False, "data": None, "debug": debug_logs}
 
 # --- LUCK LOGIC (LOGARITHMIC) ---
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
@@ -90,13 +102,12 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
 
 # --- DYNAMIC TEMPLE PARSER ---
 def parse_temple_clog_data(clog_api_data, target_name):
-    """Attempts to find the boss/activity in Temple's JSON payload."""
+    """Deep searches the Temple JSON payload for the boss name."""
     if not clog_api_data or not isinstance(clog_api_data, dict):
         return {"actual": 1, "total": 1}
 
     target = target_name.lower()
 
-    # Search the entire dictionary recursively for the boss name
     def search_dict(d, search_key):
         for k, v in d.items():
             if str(k).lower() == search_key:
@@ -109,14 +120,10 @@ def parse_temple_clog_data(clog_api_data, target_name):
     boss_data = search_dict(clog_api_data, target)
 
     if isinstance(boss_data, dict):
-        # Look for standard keys Temple might use
+        # TempleOSRS usually uses 'obtained', 'count', or 'actual'
         actual = boss_data.get("obtained", boss_data.get("count", boss_data.get("actual", 1)))
         total = boss_data.get("total", boss_data.get("max", 1))
         return {"actual": actual, "total": total}
-
-    # If it returns a list of items instead of a summary
-    elif isinstance(boss_data, list):
-        return {"actual": len(boss_data), "total": len(boss_data)} # Fallback
 
     return {"actual": 1, "total": 1}
 
@@ -129,29 +136,35 @@ def main():
 
     with st.sidebar:
         st.header("Player Info")
-        player_name = st.text_input("Username", value="Spencejliv")
+        player_name = st.text_input("Username", value="B0aty")
         filter_type = st.selectbox("Category", ["All", "Boss", "Raid", "Clue"])
         analyze = st.button("Analyze Account", type="primary", use_container_width=True)
 
     if analyze:
-        with st.spinner("Fetching Data from TempleOSRS..."):
+        with st.spinner("Hunting for TempleOSRS Data..."):
             kc_api = fetch_player_kc(player_name)
-            clog_api = fetch_temple_clog(player_name)
+            clog_response = fetch_temple_clog_hunter(player_name)
 
         if not kc_api:
             st.error("No hiscore data found. Check the name spelling.")
             return
 
-        if not clog_api:
-            st.warning(f"⚠️ We successfully fetched KC, but TempleOSRS returned no Collection Log data for '{player_name}'. Defaulting to 1/1 (pure KC math).")
+        clog_api = clog_response["data"]
 
-        with st.expander("🔍 Debug: Raw TempleOSRS Clog Data"):
-            st.write("Reviewing this raw payload will tell us exactly how TempleOSRS formats their slot data so we can map it perfectly!")
-            if clog_api:
-                st.json(clog_api)
-            else:
-                st.write("No Clog Data Returned.")
+        # UI Warnings & Diagnostics
+        if not clog_response["success"]:
+            st.warning(f"⚠️ We successfully fetched KC, but TempleOSRS returned no Collection Log data for '{player_name}'. Defaulting to 1/1 logic.")
 
+        with st.expander("🔍 Diagnostic: Endpoint Hunter Results"):
+            st.write("This shows exactly which URLs were tested and why they failed:")
+            st.json(clog_response["debug"])
+            if clog_response["success"]:
+                st.success(f"Success! Data pulled from: {clog_response['url']}")
+                st.write("Raw Payload Format (Snippet):")
+                # Only show a small snippet to prevent freezing the UI with massive JSONs
+                st.json({k: str(v)[:200] + "..." for k, v in list(clog_api.items())[:3]} if isinstance(clog_api, dict) else "Data is not a dictionary.")
+
+        # Flatten Temple KC Stats
         flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
         if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
             flat_kc.update({k.lower(): v for k, v in flat_kc["bosses"].items()})
@@ -163,27 +176,25 @@ def main():
             if filter_type != "All" and info["type"] != filter_type:
                 continue
 
-            actual_kc = flat_kc.get(key.lower(), 0)
+            # Ensure KC is an integer
+            actual_kc = int(flat_kc.get(key.lower(), 0))
             if actual_kc <= 0: continue
 
-            # --- Using the dynamic parser ---
             clog_info = parse_temple_clog_data(clog_api, info["name"])
 
             status, ratio, exp_slots = determine_luck_v2(
                 actual_kc, info["ekc"], clog_info["actual"], clog_info["total"], info["name"]
             )
 
-            # Make sure Expected Slots looks clean if we are falling back
+            # Formatting for the table display
             display_exp_slots = "N/A" if (clog_info["total"] == 1) else round(exp_slots, 1)
-
-            # Format KC nicely so it doesn't show decimals
-            display_kc = f"{int(actual_kc):,}"
+            display_kc = f"{actual_kc:,}"
 
             results.append({
                 "Activity": info["name"],
-                "Clog Progress": f"{clog_info['actual']}/{clog_info['total']}",
+                "Clog": f"{clog_info['actual']}/{clog_info['total']}",
                 "Expected Slots": display_exp_slots,
-                "Your KC": display_kc,
+                "KC": display_kc,
                 "Luck Ratio": round(ratio, 2),
                 "Status": status
             })
@@ -192,6 +203,8 @@ def main():
 
         if results:
             df = pd.DataFrame(results).sort_values("Luck Ratio", ascending=False)
+
+            # Enforce column types to prevent Pandas from making strings into floats
             st.table(df)
 
             st.divider()
