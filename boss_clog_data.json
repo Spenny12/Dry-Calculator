@@ -102,7 +102,7 @@
         "slots": 10
     },
     "duke_sucellus": {
-        "name": "Duke Sucellus",
+        "name": "Duke Sucellus (complex to calculate)",
         "ekc": 2734.0,
         "kph": 30.0,
         "slots": 10,
@@ -216,7 +216,7 @@
         "mega_rares": 1
     },
     "the_leviathan": {
-        "name": "The Leviathan",
+        "name": "The Leviathan (complex to calculate)",
         "ekc": 2762.0,
         "kph": 32.0,
         "slots": 10,
@@ -314,7 +314,7 @@
         "mega_rares": 2
     },
     "vardorvis": {
-        "name": "Vardorvis",
+        "name": "Vardorvis (complex to calculate)",
         "ekc": 3419.0,
         "kph": 37.0,
         "slots": 10,
@@ -346,7 +346,7 @@
         "mega_rares": 2
     },
     "the_whisperer": {
-        "name": "The Whisperer",
+        "name": "The Whisperer (complex to calculate)",
         "ekc": 2155.0,
         "kph": 21.0,
         "slots": 10,
