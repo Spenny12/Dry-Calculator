@@ -168,8 +168,7 @@ def main():
                 results = []
                 total_spoon_score = 0
 
-                # --- RELEVANT FIX INSIDE MAIN LOOP ---
-for key, info in clog_data.items():
+                for key, info in clog_data.items():
     if filter_type != "All" and info["type"] != filter_type: continue
 
     # Improved search keys to catch DT2 bosses
@@ -186,7 +185,13 @@ for key, info in clog_data.items():
     if "whisperer" in clean_key: kc_keys_to_try.append("the_whisperer")
     if "leviathan" in clean_key: kc_keys_to_try.append("the_leviathan")
     if "vardorvis" in clean_key: kc_keys_to_try.append("vardorvis")
-    if "sucellus" in clean_key: kc_keys_to_try.append("duke_sucellus")
+    if "sucellus" in clean_key: kc_keys_to_try.append("duke_sucellus")for key, info in clog_data.items():
+                    if filter_type != "All" and info["type"] != filter_type: continue
+
+                    kc_keys_to_try = [
+                        key.lower(), key.lower().replace("the_", ""),
+                        info["name"].lower().replace(" ", "_"),
+                        info["name"].lower().replace("'", ""),
                     ]
 
                     actual_kc = 0
