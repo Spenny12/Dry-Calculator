@@ -97,7 +97,7 @@
         "ekc": 2734.0,
         "kph": 30.0,
         "slots": 10,
-        "free_slots": 2
+        "free_slots": 3
     },
     "the_fight_caves": {
         "name": "The Fight Caves",
@@ -201,7 +201,7 @@
         "ekc": 2762.0,
         "kph": 32.0,
         "slots": 10,
-        "free_slots": 2
+        "free_slots": 3
     },
     "moons_of_peril": {
         "name": "Moons of Peril",
@@ -288,7 +288,7 @@
         "ekc": 3419.0,
         "kph": 37.0,
         "slots": 10,
-        "free_slots": 2
+        "free_slots": 3
     },
     "venenatis_and_spindel": {
         "name": "Venenatis and Spindel",
@@ -315,7 +315,7 @@
         "ekc": 2155.0,
         "kph": 21.0,
         "slots": 10,
-        "free_slots": 2
+        "free_slots": 3
     },
     "wintertodt": {
         "name": "Wintertodt",
