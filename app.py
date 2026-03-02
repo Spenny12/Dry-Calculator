@@ -101,9 +101,18 @@ def determine_luck(actual_kc, ekc):
 
 # --- 5. MAIN APP UI ---
 def main():
-    st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
-    st.title("OSRS Collection Log Luck Analyzer")
-    st.markdown("Compare your actual KC against the Expected KC (EKC) required to greenlog bosses, clues, and raids.")
+    # 1. Initialize with a default or empty string at the top level of main
+    player_name = ""
+
+    st.title("OSRS Clog Luck Analyzer")
+
+    # 2. Assign it via the text input
+    player_name = st.text_input("Enter OSRS Username:", "Zezima")
+
+    if st.button("Analyze Account", type="primary"):
+        # Now player_name is guaranteed to exist when this block runs
+        with st.spinner(f"Fetching hiscores for {player_name}..."):
+            player_stats = fetch_player_data(player_name)
 
     # 1. Load the unified dataset
     clog_data = load_all_clog_data()
