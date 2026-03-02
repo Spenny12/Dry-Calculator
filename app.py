@@ -9,19 +9,19 @@ RAIDS_DATA = {
     "chambers_of_xeric": {
         "name": "Chambers of Xeric",
         "type": "Raid",
-        "ekc": round(850 / (30 / 60)),  # 1700 KC
+        "ekc": round(850 / (30 / 60)),
         "kph": 2.0
     },
     "theatre_of_blood": {
         "name": "Theatre of Blood",
         "type": "Raid",
-        "ekc": round(636 / (20 / 60)),  # 1908 KC
+        "ekc": round(636 / (20 / 60)),
         "kph": 3.0
     },
     "tombs_of_amascut": {
         "name": "Tombs of Amascut",
         "type": "Raid",
-        "ekc": round(692 / (35 / 60)),  # ~1186 KC
+        "ekc": round(692 / (35 / 60)),
         "kph": round(60 / 35, 2)
     }
 }
@@ -31,7 +31,6 @@ RAIDS_DATA = {
 def load_all_clog_data():
     combined_data = {}
 
-    # Load Bosses
     if os.path.exists("boss_clog_data.json"):
         with open("boss_clog_data.json", "r") as f:
             bosses = json.load(f)
@@ -39,7 +38,6 @@ def load_all_clog_data():
                 v["type"] = "Boss"
             combined_data.update(bosses)
 
-    # Load Clues
     if os.path.exists("clue_clog_data.json"):
         with open("clue_clog_data.json", "r") as f:
             clues = json.load(f)
@@ -47,11 +45,10 @@ def load_all_clog_data():
                 v["type"] = "Clue"
             combined_data.update(clues)
 
-    # Inject Raids
     combined_data.update(RAIDS_DATA)
     return combined_data
 
-# --- 3. API INTEGRATION ---
+# --- 3. BULLETPROOF API INTEGRATION ---
 @st.cache_data(ttl=3600)
 def fetch_player_data(player_name):
     url = f"https://templeosrs.com/api/player_stats.php?player={player_name}&bosses=1"
@@ -59,8 +56,11 @@ def fetch_player_data(player_name):
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
-        return data.get("data", {}).get("bosses", {})
-    except Exception:
+
+        # Instead of looking for a specific 'bosses' dictionary,
+        # we return the entire 'data' block just in case it's flat.
+        return data.get("data", {})
+    except Exception as e:
         return None
 
 # --- 4. LUCK LOGIC ---
@@ -78,15 +78,12 @@ def determine_luck(actual_kc, ekc):
 # --- 5. MAIN APP ---
 def main():
     st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
-
     st.title("OSRS Collection Log Luck Analyzer")
     st.markdown("Analyze how 'wet' or 'dry' your account is based on expected hours to greenlog.")
 
-    # Initialize data
     clog_data = load_all_clog_data()
 
-    # UI Inputs - Added unique keys to prevent DuplicateElementId
-    player_name = st.text_input("Enter OSRS Username:", value="Zezima", key="user_input_name")
+    player_name = st.text_input("Enter OSRS Username:", value="Spencejliv", key="user_input_name")
     filter_type = st.radio("Filter By:", ["All", "Boss", "Raid", "Clue"], horizontal=True, key="filter_selection")
 
     if st.button("Analyze Account", type="primary", key="main_analyze_btn"):
@@ -97,6 +94,13 @@ def main():
         with st.spinner(f"Fetching hiscores for {player_name}..."):
             player_stats = fetch_player_data(player_name)
 
+        # --- NEW DEBUGGER ---
+        with st.expander("🔍 API Debug (Click to view raw TempleOSRS data)"):
+            if player_stats:
+                st.json(player_stats)
+            else:
+                st.write("No data returned from API.")
+
         if player_stats is None:
             st.error("Could not connect to TempleOSRS. The API might be down.")
         elif not player_stats:
@@ -106,11 +110,20 @@ def main():
             total_ratio = 0
             valid_activities = 0
 
+            # Make the API dictionary entirely case-insensitive and flat for safe searching
+            safe_stats = {str(k).lower(): v for k, v in player_stats.items()}
+
+            # If temple nests them under "bosses" anyway, flatten it out
+            if "bosses" in safe_stats and isinstance(safe_stats["bosses"], dict):
+                for k, v in safe_stats["bosses"].items():
+                    safe_stats[str(k).lower()] = v
+
             for api_key, details in clog_data.items():
                 if filter_type != "All" and details.get("type") != filter_type:
                     continue
 
-                actual_kc = player_stats.get(api_key, 0)
+                # Check our safe lowercase dictionary
+                actual_kc = safe_stats.get(api_key.lower(), 0)
                 expected_kc = details.get("ekc", 0)
 
                 if actual_kc > 0 and expected_kc > 0:
@@ -128,11 +141,8 @@ def main():
 
             if results:
                 df = pd.DataFrame(results).sort_values(by="Ratio", ascending=False)
-
-                # Display Results Table
                 st.dataframe(df, use_container_width=True, hide_index=True)
 
-                # Summary Stats
                 st.divider()
                 avg_ratio = total_ratio / valid_activities
                 overall_status, _ = determine_luck(avg_ratio, 1.0)
@@ -142,7 +152,7 @@ def main():
                 c2.metric("Average Ratio", f"{avg_ratio:.2f}")
                 c3.metric("Activities Tracked", valid_activities)
             else:
-                st.info("No KC found for the selected category on this account.")
+                st.info("The player exists, but no KC matched our database. Try checking the 🔍 API Debug dropdown above to see what names TempleOSRS is using for bosses!")
 
 if __name__ == "__main__":
     main()
