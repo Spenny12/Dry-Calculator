@@ -30,7 +30,7 @@ def load_all_clog_data():
     combined.update(RAIDS_DATA)
     return combined
 
-# --- API FUNCTIONS ---
+# --- TEMPLEOSRS API FUNCTIONS ---
 @st.cache_data(ttl=3600)
 def fetch_player_kc(player_name):
     url = f"https://templeosrs.com/api/player_stats.php?player={player_name}&bosses=1"
@@ -41,27 +41,27 @@ def fetch_player_kc(player_name):
     except: return None
 
 @st.cache_data(ttl=3600)
-def fetch_clog_slots(player_name):
-    url = f"https://api.collectionlog.net/collectionlog/user/{player_name}"
-    # The crucial fix: Some OSRS APIs block requests without a proper User-Agent
+def fetch_temple_clog(player_name):
+    """Fetches Collection Log data directly from TempleOSRS."""
     headers = {'User-Agent': 'OSRS Luck Analyzer Tool - Streamlit'}
-    try:
-        r = requests.get(url, headers=headers, timeout=10)
-        if r.status_code != 200:
-            return None # Fails gracefully if user isn't on collectionlog.net
 
-        data = r.json()
-        clog_stats = {}
-        tabs = data.get("collectionLog", {}).get("tabs", {})
-        for tab in tabs.values():
-            for page_name, page_data in tab.items():
-                items = page_data.get("items", [])
-                clog_stats[page_name.lower()] = {
-                    "actual": sum(1 for i in items if i.get("obtained")),
-                    "total": len(items)
-                }
-        return clog_stats
-    except: return None
+    # We try both common PHP naming conventions just in case
+    endpoints = [
+        f"https://templeosrs.com/api/player_collection_log.php?player={player_name}",
+        f"https://templeosrs.com/api/player_collectionlog.php?player={player_name}"
+    ]
+
+    for url in endpoints:
+        try:
+            r = requests.get(url, headers=headers, timeout=10)
+            if r.status_code == 200:
+                data = r.json()
+                if "error" not in data:
+                    return data.get("data", data) # Return data payload
+        except Exception:
+            continue
+
+    return None
 
 # --- LUCK LOGIC (LOGARITHMIC) ---
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
@@ -88,10 +88,42 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
 
     return status, ratio, expected_slots
 
+# --- DYNAMIC TEMPLE PARSER ---
+def parse_temple_clog_data(clog_api_data, target_name):
+    """Attempts to find the boss/activity in Temple's JSON payload."""
+    if not clog_api_data or not isinstance(clog_api_data, dict):
+        return {"actual": 1, "total": 1}
+
+    target = target_name.lower()
+
+    # Search the entire dictionary recursively for the boss name
+    def search_dict(d, search_key):
+        for k, v in d.items():
+            if str(k).lower() == search_key:
+                return v
+            if isinstance(v, dict):
+                res = search_dict(v, search_key)
+                if res: return res
+        return None
+
+    boss_data = search_dict(clog_api_data, target)
+
+    if isinstance(boss_data, dict):
+        # Look for standard keys Temple might use
+        actual = boss_data.get("obtained", boss_data.get("count", boss_data.get("actual", 1)))
+        total = boss_data.get("total", boss_data.get("max", 1))
+        return {"actual": actual, "total": total}
+
+    # If it returns a list of items instead of a summary
+    elif isinstance(boss_data, list):
+        return {"actual": len(boss_data), "total": len(boss_data)} # Fallback
+
+    return {"actual": 1, "total": 1}
+
 # --- MAIN UI ---
 def main():
     st.title("OSRS Clog Luck Analyzer")
-    st.markdown("Comparing KC to Expected KC (EKC) weighted by Log Progress.")
+    st.markdown("Comparing KC to Expected KC (EKC) weighted by Log Progress via TempleOSRS.")
 
     clog_data = load_all_clog_data()
 
@@ -102,21 +134,23 @@ def main():
         analyze = st.button("Analyze Account", type="primary", use_container_width=True)
 
     if analyze:
-        with st.spinner("Fetching Data..."):
+        with st.spinner("Fetching Data from TempleOSRS..."):
             kc_api = fetch_player_kc(player_name)
-            clog_api = fetch_clog_slots(player_name)
+            clog_api = fetch_temple_clog(player_name)
 
         if not kc_api:
             st.error("No hiscore data found. Check the name spelling.")
             return
 
-        # NEW: Explicit warning if the player isn't on collectionlog.net
         if not clog_api:
-            st.warning(f"⚠️ We couldn't find Collection Log data for '{player_name}'. They may not have synced their log to collectionlog.net via RuneLite. Defaulting to 1/1 (pure KC math) for luck calculations.")
+            st.warning(f"⚠️ We successfully fetched KC, but TempleOSRS returned no Collection Log data for '{player_name}'. Defaulting to 1/1 (pure KC math).")
 
-        with st.expander("🔍 Debug: Raw Clog Data"):
-            st.write("If this says 'None', the API rejected the request or the player doesn't exist there.")
-            st.json(clog_api)
+        with st.expander("🔍 Debug: Raw TempleOSRS Clog Data"):
+            st.write("Reviewing this raw payload will tell us exactly how TempleOSRS formats their slot data so we can map it perfectly!")
+            if clog_api:
+                st.json(clog_api)
+            else:
+                st.write("No Clog Data Returned.")
 
         flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
         if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
@@ -132,23 +166,24 @@ def main():
             actual_kc = flat_kc.get(key.lower(), 0)
             if actual_kc <= 0: continue
 
-            if clog_api and isinstance(clog_api, dict):
-                clog_info = clog_api.get(info["name"].lower(), {"actual": 1, "total": 1})
-            else:
-                clog_info = {"actual": 1, "total": 1}
+            # --- Using the dynamic parser ---
+            clog_info = parse_temple_clog_data(clog_api, info["name"])
 
             status, ratio, exp_slots = determine_luck_v2(
                 actual_kc, info["ekc"], clog_info["actual"], clog_info["total"], info["name"]
             )
 
-            # Make sure Expected Slots looks clean if we are falling back to 1/1
-            display_exp_slots = "N/A" if (not clog_api or clog_info["total"] == 1) else round(exp_slots, 1)
+            # Make sure Expected Slots looks clean if we are falling back
+            display_exp_slots = "N/A" if (clog_info["total"] == 1) else round(exp_slots, 1)
+
+            # Format KC nicely so it doesn't show decimals
+            display_kc = f"{int(actual_kc):,}"
 
             results.append({
                 "Activity": info["name"],
                 "Clog Progress": f"{clog_info['actual']}/{clog_info['total']}",
                 "Expected Slots": display_exp_slots,
-                "Your KC": actual_kc,
+                "Your KC": display_kc,
                 "Luck Ratio": round(ratio, 2),
                 "Status": status
             })
