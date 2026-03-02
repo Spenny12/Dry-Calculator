@@ -84,8 +84,8 @@ def get_clog_counts(clog_payload, boss_key, local_info):
     if total > 0 and actual > total: actual = total
     return actual, total
 
-# --- THE SPOON MATH V9 ---
-def determine_luck_v9(actual_kc, info, actual_slots):
+# --- THE SPOON MATH V10 (ASIMYETRIC TAPERED) ---
+def determine_luck_v10(actual_kc, info, actual_slots):
     expected_kc = info.get("ekc", 0)
     total_slots = info.get("slots", 0)
     free_slots = info.get("free_slots", 0)
@@ -98,37 +98,43 @@ def determine_luck_v9(actual_kc, info, actual_slots):
     # RNG Isolation
     rng_total_slots = max(1, total_slots - free_slots)
     rng_actual_slots = max(0, actual_slots - free_slots)
+    safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
+    normal_rng_slots = rng_total_slots - safe_mega_rares
 
-    # 1. Forward Curve: For Displaying 'Expected Slots' only
+    # 1. Forward Curve (What should you have at your KC?)
+    # Normal uniques condensed into start (0.5 power), Megas tapered to end (2.5 power)
     p = actual_kc / expected_kc
-    exp_rng_total = rng_total_slots * (p ** 0.85) # Balanced power
-    exp_slots_display = free_slots + min(exp_rng_total, rng_total_slots)
+    exp_normal = normal_rng_slots * (p ** 0.5)
+    exp_mega = safe_mega_rares * (p ** 2.5)
 
-    # 2. Inverse Curve: How much KC is 'expected' to reach your current slots?
-    # This weights the 'tapering' of the log correctly.
+    exp_rng_total = min(exp_normal + exp_mega, rng_total_slots)
+    exp_slots_display = free_slots + exp_rng_total
+
+    # 2. Inverse Curve (How much KC is expected for your current progress?)
+    # Using a quadratic (2.0) power to heavily weight the 'final items'
     progress_ratio = rng_actual_slots / rng_total_slots
-    expected_kc_for_slots = expected_kc * (progress_ratio ** 1.1)
+    expected_kc_for_progress = expected_kc * (progress_ratio ** 2.0)
 
-    # 3. Spoon Points = (Actual KC - Expected KC for progress) / KPH
-    # This represents 'Hours Saved' (Negative) or 'Hours Wasted' (Positive)
-    pts = int(round((actual_kc - expected_kc_for_slots) / max(kph, 0.1)))
+    # 3. Spoon Points = Hours Saved/Lost
+    pts = int(round((actual_kc - expected_kc_for_progress) / max(kph, 0.1)))
 
-    # Ratio for display
-    ratio = expected_kc_for_slots / max(actual_kc, 1.0)
+    # Ratio calculation for display
+    # (Higher ratio means you are 'dryer' in terms of time expected vs spent)
+    display_ratio = expected_kc_for_progress / max(actual_kc, 1.0)
 
-    # --- STATUS LOGIC TIED TO POINTS ---
+    # --- STATUS LOGIC ---
     if pts <= -100: status = "Spooned 🥄"
     elif pts <= -20: status = "Wet 💧"
     elif pts >= 100: status = "Very Dry 💀"
     elif pts >= 20: status = "Dry 🏜️"
     else: status = "On-Rate 🎯"
 
-    return status, ratio, exp_slots_display, pts
+    return status, display_ratio, exp_slots_display, pts
 
 # --- MAIN UI ---
 def main():
     st.title("OSRS Luck & Time Analyzer")
-    st.markdown("Status is tied to **Spoon Points** (Hours Saved). Sorting by largest spoon.")
+    st.markdown("Math: **Asymmetric Tapered Curve**. Normal uniques condensed early; Mega-rares heavily delayed.")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -179,7 +185,7 @@ def main():
                         if k and k in flat_kc:
                             actual_kc = int(flat_kc[k]); break
 
-                    # ADDITIVE KC FIX: Nightmare + Phosani
+                    # ADDITIVE KC: Nightmare + Phosani
                     if "nightmare" in key.lower():
                         for pk in ["phosani's nightmare", "phosanis nightmare", "phosani"]:
                             if pk in flat_kc: actual_kc += int(flat_kc[pk]); break
@@ -192,7 +198,7 @@ def main():
                     if actual_kc <= 0: continue
 
                     actual_slots, total_slots = get_clog_counts(clog_api, key, info)
-                    status, ratio, exp, pts = determine_luck_v9(actual_kc, info, actual_slots)
+                    status, ratio, exp, pts = determine_luck_v10(actual_kc, info, actual_slots)
 
                     results.append({
                         "Activity": info["name"],
