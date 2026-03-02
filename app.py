@@ -144,7 +144,7 @@ def main():
 
     with st.sidebar:
         st.header("Player Info")
-        player_names_input = st.text_input("Username(s)", value="Spencejliv")
+        player_names_input = st.text_input("Username(s)", value="Spencejliv,Catches,iPhone Game,Luikang67,NotALadyBoy,TheKizzler,iMogU")
         filter_type = st.selectbox("Category", ["All", "Boss", "Raid", "Clue"])
         analyze = st.button("ARun", type="primary", use_container_width=True)
 
