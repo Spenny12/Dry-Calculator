@@ -137,8 +137,11 @@ def main():
             if actual_kc <= 0: continue
 
             # 2. Get Clog Data (Actual/Total)
-            # Default to 1/1 if not found in clog API to prevent division errors
-            clog_info = clog_api.get(info["name"].lower(), {"actual": 1, "total": 1})
+           # Check if clog_api exists; if not, use a default 1/1 dict
+if clog_api and isinstance(clog_api, dict):
+    clog_info = clog_api.get(info["name"].lower(), {"actual": 1, "total": 1})
+else:
+    clog_info = {"actual": 1, "total": 1}
 
             # 3. Calculate Luck
             status, ratio, exp_slots = determine_luck_v2(
