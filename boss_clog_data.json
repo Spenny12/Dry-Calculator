@@ -106,7 +106,7 @@
         "ekc": 2734.0,
         "kph": 30.0,
         "slots": 10,
-        "free_slots": 6,
+        "free_slots": 7,
         "mega_rares": 3
     },
     "the_fight_caves": {
@@ -220,7 +220,7 @@
         "ekc": 2762.0,
         "kph": 32.0,
         "slots": 10,
-        "free_slots": 6,
+        "free_slots": 7,
         "mega_rares": 3
     },
     "moons_of_peril": {
@@ -318,7 +318,7 @@
         "ekc": 3419.0,
         "kph": 37.0,
         "slots": 10,
-        "free_slots": 6,
+        "free_slots": 7,
         "mega_rares": 3
     },
     "venenatis_and_spindel": {
@@ -350,7 +350,7 @@
         "ekc": 2155.0,
         "kph": 21.0,
         "slots": 10,
-        "free_slots": 6,
+        "free_slots": 7,
         "mega_rares": 3
     },
     "wintertodt": {
