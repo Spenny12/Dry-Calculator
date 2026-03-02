@@ -164,9 +164,7 @@ def main():
 
                 clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
 
-                # --- THE FLATTENING FIX ---
-                # TempleOSRS nests its data (e.g., inside 'bosses', 'clues', 'minigames').
-                # We flatten EVERYTHING so clue KC isn't hidden inside a sub-dictionary.
+                # We flatten the nested dictionary so that clues aren't hidden deep inside hiscore folders
                 flat_kc = {}
                 for k, v in kc_api.items():
                     if isinstance(v, dict):
@@ -190,25 +188,46 @@ def main():
                     if "nightmare" in key.lower():
                         kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
 
-                    # --- CLUE TRANSLATION FIX ---
-                    # Converts "Beginner Clues" -> "clue_beginner" to match TempleOSRS Hiscores
-                    if info.get("type") == "Clue" and "clue" in info["name"].lower():
+                    # --- OFFICIAL HISCORES CLUE TRANSLATOR ---
+                    if info.get("type") == "Clue":
                         tier = info["name"].lower().replace(" clues", "").replace(" clue", "").strip()
-                        kc_keys_to_try.extend([f"clue_{tier}", f"clues_{tier}", tier])
+                        if tier:
+                            kc_keys_to_try.extend([f"clue scrolls ({tier})", f"clue_{tier}", f"clues_{tier}"])
 
                     actual_kc = 0
 
+                    # 1. Grab Base KC
                     for k in kc_keys_to_try:
                         if k in flat_kc:
                             actual_kc = int(flat_kc[k])
                             if actual_kc > 0: break
 
+                    # 2. Additive KC Combiner
                     for combine_key in info.get("combine_kc_keys", []):
                         ck = combine_key.lower()
                         if ck in flat_kc:
                             actual_kc += int(flat_kc[ck])
                         elif ck.replace(" ", "_") in flat_kc:
                             actual_kc += int(flat_kc[ck.replace(" ", "_")])
+
+                    # --- CLUE META CATEGORY CALCULATOR ---
+                    if info.get("type") == "Clue" and actual_kc <= 0:
+                        clue_tiers_to_sum = []
+                        if "shared" in key.lower():
+                            clue_tiers_to_sum = ["beginner", "easy", "medium", "hard", "elite", "master"]
+                        elif "3rd" in key.lower() or "third" in key.lower() or "gilded" in key.lower():
+                            clue_tiers_to_sum = ["hard", "elite", "master"]
+                        elif "elite_mega" in key.lower():
+                            clue_tiers_to_sum = ["elite"]
+                        elif "master_mega" in key.lower():
+                            clue_tiers_to_sum = ["master"]
+
+                        # Sums up the specific tiers to calculate your true KC for these categories
+                        for c_tier in clue_tiers_to_sum:
+                            for variant in [f"clue scrolls ({c_tier})", f"clue_{c_tier}", f"clues_{c_tier}"]:
+                                if variant in flat_kc:
+                                    actual_kc += int(flat_kc[variant])
+                                    break
 
                     if actual_kc <= 0: continue
 
