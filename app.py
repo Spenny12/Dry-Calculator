@@ -110,8 +110,8 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     # 1. Forward Curve (What should you have at your KC?)
     # Normal uniques condensed into start (0.5 power), Megas tapered to end (2.5 power)
     p = actual_kc / expected_kc
-    exp_normal = normal_rng_slots * (p ** 0.7)
-    exp_mega = safe_mega_rares * (p ** 2.3)
+    exp_normal = normal_rng_slots * (p ** 1)
+    exp_mega = safe_mega_rares * (p ** 2)
 
     exp_rng_total = min(exp_normal + exp_mega, rng_total_slots)
     exp_slots_display = free_slots + exp_rng_total
