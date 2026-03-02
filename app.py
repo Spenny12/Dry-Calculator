@@ -59,7 +59,7 @@ def fetch_exact_temple_clog(player_name, categories_list):
     except: pass
     return {"success": False}
 
-# --- THE CORRECTED PARSER ---
+# --- THE PARSER ---
 def get_clog_counts(clog_payload, boss_key, local_info):
     items_dict = clog_payload.get("items", {}) if isinstance(clog_payload, dict) else {}
     search_key = "nightmare" if "nightmare" in boss_key.lower() else boss_key.lower()
@@ -77,17 +77,23 @@ def get_clog_counts(clog_payload, boss_key, local_info):
 
     return actual, total
 
+# --- THE HYPER-LOGARITHMIC MATH FIX ---
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
     if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
         return "Not Started", 1.0, 0.0
 
     p = actual_kc / expected_kc
-    a = 2 if "barrows" in name.lower() or "clue" in name.lower() else 15
+
+    # 'a' dictates the steepness of the curve.
+    # Clues/Barrows are more linear (so a=5). Bosses are heavily pet-skewed (a=150).
+    a = 5 if "barrows" in name.lower() or "clue" in name.lower() else 150
+
     s = math.log(1 + a * p) / math.log(1 + a)
     exp_slots = min(total_slots * s, total_slots)
 
     ratio = exp_slots / max(actual_slots, 0.1)
-    if actual_slots >= total_slots: ratio = actual_kc / expected_kc
+    if actual_slots >= total_slots:
+        ratio = actual_kc / expected_kc
 
     if ratio <= 0.5: status = "Spooned 🥄"
     elif ratio <= 0.85: status = "Wet 💧"
@@ -100,7 +106,7 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
 # --- MAIN UI ---
 def main():
     st.title("OSRS Clog Luck Analyzer")
-    st.markdown("Comparing KC to Expected KC (EKC) weighted by Log Progress.")
+    st.markdown("Comparing KC to Expected KC (EKC) using weighted logarithmic log progress.")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -132,7 +138,6 @@ def main():
         for key, info in clog_data.items():
             if filter_type != "All" and info["type"] != filter_type: continue
 
-            # THE FIX: Only build base keys normally
             kc_keys_to_try = [
                 key.lower(),
                 key.lower().replace("the_", ""),
@@ -140,7 +145,6 @@ def main():
                 info["name"].lower().replace("'", "")
             ]
 
-            # Conditionally add Phosani ONLY if we are looking at Nightmare
             if "nightmare" in key.lower():
                 kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
 
@@ -179,7 +183,15 @@ def main():
 
             if count > 0:
                 avg = total_r / count
-                overall = "Overall Spooned 🥄" if avg <= 0.85 else "Overall Dry 🏜️" if avg >= 1.15 else "Overall On-Rate 🎯"
+
+                # Standard if/elif/else format to prevent Syntax errors
+                if avg <= 0.85:
+                    overall = "Overall Spooned 🥄"
+                elif avg >= 1.15:
+                    overall = "Overall Dry 🏜️"
+                else:
+                    overall = "Overall On-Rate 🎯"
+
                 ehc_val = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
 
                 c1, c2, c3, c4 = st.columns(4)
