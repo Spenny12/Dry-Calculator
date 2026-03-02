@@ -20,44 +20,44 @@
     "hard_treasure_trails": {
         "name": "Hard Clues",
         "ekc": 5484.0,
-        "kph": 20.0,
+        "kph": 3,
         "slots": 125
     },
     "elite_treasure_trails": {
         "name": "Elite Clues",
         "ekc": 7469.0,
-        "kph": 2.3,
+        "kph": 1,
         "slots": 91
     },
     "master_treasure_trails": {
         "name": "Master Clues",
         "ekc": 7532.0,
-        "kph": 2.0,
+        "kph": 0.25,
         "slots": 92
     },
     "elite_mega_rares": {
         "name": "Elite Mega Rares (BROKEN FOR NOW)",
         "ekc": 663.0,
-        "kph": 2.3,
+        "kph": 1,
         "slots": 15
     },
     "master_mega_rares": {
         "name": "Master Mega Rares (BROKEN FOR NOW)",
         "ekc": 315.0,
-        "kph": 2.0,
+        "kph": 0.25,
         "slots": 15
     },
     "gilded": {
         "name": "Gilded",
         "ekc": 1000.0,
-        "kph": 1.0,
+        "kph": 0.25,
         "slots": 15,
         "mega_rares": 15
     },
     "third_age": {
         "name": "3rd Age",
         "ekc": 10000.0,
-        "kph": 1.0,
+        "kph": 0.25,
         "slots": 23,
         "mega_rares": 23
     },
