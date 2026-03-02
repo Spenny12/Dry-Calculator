@@ -101,32 +101,46 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     if expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
         return "Not Started", 1.0, 0.0, 0
 
-    # RNG Isolation
+    # 1. RNG Isolation
     rng_total_slots = max(1, total_slots - free_slots)
     rng_actual_slots = max(0, actual_slots - free_slots)
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_rng_slots = rng_total_slots - safe_mega_rares
 
-    # 1. Forward Curve (What should you have at your KC?)
-    # Normal uniques condensed into start (0.5 power), Megas tapered to end (2.5 power)
+    # 2. Progress Percentage
     p = actual_kc / expected_kc
-    exp_normal = normal_rng_slots * (p ** 0.1)
-    exp_mega = safe_mega_rares * (p ** 4)
 
+    # 3. Tapered Forward Curve (For the 'Expected' Column)
+    # Exponent 0.5 = Front-loaded ( filler items )
+    # Exponent 2.5 = Back-loaded ( mega rares )
+    exp_normal = normal_rng_slots * (p ** 0.5)
+    exp_mega = safe_mega_rares * (p ** 2.5)
     exp_rng_total = min(exp_normal + exp_mega, rng_total_slots)
     exp_slots_display = free_slots + exp_rng_total
 
-    # 2. Inverse Curve (How much KC is expected for your current progress?)
-    # Using a quadratic (2.0) power to heavily weight the 'final items'
+    # 4. Tapered Inverse Curve (For the 'Spoon Score')
+    # This now calculates the 'Expected KC' using the SAME tapering logic.
     progress_ratio = rng_actual_slots / rng_total_slots
-    expected_kc_for_progress = expected_kc * (progress_ratio ** 2.0)
+    # We use a weighted average exponent based on how many megas are in the log
+    weight_mega = safe_mega_rares / rng_total_slots
+    avg_exponent = (0.5 * (1 - weight_mega)) + (2.5 * weight_mega)
 
-    # 3. Spoon Points = Hours Saved/Lost
+    expected_kc_for_progress = expected_kc * (progress_ratio ** (1/avg_exponent))
+
+    # 5. Spoon Points = (Spent Time - Expected Time for current progress)
     pts = int(round((actual_kc - expected_kc_for_progress) / max(kph, 0.1)))
 
-    # Display Ratio calculation (Expected KC / Spent KC)
-    # Higher means luckier
+    # Status thresholds (unchanged)
+    if pts <= -100: status = "Spooned 🥄"
+    elif pts <= -20: status = "Wet 💧"
+    elif pts >= 100: status = "Very Dry 💀"
+    elif pts >= 20: status = "Dry 🏜️"
+    else: status = "On-Rate 🎯"
+
+    # Display Ratio
     display_ratio = expected_kc_for_progress / max(actual_kc, 1.0)
+
+    return status, display_ratio, exp_slots_display, pts
 
     # --- STATUS LOGIC TIED TO POINTS ---
     if pts <= -25: status = "Spooned 🥄"
