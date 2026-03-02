@@ -16,7 +16,6 @@ RAIDS_DATA = {
     "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 8}
 }
 
-# No @st.cache_data here so your JSON edits show up immediately on refresh!
 def load_all_clog_data():
     combined = {}
     for filename, activity_type in [("boss_clog_data.json", "Boss"), ("clue_clog_data.json", "Clue")]:
@@ -32,7 +31,7 @@ def load_all_clog_data():
     combined.update(RAIDS_DATA)
     return combined
 
-# --- TEMPLEOSRS API FUNCTIONS ---
+# --- API FUNCTIONS ---
 @st.cache_data(ttl=3600)
 def fetch_player_kc(player_name):
     url = f"https://templeosrs.com/api/player_stats.php?player={player_name}&bosses=1"
@@ -46,6 +45,10 @@ def fetch_player_kc(player_name):
 def fetch_exact_temple_clog(player_name, categories_list):
     clean_keys = [k for k in categories_list if isinstance(k, str) and k.lower() not in ['true', 'false', '0', '1']]
     categories_str = ",".join(clean_keys)
+    # Ensure Nightmare is in the request even if renamed in JSON
+    if "nightmare" not in categories_str.lower():
+        categories_str += ",nightmare"
+
     url = f"https://templeosrs.com/api/collection-log/player_collection_log.php?player={player_name}&categories={categories_str}"
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
@@ -59,7 +62,10 @@ def fetch_exact_temple_clog(player_name, categories_list):
 # --- PARSERS ---
 def get_clog_counts(clog_payload, boss_key, local_info):
     items_dict = clog_payload.get("items", {}) if isinstance(clog_payload, dict) else {}
-    boss_data = items_dict.get(boss_key.lower())
+
+    # Logic override: Phosani shares the "Nightmare" collection log
+    search_key = "nightmare" if "nightmare" in boss_key.lower() else boss_key.lower()
+    boss_data = items_dict.get(search_key)
 
     if isinstance(boss_data, list):
         actual = len(boss_data)
@@ -116,6 +122,8 @@ def main():
 
         clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
         flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
+
+        # Flatten nested 'bosses' dict if it exists
         if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
             flat_kc.update({k.lower(): v for k, v in flat_kc["bosses"].items()})
 
@@ -126,11 +134,13 @@ def main():
             if filter_type != "All" and info["type"] != filter_type:
                 continue
 
-            # --- SMARTER KC LOOKUP ---
-            # Checks for variations like 'the_nightmare' vs 'nightmare'
+            # --- SMARTER KC LOOKUP (Including Phosani) ---
             kc_keys_to_try = [
                 key.lower(),
                 key.lower().replace("the_", ""),
+                "phosani's nightmare",
+                "phosanis nightmare",
+                "phosani",
                 info["name"].lower().replace(" ", "_"),
                 info["name"].lower().replace("'", "")
             ]
@@ -149,7 +159,6 @@ def main():
 
             status, ratio, exp_slots = determine_luck_v2(actual_kc, info["ekc"], actual_slots, total_slots, info["name"])
 
-            # --- REFINED ALIGNMENT FORMATTING ---
             results.append({
                 "Activity": info["name"],
                 "Clog Progress": f"{actual_slots}/{total_slots}" if not missing_total else f"{actual_slots}/?",
