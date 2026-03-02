@@ -98,14 +98,14 @@ def determine_luck_v6(actual_kc, info, actual_slots):
     p = actual_kc / expected_kc
 
     # --- RNG ISOLATION ---
-    # We remove free slots entirely from the grading logic
+    # We remove free slots entirely from the grading logic to avoid "spooned" false positives
     rng_total_slots = max(1, total_slots - free_slots)
     rng_actual_slots = max(0, actual_slots - free_slots)
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_slots_count = rng_total_slots - safe_mega_rares
 
-    # Asymmetric Sigmoid:Degree 3 makes the start much flatter
-    #     s_frac_normal = (p ** 3) / (p ** 3 + 0.15 ** 3)
+    # Asymmetric Sigmoid: Degree 3 makes the start much flatter
+    s_frac_normal = (p ** 3) / (p ** 3 + 0.15 ** 3)
     s_frac_mega = (p ** 5) / (p ** 5 + 0.6 ** 5)
 
     exp_rng_total = (normal_slots_count * s_frac_normal) + (safe_mega_rares * s_frac_mega)
@@ -116,7 +116,7 @@ def determine_luck_v6(actual_kc, info, actual_slots):
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
     elif rng_actual_slots == 0:
-        # If you have 0 RNG slots, your ratio is effectively your expectation
+        # If you have 0 RNG slots, your ratio is driven by your expectation
         ratio = max(1.0, exp_rng_total)
     else:
         ratio = exp_rng_total / rng_actual_slots
