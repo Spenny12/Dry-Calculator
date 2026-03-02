@@ -153,7 +153,7 @@
         "ekc": 480.0,
         "kph": 10.0,
         "slots": 6,
-        "free_slots": 1
+        "free_slots": 2
     },
     "the_inferno": {
         "name": "The Inferno",
