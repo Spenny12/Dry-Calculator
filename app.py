@@ -137,7 +137,7 @@ def main():
             if actual_kc <= 0: continue
 
             # 2. Get Clog Data (Actual/Total)
-           # Check if clog_api exists; if not, use a default 1/1 dict
+# Check if clog_api exists; if not, use a default 1/1 dict
 if clog_api and isinstance(clog_api, dict):
     clog_info = clog_api.get(info["name"].lower(), {"actual": 1, "total": 1})
 else:
