@@ -5,21 +5,20 @@ import json
 import os
 import math
 
-st.set_page_config(page_title="Chungies Spoon Calc!!!!!", layout="wide")
+st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
-# Added combine_kc_keys so the app automatically sums Normal + Challenge/Expert modes
 RAIDS_DATA = {
     "chambers_of_xeric": {
-        "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 23, "free_slots": 7, "mega_rares": 4,
+        "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17, "free_slots": 0, "mega_rares": 3,
         "combine_kc_keys": ["chambers_of_xeric_challenge_mode"]
     },
     "theatre_of_blood": {
-        "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 6, "mega_rares": 2,
+        "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 0, "mega_rares": 2,
         "combine_kc_keys": ["theatre_of_blood_hard_mode"]
     },
     "tombs_of_amascut": {
-        "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 27, "free_slots": 19, "mega_rares": 2,
+        "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 16, "free_slots": 0, "mega_rares": 2,
         "combine_kc_keys": ["tombs_of_amascut_expert"]
     }
 }
@@ -164,10 +163,16 @@ def main():
                     continue
 
                 clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
-                flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
 
-                if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
-                    flat_kc.update({k.lower(): v for k, v in flat_kc["bosses"].items()})
+                # --- THE FLATTENING FIX ---
+                # TempleOSRS nests its data (e.g., inside 'bosses', 'clues', 'minigames').
+                # We flatten EVERYTHING so clue KC isn't hidden inside a sub-dictionary.
+                flat_kc = {}
+                for k, v in kc_api.items():
+                    if isinstance(v, dict):
+                        flat_kc.update({str(sub_k).lower(): sub_v for sub_k, sub_v in v.items()})
+                    else:
+                        flat_kc[str(k).lower()] = v
 
                 results = []
                 total_r, count = 0, 0
@@ -185,15 +190,19 @@ def main():
                     if "nightmare" in key.lower():
                         kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
 
+                    # --- CLUE TRANSLATION FIX ---
+                    # Converts "Beginner Clues" -> "clue_beginner" to match TempleOSRS Hiscores
+                    if info.get("type") == "Clue" and "clue" in info["name"].lower():
+                        tier = info["name"].lower().replace(" clues", "").replace(" clue", "").strip()
+                        kc_keys_to_try.extend([f"clue_{tier}", f"clues_{tier}", tier])
+
                     actual_kc = 0
 
-                    # 1. Grab Base KC
                     for k in kc_keys_to_try:
                         if k in flat_kc:
                             actual_kc = int(flat_kc[k])
                             if actual_kc > 0: break
 
-                    # 2. Additive KC Combiner (Normal + Expert/Challenge/Hard modes)
                     for combine_key in info.get("combine_kc_keys", []):
                         ck = combine_key.lower()
                         if ck in flat_kc:
