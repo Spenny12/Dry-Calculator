@@ -137,7 +137,7 @@ def determine_luck_v10(actual_kc, info, actual_slots):
 # --- MAIN UI ---
 def main():
     st.title("Spoon Calc")
-    st.markdown("Math: **Strict Power Curve**. Status tied to +/- 10 Spoon Points.")
+    st.markdown("Readme coming soon. Lower the spoon score, the more spooned")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -146,7 +146,7 @@ def main():
         st.header("Player Info")
         player_names_input = st.text_input("Username(s)", value="Spencejliv")
         filter_type = st.selectbox("Category", ["All", "Boss", "Raid", "Clue"])
-        analyze = st.button("run", type="primary", use_container_width=True)
+        analyze = st.button("ARun", type="primary", use_container_width=True)
 
     if analyze:
         player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
