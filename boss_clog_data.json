@@ -107,7 +107,7 @@
         "kph": 30.0,
         "slots": 10,
         "free_slots": 3,
-        "mega_rares": 2
+        "mega_rares": 3
     },
     "the_fight_caves": {
         "name": "The Fight Caves",
@@ -221,7 +221,7 @@
         "kph": 32.0,
         "slots": 10,
         "free_slots": 3,
-        "mega_rares": 1
+        "mega_rares": 3
     },
     "moons_of_peril": {
         "name": "Moons of Peril",
@@ -318,7 +318,7 @@
         "kph": 37.0,
         "slots": 10,
         "free_slots": 3,
-        "mega_rares": 2
+        "mega_rares": 3
     },
     "venenatis_and_spindel": {
         "name": "Venenatis and Spindel",
@@ -349,7 +349,7 @@
         "kph": 21.0,
         "slots": 10,
         "free_slots": 3,
-        "mega_rares": 2
+        "mega_rares": 3
     },
     "wintertodt": {
         "name": "Wintertodt",
