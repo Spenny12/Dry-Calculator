@@ -10,15 +10,15 @@ st.set_page_config(page_title="Chungies Spoon Calc!!!!!!!!", layout="wide")
 # --- DATA & CONSTANTS ---
 RAIDS_DATA = {
     "chambers_of_xeric": {
-        "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 23, "free_slots": 7, "mega_rares": 4,
+        "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 22, "free_slots": 2, "mega_rares": 4,
         "combine_kc_keys": ["chambers_of_xeric_challenge_mode"]
     },
     "theatre_of_blood": {
-        "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 6, "mega_rares": 2,
+        "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 12, "free_slots": 1, "mega_rares": 2,
         "combine_kc_keys": ["theatre_of_blood_hard_mode"]
     },
     "tombs_of_amascut": {
-        "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 27, "free_slots": 19, "mega_rares": 2,
+        "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 23, "free_slots": 14, "mega_rares": 2,
         "combine_kc_keys": ["tombs_of_amascut_expert"]
     }
 }
