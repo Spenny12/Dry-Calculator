@@ -133,7 +133,7 @@ def determine_luck_v10(actual_kc, info, actual_slots):
 # --- MAIN UI ---
 def main():
     st.title("Spoon Calc")
-    st.markdown("ReadMe coming soon. Only Bosses are functional atm (with some exceptions)")
+    st.markdown("ReadMe coming soon. Only Bosses are functional atm (with some exceptions). The lower the spoon score, the more spooned")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
