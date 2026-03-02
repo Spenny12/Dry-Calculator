@@ -43,8 +43,9 @@ def fetch_player_kc(player_name):
 @st.cache_data(ttl=3600)
 def fetch_exact_temple_clog(player_name, categories_list):
     """Fetches exactly the categories we need from TempleOSRS."""
-    # Join all our JSON keys into a comma-separated string
-    categories_str = ",".join(categories_list)
+    # Filter out any junk keys (like 'false' or 'true') that might have slipped into the JSON
+    clean_keys = [k for k in categories_list if isinstance(k, str) and k.lower() not in ['true', 'false', '0', '1']]
+    categories_str = ",".join(clean_keys)
 
     url = f"https://templeosrs.com/api/collection-log/player_collection_log.php?player={player_name}&categories={categories_str}"
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
@@ -53,12 +54,55 @@ def fetch_exact_temple_clog(player_name, categories_list):
         r = requests.get(url, headers=headers, timeout=10)
         if r.status_code == 200:
             data = r.json()
-            # Depending on Temple's exact format, it might be nested under "data"
             return {"success": True, "url": url, "data": data.get("data", data)}
         else:
             return {"success": False, "url": url, "error": f"HTTP {r.status_code}"}
     except Exception as e:
         return {"success": False, "url": url, "error": str(e)}
+
+# --- JSON DEEP SEARCH ---
+def get_clog_counts(clog_payload, boss_key, boss_name):
+    """Recursively searches the entire Temple payload for the specific boss data."""
+    if not isinstance(clog_payload, dict):
+        return 1, 1
+
+    # Temple usually hides the actual data inside a "collection_log" object
+    target_areas = [clog_payload, clog_payload.get("collection_log", {}), clog_payload.get("categories", {})]
+
+    for area in target_areas:
+        if not isinstance(area, dict): continue
+
+        # Check if the exact key (e.g., 'araxxor') is here
+        if boss_key in area:
+            b_data = area[boss_key]
+            if isinstance(b_data, dict) and "total" in b_data:
+                return b_data.get("obtained", 1), b_data.get("total", 1)
+
+        # Check if the title-cased name (e.g., 'Araxxor') is here
+        if boss_name in area:
+            b_data = area[boss_name]
+            if isinstance(b_data, dict) and "total" in b_data:
+                return b_data.get("obtained", 1), b_data.get("total", 1)
+
+    # If not found in common places, do a deep recursive dive
+    def deep_search(d):
+        if isinstance(d, dict):
+            for k, v in d.items():
+                if str(k).lower() in [boss_key.lower(), boss_name.lower()]:
+                    if isinstance(v, dict) and "total" in v:
+                        return v.get("obtained", v.get("count", 1)), v.get("total", 1)
+            for v in d.values():
+                if isinstance(v, (dict, list)):
+                    res = deep_search(v)
+                    if res: return res
+        elif isinstance(d, list):
+            for item in d:
+                res = deep_search(item)
+                if res: return res
+        return None
+
+    res = deep_search(clog_payload)
+    return res if res else (1, 1)
 
 # --- LUCK LOGIC (LOGARITHMIC) ---
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
@@ -91,7 +135,6 @@ def main():
     st.markdown("Comparing KC to Expected KC (EKC) weighted by Log Progress via TempleOSRS.")
 
     clog_data = load_all_clog_data()
-    # Extract all the keys (e.g., 'araxxor', 'zulrah') to query the API
     api_keys = list(clog_data.keys())
 
     with st.sidebar:
@@ -101,7 +144,7 @@ def main():
         analyze = st.button("Analyze Account", type="primary", use_container_width=True)
 
     if analyze:
-        with st.spinner("Fetching data from TempleOSRS..."):
+        with st.spinner("Fetching deep data from TempleOSRS..."):
             kc_api = fetch_player_kc(player_name)
             clog_response = fetch_exact_temple_clog(player_name, api_keys)
 
@@ -112,13 +155,17 @@ def main():
         clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
 
         if not clog_response["success"]:
-            st.warning(f"⚠️ Failed to pull Collection Log data for '{player_name}'. Error: {clog_response.get('error')}. Defaulting to KC-only math.")
+            st.warning(f"⚠️ Failed to pull Collection Log data. Error: {clog_response.get('error')}. Defaulting to 1/1 KC math.")
 
         with st.expander("🔍 Diagnostic: Raw Temple Clog Data"):
             st.write(f"**URL Queried:** {clog_response.get('url')}")
             if clog_api:
-                # Show first 3 elements to avoid lag
-                st.json({k: clog_api[k] for k in list(clog_api.keys())[:3]})
+                st.write(f"**Top-Level Folders Found:** {list(clog_api.keys())}")
+                # Show the actual nested collection log instead of just the top-level player info
+                debug_target = clog_api.get("collection_log", clog_api)
+                if isinstance(debug_target, dict):
+                    # Show first 5 bosses to confirm it's working
+                    st.json({k: debug_target[k] for k in list(debug_target.keys())[:5]})
             else:
                 st.write("No valid dictionary returned.")
 
@@ -137,22 +184,14 @@ def main():
             actual_kc = int(flat_kc.get(key.lower(), 0))
             if actual_kc <= 0: continue
 
-            # Direct Dictionary Lookup (So much cleaner!)
-            # We look up 'araxxor' directly in the returned Temple data
-            boss_clog = clog_api.get(key.lower(), {})
-
-            # Temple might return an array for items, or a dict with "obtained"/"total"
-            if isinstance(boss_clog, dict):
-                actual_slots = boss_clog.get("obtained", 1)
-                total_slots = boss_clog.get("total", 1)
-            else:
-                actual_slots, total_slots = 1, 1
+            # --- THE FIX: Deep Search extraction ---
+            actual_slots, total_slots = get_clog_counts(clog_api, key.lower(), info["name"])
 
             status, ratio, exp_slots = determine_luck_v2(
                 actual_kc, info["ekc"], actual_slots, total_slots, info["name"]
             )
 
-            display_exp_slots = "N/A" if (total_slots == 1) else round(exp_slots, 1)
+            display_exp_slots = "N/A" if (total_slots <= 1) else round(exp_slots, 1)
             display_kc = f"{actual_kc:,}"
 
             results.append({
