@@ -1,48 +1,48 @@
 {
-    "beginner_clues": {
+    "beginner_treasure_trails": {
         "name": "Beginner Clues",
         "ekc": 597.0,
         "kph": 60.0,
         "slots": 16
     },
-    "easy_clues": {
+    "easy_treasure_trails": {
         "name": "Easy Clues",
         "ekc": 7907.0,
         "kph": 50.0,
         "slots": 131
     },
-    "medium_clues": {
+    "medium_treasure_trails": {
         "name": "Medium Clues",
         "ekc": 2076.0,
         "kph": 30.0,
         "slots": 116
     },
-    "hard_clues": {
+    "hard_treasure_trails": {
         "name": "Hard Clues",
         "ekc": 5484.0,
         "kph": 20.0,
         "slots": 125
     },
-    "elite_clues": {
+    "elite_treasure_trails": {
         "name": "Elite Clues",
         "ekc": 7469.0,
         "kph": 2.3,
         "slots": 91
     },
-    "master_clues": {
+    "master_treasure_trails": {
         "name": "Master Clues",
         "ekc": 7532.0,
         "kph": 2.0,
         "slots": 92
     },
     "elite_mega_rares": {
-        "name": "Elite Mega Rares",
+        "name": "Elite Mega Rares (BROKEN FOR NOW)",
         "ekc": 663.0,
         "kph": 2.3,
         "slots": 15
     },
     "master_mega_rares": {
-        "name": "Master Mega Rares",
+        "name": "Master Mega Rares (BROKEN FOR NOW)",
         "ekc": 315.0,
         "kph": 2.0,
         "slots": 15
@@ -54,12 +54,12 @@
         "slots": 15
     },
     "3rd_age": {
-        "name": "3rd Age",
+        "name": "3rd Age (BROKEN FOR NOW)",
         "ekc": 10000.0,
         "kph": 1.0,
         "slots": 23
     },
-    "shared_clues": {
+    "shared_treasure_trail_rewards": {
         "name": "Shared Clues",
         "ekc": 1000.0,
         "kph": 1.0,
