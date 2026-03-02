@@ -9,7 +9,7 @@ import math
 st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
-# Slots added here so raids work instantly
+# Total slots for Raids (Denominator source)
 RAIDS_DATA = {
     "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17},
     "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 7},
@@ -45,9 +45,7 @@ def fetch_player_kc(player_name):
 def fetch_exact_temple_clog(player_name, categories_list):
     clean_keys = [k for k in categories_list if isinstance(k, str) and k.lower() not in ['true', 'false', '0', '1']]
     categories_str = ",".join(clean_keys)
-    # Ensure Nightmare is in the request even if renamed in JSON
-    if "nightmare" not in categories_str.lower():
-        categories_str += ",nightmare"
+    if "nightmare" not in categories_str.lower(): categories_str += ",nightmare"
 
     url = f"https://templeosrs.com/api/collection-log/player_collection_log.php?player={player_name}&categories={categories_str}"
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -59,22 +57,27 @@ def fetch_exact_temple_clog(player_name, categories_list):
     except: pass
     return {"success": False}
 
-# --- PARSERS ---
+# --- CORRECTED PARSER ---
 def get_clog_counts(clog_payload, boss_key, local_info):
+    """
+    Numerators: Count items in the TempleOSRS list.
+    Denominators: Pull 'slots' from the local JSON.
+    """
     items_dict = clog_payload.get("items", {}) if isinstance(clog_payload, dict) else {}
 
-    # Logic override: Phosani shares the "Nightmare" collection log
+    # Check for Phosani/Nightmare grouping
     search_key = "nightmare" if "nightmare" in boss_key.lower() else boss_key.lower()
-    boss_data = items_dict.get(search_key)
+    boss_api_list = items_dict.get(search_key, [])
 
-    if isinstance(boss_data, list):
-        actual = len(boss_data)
-    elif isinstance(boss_data, dict):
-        actual = boss_data.get("obtained", 0)
+    # 1. OBTAINED: Count only what's in the list
+    if isinstance(boss_api_list, list):
+        actual = len(boss_api_list)
     else:
         actual = 0
 
+    # 2. TOTAL: Pulled strictly from your local JSON
     total = local_info.get("slots", 0)
+
     return actual, total
 
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
@@ -86,6 +89,7 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
     s = math.log(1 + a * p) / math.log(1 + a)
     exp_slots = min(total_slots * s, total_slots)
 
+    # Luck calculation: Ratio of Expected vs Actual
     ratio = exp_slots / max(actual_slots, 0.1)
     if actual_slots >= total_slots: ratio = actual_kc / expected_kc
 
@@ -123,7 +127,6 @@ def main():
         clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
         flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
 
-        # Flatten nested 'bosses' dict if it exists
         if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
             flat_kc.update({k.lower(): v for k, v in flat_kc["bosses"].items()})
 
@@ -131,29 +134,21 @@ def main():
         total_r, count = 0, 0
 
         for key, info in clog_data.items():
-            if filter_type != "All" and info["type"] != filter_type:
-                continue
+            if filter_type != "All" and info["type"] != filter_type: continue
 
-            # --- SMARTER KC LOOKUP (Including Phosani) ---
-            kc_keys_to_try = [
-                key.lower(),
-                key.lower().replace("the_", ""),
-                "phosani's nightmare",
-                "phosanis nightmare",
-                "phosani",
-                info["name"].lower().replace(" ", "_"),
-                info["name"].lower().replace("'", "")
-            ]
-
+            # Match boss names (handles The_Nightmare, Phosani, etc.)
+            kc_keys = [key.lower(), key.lower().replace("the_", ""), "phosani's nightmare", "phosanis nightmare"]
             actual_kc = 0
-            for k in kc_keys_to_try:
+            for k in kc_keys:
                 if k in flat_kc:
                     actual_kc = int(flat_kc[k])
                     if actual_kc > 0: break
 
             if actual_kc <= 0: continue
 
+            # --- USE THE CORRECTED PARSER ---
             actual_slots, total_slots = get_clog_counts(clog_api, key, info)
+
             missing_total = (total_slots == 0)
             if missing_total: total_slots = max(actual_slots, 1)
 
@@ -162,7 +157,7 @@ def main():
             results.append({
                 "Activity": info["name"],
                 "Clog Progress": f"{actual_slots}/{total_slots}" if not missing_total else f"{actual_slots}/?",
-                "Expected Slots": f"{exp_slots:.1f}" if not missing_total else "⚠️ Set slots in JSON",
+                "Expected Slots": f"{exp_slots:.1f}" if not missing_total else "⚠️ Check JSON Slots",
                 "Your KC": f"{actual_kc:,}",
                 "Luck Ratio": f"{ratio:.2f}" if not missing_total else "N/A",
                 "Status": status if not missing_total else "N/A"
@@ -180,13 +175,13 @@ def main():
             if count > 0:
                 avg = total_r / count
                 overall = "Overall Spooned 🥄" if avg <= 0.85 else "Overall Dry 🏜️" if avg >= 1.15 else "Overall On-Rate 🎯"
-                ehc_value = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
+                ehc_val = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
 
                 c1, c2, c3, c4 = st.columns(4)
                 c1.metric("Account Luck", overall)
                 c2.metric("Avg Luck Ratio", f"{avg:.2f}")
                 c3.metric("Activities Analyzed", count)
-                c4.metric("Temple EHC", f"{ehc_value:,.1f} hrs")
+                c4.metric("Temple EHC", f"{ehc_val:,.1f} hrs")
         else:
             st.info("No matching data found.")
 
