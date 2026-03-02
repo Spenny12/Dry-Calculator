@@ -87,7 +87,7 @@ def get_clog_counts(clog_payload, boss_key, local_info):
     if total > 0 and actual > total: actual = total
     return actual, total
 
-# --- THE SPOON MATH V10 (DYNAMIC ASYMMETRIC TAPERED) ---
+# --- THE STRICT POWER CURVE MATH ---
 def determine_luck_v10(actual_kc, info, actual_slots):
     expected_kc = info.get("ekc", 0)
     total_slots = info.get("slots", 0)
@@ -104,31 +104,28 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_rng_slots = rng_total_slots - safe_mega_rares
 
-    # DYNAMIC EXPONENT FIX:
-    # Use 1.0 (Linear) for short grinds (EKC < 500) to keep low-KC expectations grounded.
-    # Use 0.5 (Power) for long grinds to properly weight the initial unique collection.
-    norm_exponent = 1.0 if expected_kc < 500 else 0.5
-
+    # Strict Power Curve:
+    # filler items start at 0.5 power to be aggressive from KC 1
     p = actual_kc / expected_kc
-    exp_normal = normal_rng_slots * (p ** norm_exponent)
-    exp_mega = safe_mega_rares * (p ** 2.5) # Megas always heavily back-loaded
+    exp_normal = normal_rng_slots * (p ** 0.5)
+    exp_mega = safe_mega_rares * (p ** 2.5)
 
     exp_rng_total = min(exp_normal + exp_mega, rng_total_slots)
     exp_slots_display = free_slots + exp_rng_total
 
-    # Inverse Curve for Time Score
+    # Inverse Curve for Score: How much KC should you have spent for this progress?
     progress_ratio = rng_actual_slots / rng_total_slots
-    expected_kc_for_progress = expected_kc * (progress_ratio ** (1/norm_exponent if norm_exponent != 1.0 else 2.0))
+    # We use a 2.0 power here to make the status more sensitive to being "wet/spooned"
+    expected_kc_for_progress = expected_kc * (progress_ratio ** 2.0)
 
-    # Spoon Points = Hours Saved/Lost
     pts = int(round((actual_kc - expected_kc_for_progress) / max(kph, 0.1)))
     display_ratio = expected_kc_for_progress / max(actual_kc, 1.0)
 
-    # --- STATUS LOGIC TIED TO POINTS ---
+    # --- STATUS LOGIC ---
     if pts <= -100: status = "Spooned 🥄"
-    elif pts <= -20: status = "Wet 💧"
+    elif pts <= -10: status = "Wet 💧" # Tightened from -20 to -10
     elif pts >= 100: status = "Very Dry 💀"
-    elif pts >= 20: status = "Dry 🏜️"
+    elif pts >= 10: status = "Dry 🏜️" # Tightened from 20 to 10
     else: status = "On-Rate 🎯"
 
     return status, display_ratio, exp_slots_display, pts
@@ -136,7 +133,7 @@ def determine_luck_v10(actual_kc, info, actual_slots):
 # --- MAIN UI ---
 def main():
     st.title("OSRS Luck & Time Analyzer")
-    st.markdown("Math: **Dynamic Asymmetric Tapered Curve**. Adjusts scaling based on total grind length.")
+    st.markdown("Math: **Strict Power Curve**. Sensitive to low-KC progress.")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -186,14 +183,12 @@ def main():
                             actual_kc = int(flat_kc[k])
                             if actual_kc > 0: break
 
-                    # NIGHTMARE KC SUMMING
                     if "nightmare" in key.lower():
                         for pk in ["phosani's nightmare", "phosani", "phosanis nightmare"]:
                             if pk in flat_kc:
                                 actual_kc += int(flat_kc[pk])
                                 break
 
-                    # RAID / MODE COMBINING
                     for ck in info.get("combine_kc_keys", []):
                         ck_low = ck.lower()
                         if ck_low in flat_kc:
