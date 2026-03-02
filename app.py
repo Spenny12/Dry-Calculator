@@ -8,10 +8,11 @@ import math
 st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
+# I added the "slots" key here so Raids work perfectly right out of the box!
 RAIDS_DATA = {
-    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0},
-    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0},
-    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71}
+    "chambers_of_xeric": {"name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17},
+    "theatre_of_blood": {"name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 7},
+    "tombs_of_amascut": {"name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 8}
 }
 
 @st.cache_data
@@ -42,11 +43,8 @@ def fetch_player_kc(player_name):
 
 @st.cache_data(ttl=3600)
 def fetch_exact_temple_clog(player_name, categories_list):
-    """Fetches exactly the categories we need from TempleOSRS."""
-    # Filter junk keys
     clean_keys = [k for k in categories_list if isinstance(k, str) and k.lower() not in ['true', 'false', '0', '1']]
     categories_str = ",".join(clean_keys)
-
     url = f"https://templeosrs.com/api/collection-log/player_collection_log.php?player={player_name}&categories={categories_str}"
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
@@ -60,28 +58,25 @@ def fetch_exact_temple_clog(player_name, categories_list):
     except Exception as e:
         return {"success": False, "url": url, "error": str(e)}
 
-# --- DIRECT JSON PARSER ---
-def get_clog_counts(clog_payload, boss_key, boss_name):
-    """Targets the 'items' folder exactly as seen in the TempleOSRS payload."""
-    if not isinstance(clog_payload, dict):
-        return 1, 1
+# --- DIRECT JSON PARSER (UPDATED FOR LISTS) ---
+def get_clog_counts(clog_payload, boss_key, local_info):
+    """Calculates actual slots from Temple's list, and total slots from your local JSON."""
+    items_dict = clog_payload.get("items", {}) if isinstance(clog_payload, dict) else {}
 
-    # As verified by the screenshot, Temple stores the categories under 'items'
-    items_dict = clog_payload.get("items", {})
+    # 1. Get ACTUAL slots by counting the items in Temple's array
+    boss_data = items_dict.get(boss_key.lower())
 
-    if not isinstance(items_dict, dict):
-        return 1, 1
+    if isinstance(boss_data, list):
+        actual = len(boss_data)  # The screenshot shows it's a list!
+    elif isinstance(boss_data, dict):
+        actual = boss_data.get("obtained", boss_data.get("count", 0))
+    else:
+        actual = 0  # 0 slots obtained
 
-    # Search inside the "items" dictionary for the boss name or key
-    for k, v in items_dict.items():
-        if str(k).lower() == boss_key.lower() or str(k).lower() == boss_name.lower():
-            if isinstance(v, dict):
-                # Safely grab the counts, defaulting to 1 to prevent division by zero errors
-                actual = v.get("obtained", v.get("count", 1))
-                total = v.get("total", v.get("max", 1))
-                return actual, total
+    # 2. Get TOTAL possible slots from your local JSON file
+    total = local_info.get("slots", local_info.get("total_slots", 0))
 
-    return 1, 1
+    return actual, total
 
 # --- LUCK LOGIC (LOGARITHMIC) ---
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
@@ -134,20 +129,8 @@ def main():
         clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
 
         if not clog_response["success"]:
-            st.warning(f"⚠️ Failed to pull Collection Log data. Error: {clog_response.get('error')}. Defaulting to 1/1 KC math.")
+            st.warning(f"⚠️ Failed to pull Collection Log data. Error: {clog_response.get('error')}.")
 
-        with st.expander("🔍 Diagnostic: Raw Temple Clog Data"):
-            st.write(f"**URL Queried:** {clog_response.get('url')}")
-            if clog_api:
-                # Debug display to show exactly what's inside the 'items' folder
-                items_preview = clog_api.get("items", {})
-                if isinstance(items_preview, dict):
-                    st.write(f"Found {len(items_preview)} categories inside 'items'!")
-                    st.json({k: items_preview[k] for k in list(items_preview.keys())[:5]})
-            else:
-                st.write("No valid dictionary returned.")
-
-        # Flatten Temple KC Stats
         flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
         if "bosses" in flat_kc and isinstance(flat_kc["bosses"], dict):
             flat_kc.update({k.lower(): v for k, v in flat_kc["bosses"].items()})
@@ -162,26 +145,39 @@ def main():
             actual_kc = int(flat_kc.get(key.lower(), 0))
             if actual_kc <= 0: continue
 
-            # Extract actual and total slots using the new direct parser
-            actual_slots, total_slots = get_clog_counts(clog_api, key, info["name"])
+            # --- Extract using the new List Parser ---
+            actual_slots, total_slots = get_clog_counts(clog_api, key, info)
+
+            # Safeguard if you haven't added "slots" to your JSON yet
+            missing_total = False
+            if total_slots == 0:
+                total_slots = max(actual_slots, 1) # Prevents division by zero crash
+                missing_total = True
 
             status, ratio, exp_slots = determine_luck_v2(
                 actual_kc, info["ekc"], actual_slots, total_slots, info["name"]
             )
 
-            display_exp_slots = "N/A" if (total_slots <= 1) else round(exp_slots, 1)
-            display_kc = f"{actual_kc:,}"
+            # UI Formatting
+            if missing_total:
+                display_exp_slots = "⚠️ Add 'slots' to JSON"
+                display_clog = f"{actual_slots}/?"
+            else:
+                display_exp_slots = round(exp_slots, 1)
+                display_clog = f"{actual_slots}/{total_slots}"
 
             results.append({
                 "Activity": info["name"],
-                "Clog Progress": f"{actual_slots}/{total_slots}",
+                "Clog Progress": display_clog,
                 "Expected Slots": display_exp_slots,
-                "Your KC": display_kc,
-                "Luck Ratio": round(ratio, 2),
-                "Status": status
+                "Your KC": f"{actual_kc:,}",
+                "Luck Ratio": "N/A" if missing_total else round(ratio, 2),
+                "Status": "N/A" if missing_total else status
             })
-            total_r += ratio
-            count += 1
+
+            if not missing_total:
+                total_r += ratio
+                count += 1
 
         if results:
             df = pd.DataFrame(results).sort_values("Luck Ratio", ascending=False)
@@ -189,18 +185,19 @@ def main():
 
             st.divider()
 
-            # --- OVERALL METRICS ---
-            avg = total_r / count
-            overall = "Overall Spooned 🥄" if avg <= 0.85 else "Overall Dry 🏜️" if avg >= 1.15 else "Overall On-Rate 🎯"
+            if count > 0:
+                avg = total_r / count
+                overall = "Overall Spooned 🥄" if avg <= 0.85 else "Overall Dry 🏜️" if avg >= 1.15 else "Overall On-Rate 🎯"
 
-            # Extract EHC from TempleOSRS payload
-            ehc_value = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
+                ehc_value = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
 
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Account Luck", overall)
-            c2.metric("Avg Luck Ratio", f"{avg:.2f}")
-            c3.metric("Activities Analyzed", count)
-            c4.metric("Temple EHC", f"{ehc_value:,.1f} hrs")
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Account Luck", overall)
+                c2.metric("Avg Luck Ratio", f"{avg:.2f}")
+                c3.metric("Activities Analyzed", count)
+                c4.metric("Temple EHC", f"{ehc_value:,.1f} hrs")
+            else:
+                st.warning("Please add the 'slots' key to your JSON file to calculate account luck!")
         else:
             st.info("The player was found, but no KC was found for the selected filters.")
 
