@@ -5,20 +5,20 @@ import json
 import os
 import math
 
-st.set_page_config(page_title="Chungies Spoon Calc!!!!!!!", layout="wide")
+st.set_page_config(page_title="OSRS Luck & Time Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
 RAIDS_DATA = {
     "chambers_of_xeric": {
-        "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 18, "free_slots": 2, "mega_rares": 4,
+        "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17, "free_slots": 0, "mega_rares": 3,
         "combine_kc_keys": ["chambers_of_xeric_challenge_mode"]
     },
     "theatre_of_blood": {
-        "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 12, "free_slots": 1, "mega_rares": 2,
+        "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 0, "mega_rares": 2,
         "combine_kc_keys": ["theatre_of_blood_hard_mode"]
     },
     "tombs_of_amascut": {
-        "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 15, "free_slots": 2, "mega_rares": 2,
+        "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 16, "free_slots": 0, "mega_rares": 2,
         "combine_kc_keys": ["tombs_of_amascut_expert"]
     }
 }
@@ -55,7 +55,8 @@ def fetch_player_kc(player_name):
 def fetch_exact_temple_clog(player_name, categories_list):
     clean_keys = [k for k in categories_list if isinstance(k, str) and k.lower() not in ['true', 'false', '0', '1']]
     categories_str = ",".join(clean_keys)
-    if "the_nightmare" not in categories_str.lower() and "nightmare" not in categories_str.lower():
+    # Ensure Nightmare is requested correctly
+    if "nightmare" not in categories_str.lower():
         categories_str += ",the_nightmare"
 
     url = f"https://templeosrs.com/api/collection-log/player_collection_log.php?player={player_name}&categories={categories_str}"
@@ -71,10 +72,11 @@ def fetch_exact_temple_clog(player_name, categories_list):
 # --- THE PARSER ---
 def get_clog_counts(clog_payload, boss_key, local_info):
     items_dict = clog_payload.get("items", {}) if isinstance(clog_payload, dict) else {}
-    boss_api_list = items_dict.get(boss_key, [])
 
+    # Try exact key, then common nightmare fallbacks
+    boss_api_list = items_dict.get(boss_key, [])
     if not boss_api_list and "nightmare" in boss_key.lower():
-        boss_api_list = items_dict.get("nightmare", items_dict.get("the_nightmare", []))
+        boss_api_list = items_dict.get("the_nightmare", items_dict.get("nightmare", []))
 
     if isinstance(boss_api_list, list):
         actual = sum(1 for item in boss_api_list if item.get("count", 0) > 0)
@@ -87,7 +89,7 @@ def get_clog_counts(clog_payload, boss_key, local_info):
     if total > 0 and actual > total: actual = total
     return actual, total
 
-# --- THE STRICT POWER CURVE MATH ---
+# --- THE SPOON MATH V10 (DYNAMIC ASYMMETRIC TAPERED) ---
 def determine_luck_v10(actual_kc, info, actual_slots):
     expected_kc = info.get("ekc", 0)
     total_slots = info.get("slots", 0)
@@ -104,51 +106,52 @@ def determine_luck_v10(actual_kc, info, actual_slots):
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_rng_slots = rng_total_slots - safe_mega_rares
 
-    # Strict Power Curve:
-    # filler items start at 0.5 power to be aggressive from KC 1
+    # Dynamic Exponent: 1.0 for short grinds (EKC < 500) to keep math grounded.
+    # 0.5 for long grinds to front-load the filler uniques.
+    norm_exponent = 1.0 if expected_kc < 500 else 0.5
+
     p = actual_kc / expected_kc
-    exp_normal = normal_rng_slots * (p ** 0.5)
+    exp_normal = normal_rng_slots * (p ** norm_exponent)
     exp_mega = safe_mega_rares * (p ** 2.5)
 
     exp_rng_total = min(exp_normal + exp_mega, rng_total_slots)
     exp_slots_display = free_slots + exp_rng_total
 
-    # Inverse Curve for Score: How much KC should you have spent for this progress?
+    # Inverse Curve for Time Score
     progress_ratio = rng_actual_slots / rng_total_slots
-    # We use a 2.0 power here to make the status more sensitive to being "wet/spooned"
-    expected_kc_for_progress = expected_kc * (progress_ratio ** 2.0)
+    expected_kc_for_progress = expected_kc * (progress_ratio ** (1/norm_exponent if norm_exponent != 1.0 else 2.0))
 
     pts = int(round((actual_kc - expected_kc_for_progress) / max(kph, 0.1)))
     display_ratio = expected_kc_for_progress / max(actual_kc, 1.0)
 
-    # --- STATUS LOGIC ---
-    if pts <= -25: status = "Spooned 🥄"
-    elif pts <= -10: status = "Wet 💧" # Tightened from -20 to -10
-    elif pts >= 25: status = "Very Dry 💀"
-    elif pts >= 10: status = "Dry 🏜️" # Tightened from 20 to 10
+    # Status Mapping (Strict +/- 10 threshold)
+    if pts <= -100: status = "Spooned 🥄"
+    elif pts <= -10: status = "Wet 💧"
+    elif pts >= 100: status = "Very Dry 💀"
+    elif pts >= 10: status = "Dry 🏜️"
     else: status = "On-Rate 🎯"
 
     return status, display_ratio, exp_slots_display, pts
 
 # --- MAIN UI ---
 def main():
-    st.title("Spoon Calc")
-    st.markdown("ReadMe coming soon. Only Bosses are functional atm (with some exceptions). The lower the spoon score, the more spooned")
+    st.title("OSRS Luck & Time Analyzer")
+    st.markdown("Math: **Asymmetric Tapered Curve v10**. Corrected Nightmare KC and DT2 naming.")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
 
     with st.sidebar:
         st.header("Player Info")
-        player_names_input = st.text_input("Username(s)", value="Spencejliv,iPhone Game,Catchies,NotALadyBoy,iMogU,Luikang67,TheKizzler")
+        player_names_input = st.text_input("Username(s)", value="Spencejliv")
         filter_type = st.selectbox("Category", ["All", "Boss", "Raid", "Clue"])
-        analyze = st.button("Run", type="primary", use_container_width=True)
+        analyze = st.button("Analyze Account(s)", type="primary", use_container_width=True)
 
     if analyze:
         player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
         if not player_names: return
 
-        with st.spinner("Pretending that Ryan is spooned"):
+        with st.spinner("Fetching data..."):
             all_player_tables = {}
             summary_stats = []
 
@@ -158,12 +161,7 @@ def main():
                 if not kc_api: continue
 
                 clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
-                flat_kc = {}
-                for k, v in kc_api.items():
-                    if isinstance(v, dict):
-                        flat_kc.update({str(sub_k).lower(): sub_v for sub_k, sub_v in v.items()})
-                    else:
-                        flat_kc[str(k).lower()] = v
+                flat_kc = {str(k).lower(): v for k, v in kc_api.items()}
 
                 results = []
                 total_spoon_score = 0
@@ -171,24 +169,33 @@ def main():
                 for key, info in clog_data.items():
                     if filter_type != "All" and info["type"] != filter_type: continue
 
+                    # DT2 and Specific Naming Fixes
+                    clean_key = key.lower()
                     kc_keys_to_try = [
-                        key.lower(), key.lower().replace("the_", ""),
+                        clean_key,
+                        clean_key.replace("the_", ""),
                         info["name"].lower().replace(" ", "_"),
-                        info["name"].lower().replace("'", ""),
+                        "the_" + clean_key.replace("the_", ""),
+                        "duke_sucellus" if "sucellus" in clean_key else "",
+                        "the_whisperer" if "whisperer" in clean_key else "",
+                        "the_leviathan" if "leviathan" in clean_key else "",
+                        "vardorvis" if "vardorvis" in clean_key else ""
                     ]
 
                     actual_kc = 0
                     for k in kc_keys_to_try:
-                        if k in flat_kc:
+                        if k and k in flat_kc:
                             actual_kc = int(flat_kc[k])
                             if actual_kc > 0: break
 
-                    if "nightmare" in key.lower():
+                    # Nightmare + Phosani Combiner
+                    if "nightmare" in clean_key:
                         for pk in ["phosani's nightmare", "phosani", "phosanis nightmare"]:
                             if pk in flat_kc:
                                 actual_kc += int(flat_kc[pk])
                                 break
 
+                    # Combined KC (Raids/Modes)
                     for ck in info.get("combine_kc_keys", []):
                         ck_low = ck.lower()
                         if ck_low in flat_kc:
