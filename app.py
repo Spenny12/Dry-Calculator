@@ -43,7 +43,7 @@ def fetch_player_kc(player_name):
 @st.cache_data(ttl=3600)
 def fetch_exact_temple_clog(player_name, categories_list):
     """Fetches exactly the categories we need from TempleOSRS."""
-    # Filter out any junk keys (like 'false' or 'true') that might have slipped into the JSON
+    # Filter junk keys
     clean_keys = [k for k in categories_list if isinstance(k, str) and k.lower() not in ['true', 'false', '0', '1']]
     categories_str = ",".join(clean_keys)
 
@@ -60,49 +60,28 @@ def fetch_exact_temple_clog(player_name, categories_list):
     except Exception as e:
         return {"success": False, "url": url, "error": str(e)}
 
-# --- JSON DEEP SEARCH ---
+# --- DIRECT JSON PARSER ---
 def get_clog_counts(clog_payload, boss_key, boss_name):
-    """Recursively searches the entire Temple payload for the specific boss data."""
+    """Targets the 'items' folder exactly as seen in the TempleOSRS payload."""
     if not isinstance(clog_payload, dict):
         return 1, 1
 
-    # Temple usually hides the actual data inside a "collection_log" object
-    target_areas = [clog_payload, clog_payload.get("collection_log", {}), clog_payload.get("categories", {})]
+    # As verified by the screenshot, Temple stores the categories under 'items'
+    items_dict = clog_payload.get("items", {})
 
-    for area in target_areas:
-        if not isinstance(area, dict): continue
+    if not isinstance(items_dict, dict):
+        return 1, 1
 
-        # Check if the exact key (e.g., 'araxxor') is here
-        if boss_key in area:
-            b_data = area[boss_key]
-            if isinstance(b_data, dict) and "total" in b_data:
-                return b_data.get("obtained", 1), b_data.get("total", 1)
+    # Search inside the "items" dictionary for the boss name or key
+    for k, v in items_dict.items():
+        if str(k).lower() == boss_key.lower() or str(k).lower() == boss_name.lower():
+            if isinstance(v, dict):
+                # Safely grab the counts, defaulting to 1 to prevent division by zero errors
+                actual = v.get("obtained", v.get("count", 1))
+                total = v.get("total", v.get("max", 1))
+                return actual, total
 
-        # Check if the title-cased name (e.g., 'Araxxor') is here
-        if boss_name in area:
-            b_data = area[boss_name]
-            if isinstance(b_data, dict) and "total" in b_data:
-                return b_data.get("obtained", 1), b_data.get("total", 1)
-
-    # If not found in common places, do a deep recursive dive
-    def deep_search(d):
-        if isinstance(d, dict):
-            for k, v in d.items():
-                if str(k).lower() in [boss_key.lower(), boss_name.lower()]:
-                    if isinstance(v, dict) and "total" in v:
-                        return v.get("obtained", v.get("count", 1)), v.get("total", 1)
-            for v in d.values():
-                if isinstance(v, (dict, list)):
-                    res = deep_search(v)
-                    if res: return res
-        elif isinstance(d, list):
-            for item in d:
-                res = deep_search(item)
-                if res: return res
-        return None
-
-    res = deep_search(clog_payload)
-    return res if res else (1, 1)
+    return 1, 1
 
 # --- LUCK LOGIC (LOGARITHMIC) ---
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
@@ -144,7 +123,7 @@ def main():
         analyze = st.button("Analyze Account", type="primary", use_container_width=True)
 
     if analyze:
-        with st.spinner("Fetching deep data from TempleOSRS..."):
+        with st.spinner("Fetching data from TempleOSRS..."):
             kc_api = fetch_player_kc(player_name)
             clog_response = fetch_exact_temple_clog(player_name, api_keys)
 
@@ -160,12 +139,11 @@ def main():
         with st.expander("🔍 Diagnostic: Raw Temple Clog Data"):
             st.write(f"**URL Queried:** {clog_response.get('url')}")
             if clog_api:
-                st.write(f"**Top-Level Folders Found:** {list(clog_api.keys())}")
-                # Show the actual nested collection log instead of just the top-level player info
-                debug_target = clog_api.get("collection_log", clog_api)
-                if isinstance(debug_target, dict):
-                    # Show first 5 bosses to confirm it's working
-                    st.json({k: debug_target[k] for k in list(debug_target.keys())[:5]})
+                # Debug display to show exactly what's inside the 'items' folder
+                items_preview = clog_api.get("items", {})
+                if isinstance(items_preview, dict):
+                    st.write(f"Found {len(items_preview)} categories inside 'items'!")
+                    st.json({k: items_preview[k] for k in list(items_preview.keys())[:5]})
             else:
                 st.write("No valid dictionary returned.")
 
@@ -184,8 +162,8 @@ def main():
             actual_kc = int(flat_kc.get(key.lower(), 0))
             if actual_kc <= 0: continue
 
-            # --- THE FIX: Deep Search extraction ---
-            actual_slots, total_slots = get_clog_counts(clog_api, key.lower(), info["name"])
+            # Extract actual and total slots using the new direct parser
+            actual_slots, total_slots = get_clog_counts(clog_api, key, info["name"])
 
             status, ratio, exp_slots = determine_luck_v2(
                 actual_kc, info["ekc"], actual_slots, total_slots, info["name"]
@@ -210,13 +188,19 @@ def main():
             st.table(df)
 
             st.divider()
+
+            # --- OVERALL METRICS ---
             avg = total_r / count
             overall = "Overall Spooned 🥄" if avg <= 0.85 else "Overall Dry 🏜️" if avg >= 1.15 else "Overall On-Rate 🎯"
 
-            c1, c2, c3 = st.columns(3)
+            # Extract EHC from TempleOSRS payload
+            ehc_value = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
+
+            c1, c2, c3, c4 = st.columns(4)
             c1.metric("Account Luck", overall)
             c2.metric("Avg Luck Ratio", f"{avg:.2f}")
             c3.metric("Activities Analyzed", count)
+            c4.metric("Temple EHC", f"{ehc_value:,.1f} hrs")
         else:
             st.info("The player was found, but no KC was found for the selected filters.")
 
