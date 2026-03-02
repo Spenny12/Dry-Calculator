@@ -164,7 +164,6 @@ def main():
 
                 clog_api = clog_response.get("data", {}) if clog_response["success"] else {}
 
-                # We flatten the nested dictionary so that clues aren't hidden deep inside hiscore folders
                 flat_kc = {}
                 for k, v in kc_api.items():
                     if isinstance(v, dict):
@@ -188,45 +187,53 @@ def main():
                     if "nightmare" in key.lower():
                         kc_keys_to_try.extend(["phosani's nightmare", "phosanis nightmare", "phosani"])
 
-                    # --- OFFICIAL HISCORES CLUE TRANSLATOR ---
                     if info.get("type") == "Clue":
                         tier = info["name"].lower().replace(" clues", "").replace(" clue", "").strip()
                         if tier:
                             kc_keys_to_try.extend([f"clue scrolls ({tier})", f"clue_{tier}", f"clues_{tier}"])
 
-                    actual_kc = 0
+                    actual_kc = 0.0 # Changed to float to handle Master Clue Equivalents
 
                     # 1. Grab Base KC
                     for k in kc_keys_to_try:
                         if k in flat_kc:
-                            actual_kc = int(flat_kc[k])
+                            actual_kc = float(flat_kc[k])
                             if actual_kc > 0: break
 
                     # 2. Additive KC Combiner
                     for combine_key in info.get("combine_kc_keys", []):
                         ck = combine_key.lower()
                         if ck in flat_kc:
-                            actual_kc += int(flat_kc[ck])
+                            actual_kc += float(flat_kc[ck])
                         elif ck.replace(" ", "_") in flat_kc:
-                            actual_kc += int(flat_kc[ck.replace(" ", "_")])
+                            actual_kc += float(flat_kc[ck.replace(" ", "_")])
 
-                    # --- CLUE META CATEGORY CALCULATOR ---
+                    # --- CLUE META CATEGORY CALCULATOR (WITH WEIGHTS) ---
                     if info.get("type") == "Clue" and actual_kc <= 0:
                         clue_tiers_to_sum = []
+                        is_mega_meta = False
+
                         if "shared" in key.lower():
                             clue_tiers_to_sum = ["beginner", "easy", "medium", "hard", "elite", "master"]
                         elif "3rd" in key.lower() or "third" in key.lower() or "gilded" in key.lower():
                             clue_tiers_to_sum = ["hard", "elite", "master"]
+                            is_mega_meta = True # Triggers the weight scaling
                         elif "elite_mega" in key.lower():
                             clue_tiers_to_sum = ["elite"]
                         elif "master_mega" in key.lower():
                             clue_tiers_to_sum = ["master"]
 
-                        # Sums up the specific tiers to calculate your true KC for these categories
                         for c_tier in clue_tiers_to_sum:
                             for variant in [f"clue scrolls ({c_tier})", f"clue_{c_tier}", f"clues_{c_tier}"]:
                                 if variant in flat_kc:
-                                    actual_kc += int(flat_kc[variant])
+                                    added_kc = float(flat_kc[variant])
+
+                                    # Normalize Hard and Elite clues to "Master Clue Equivalents"
+                                    if is_mega_meta:
+                                        if c_tier == "hard": added_kc *= 0.086
+                                        elif c_tier == "elite": added_kc *= 0.33
+
+                                    actual_kc += added_kc
                                     break
 
                     if actual_kc <= 0: continue
@@ -246,7 +253,7 @@ def main():
                         "Activity": info["name"],
                         "Clog Progress": f"{actual_slots}/{total_slots}" if not missing_total else f"{actual_slots}/?",
                         "Expected Slots": f"{exp_slots:.2f}" if not missing_total else "⚠️ Check JSON",
-                        "Your KC": f"{actual_kc:,}",
+                        "Your KC": f"{int(actual_kc):,}", # Cast to int for clean display
                         "Luck Ratio": f"{ratio:.2f}" if not missing_total else "N/A",
                         "Status": status if not missing_total else "N/A"
                     })
