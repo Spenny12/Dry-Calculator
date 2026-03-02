@@ -5,7 +5,6 @@ import json
 import os
 import math
 
-# 1. Page Config (Must be the first command)
 st.set_page_config(page_title="OSRS Clog Luck Analyzer", layout="wide")
 
 # --- DATA & CONSTANTS ---
@@ -77,22 +76,28 @@ def get_clog_counts(clog_payload, boss_key, local_info):
 
     return actual, total
 
-# --- THE MATH FIX ---
+# --- THE S-CURVE MATH ---
 def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""):
     if expected_kc is None or expected_kc <= 0 or actual_kc <= 0 or total_slots <= 0:
         return "Not Started", 1.0, 0.0
 
     p = actual_kc / expected_kc
 
-    a = 5 if "barrows" in name.lower() or "clue" in name.lower() else 150
-    s = math.log(1 + a * p) / math.log(1 + a)
-    exp_slots = min(total_slots * s, total_slots)
+    # 'c' controls the curve. 0.05 is faster (Clues/Barrows). 0.15 is slower (Bosses).
+    c = 0.05 if "barrows" in name.lower() or "clue" in name.lower() else 0.15
 
-    # THE FIX: using 1.0 instead of 0.1 to prevent insane multipliers on 0 slots
-    ratio = exp_slots / max(actual_slots, 1.0)
+    # The Algebraic S-Curve
+    s_fraction = (p ** 2) / ((p ** 2) + c)
+    exp_slots = min(total_slots * s_fraction, total_slots)
 
+    # The True Ratio Fix
     if actual_slots >= total_slots:
         ratio = actual_kc / expected_kc
+    elif actual_slots == 0:
+        # If you have 0 slots, you get a free pass if expected is low, but punished if expected is high.
+        ratio = max(1.0, exp_slots)
+    else:
+        ratio = exp_slots / actual_slots
 
     if ratio <= 0.5: status = "Spooned 🥄"
     elif ratio <= 0.85: status = "Wet 💧"
@@ -105,7 +110,7 @@ def determine_luck_v2(actual_kc, expected_kc, actual_slots, total_slots, name=""
 # --- MAIN UI ---
 def main():
     st.title("OSRS Clog Luck Analyzer")
-    st.markdown("Comparing KC to Expected KC (EKC) using weighted logarithmic log progress. You can now compare multiple players at once!")
+    st.markdown("Comparing KC to Expected KC (EKC) using an S-Curve for realistic log progress. Compare multiple players at once!")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -175,7 +180,7 @@ def main():
                     results.append({
                         "Activity": info["name"],
                         "Clog Progress": f"{actual_slots}/{total_slots}" if not missing_total else f"{actual_slots}/?",
-                        "Expected Slots": f"{exp_slots:.1f}" if not missing_total else "⚠️ Check JSON Slots",
+                        "Expected Slots": f"{exp_slots:.2f}" if not missing_total else "⚠️ Check JSON",
                         "Your KC": f"{actual_kc:,}",
                         "Luck Ratio": f"{ratio:.2f}" if not missing_total else "N/A",
                         "Status": status if not missing_total else "N/A"
