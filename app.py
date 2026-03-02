@@ -222,7 +222,7 @@ def main():
 
             if summary_stats:
                 st.subheader("🏆 Leaderboard")
-                st.table(pd.DataFrame(summary_stats).sort_values("Total Spoon Score, lower number is more spooned"))
+                st.table(pd.DataFrame(summary_stats).sort_values("Total Spoon Score"))
 
                 tabs = st.tabs(list(all_player_tables.keys()))
                 for tab, p_name in zip(tabs, all_player_tables.keys()):
