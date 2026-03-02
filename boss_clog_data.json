@@ -9,13 +9,13 @@
         "name": "Alchemical Hydra",
         "ekc": 3967.0,
         "kph": 33.0,
-        "slots": 13
+        "slots": 11
     },
     "amoxliatl": {
         "name": "Amoxliatl",
         "ekc": 3003.0,
         "kph": 75.0,
-        "slots": 5
+        "slots": 4
     },
     "araxxor": {
         "name": "Araxxor",
@@ -27,7 +27,7 @@
         "name": "Barrows",
         "ekc": 1321.0,
         "kph": 24.0,
-        "slots": 24
+        "slots": 25
     },
     "bryophyta": {
         "name": "Bryophyta",
@@ -45,7 +45,7 @@
         "name": "Cerberus",
         "ekc": 3883.0,
         "kph": 65.0,
-        "slots": 6
+        "slots": 7
     },
     "chaos_elemental": {
         "name": "Chaos Elemental",
@@ -87,7 +87,7 @@
         "name": "Duke Sucellus",
         "ekc": 2734.0,
         "kph": 30.0,
-        "slots": 8
+        "slots": 10
     },
     "the_fight_caves": {
         "name": "The Fight Caves",
@@ -99,13 +99,13 @@
         "name": "Fortis Colosseum",
         "ekc": 139.7,
         "kph": 2.5,
-        "slots": 8
+        "slots": 9
     },
     "gauntlet": {
         "name": "Gauntlet",
         "ekc": 934.0,
         "kph": 7.0,
-        "slots": 6
+        "slots": 5
     },
     "general_graardor": {
         "name": "General Graardor",
@@ -129,13 +129,13 @@
         "name": "Hespori",
         "ekc": 36.0,
         "kph": 90.0,
-        "slots": 3
+        "slots": 4
     },
     "the_hueycoatl": {
         "name": "The Hueycoatl",
         "ekc": 480.0,
         "kph": 10.0,
-        "slots": 7
+        "slots": 6
     },
     "the_inferno": {
         "name": "The Inferno",
@@ -165,31 +165,31 @@
         "name": "Kree'arra",
         "ekc": 5092.0,
         "kph": 40.0,
-        "slots": 6
+        "slots": 8
     },
     "kril_tsutsaroth": {
         "name": "K'ril Tsutsaroth",
         "ekc": 5083.0,
         "kph": 65.0,
-        "slots": 7
+        "slots": 8
     },
     "the_leviathan": {
         "name": "The Leviathan",
         "ekc": 2762.0,
         "kph": 32.0,
-        "slots": 8
+        "slots": 10
     },
     "moons_of_peril": {
         "name": "Moons of Peril",
         "ekc": 500.0,
         "kph": 15.0,
-        "slots": 14
+        "slots": 13
     },
     "nex": {
         "name": "Nex",
         "ekc": 902.0,
         "kph": 2.87,
-        "slots": 9
+        "slots": 8
     },
     "phosanis_nightmare": {
         "name": "The Nightmare",
@@ -201,7 +201,7 @@
         "name": "Obor",
         "ekc": 118.0,
         "kph": 8.0,
-        "slots": 2
+        "slots": 1
     },
     "phantom_muspah": {
         "name": "Phantom Muspah",
@@ -213,37 +213,37 @@
         "name": "Royal Titans",
         "ekc": 221.0,
         "kph": 30.0,
-        "slots": 6
+        "slots": 7
     },
     "sarachnis": {
         "name": "Sarachnis",
         "ekc": 3812.0,
         "kph": 100.0,
-        "slots": 4
+        "slots": 5
     },
     "scorpia": {
         "name": "Scorpia",
         "ekc": 2066.0,
         "kph": 130.0,
-        "slots": 3
+        "slots": 4
     },
     "scurrius": {
         "name": "Scurrius",
         "ekc": 3000.0,
         "kph": 60.0,
-        "slots": 3
+        "slots": 2
     },
     "skotizo": {
         "name": "Skotizo",
         "ekc": 259.0,
         "kph": 45.0,
-        "slots": 5
+        "slots": 6
     },
     "tempoross": {
         "name": "Tempoross",
         "ekc": 8466.0,
         "kph": 85.0,
-        "slots": 9
+        "slots": 12
     },
     "thermonuclear_smoke_devil": {
         "name": "Thermonuclear Smoke Devil",
@@ -255,7 +255,7 @@
         "name": "Vardorvis",
         "ekc": 3419.0,
         "kph": 37.0,
-        "slots": 8
+        "slots": 10
     },
     "venenatis_and_spindel": {
         "name": "Venenatis and Spindel",
@@ -273,19 +273,19 @@
         "name": "Vorkath",
         "ekc": 6939.0,
         "kph": 34.0,
-        "slots": 9
+        "slots": 6
     },
     "the_whisperer": {
         "name": "The Whisperer",
         "ekc": 2155.0,
         "kph": 21.0,
-        "slots": 8
+        "slots": 10
     },
     "wintertodt": {
         "name": "Wintertodt",
         "ekc": 5171.0,
         "kph": 48.0,
-        "slots": 8
+        "slots": 10
     },
     "yama": {
         "name": "Yama",
@@ -297,7 +297,7 @@
         "name": "Zalcano",
         "ekc": 2563.0,
         "kph": 16.0,
-        "slots": 5
+        "slots": 4
     },
     "zulrah": {
         "name": "Zulrah",
