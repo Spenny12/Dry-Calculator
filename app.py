@@ -179,4 +179,16 @@ def main():
 
             if count > 0:
                 avg = total_r / count
-                overall = "Overall Spooned 🥄" if avg <= 0.8
+                overall = "Overall Spooned 🥄" if avg <= 0.85 else "Overall Dry 🏜️" if avg >= 1.15 else "Overall On-Rate 🎯"
+                ehc_val = clog_api.get('ehc', 0) if isinstance(clog_api, dict) else 0
+
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Account Luck", overall)
+                c2.metric("Avg Luck Ratio", f"{avg:.2f}")
+                c3.metric("Activities Analyzed", count)
+                c4.metric("Temple EHC", f"{ehc_val:,.1f} hrs")
+        else:
+            st.info("No matching data found.")
+
+if __name__ == "__main__":
+    main()
