@@ -5,20 +5,20 @@ import json
 import os
 import math
 
-st.set_page_config(page_title="OSRS Luck & Time Analyzer", layout="wide")
+st.set_page_config(page_title="Chungies Spoon Calc!!!!!!!", layout="wide")
 
 # --- DATA & CONSTANTS ---
 RAIDS_DATA = {
     "chambers_of_xeric": {
-        "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 17, "free_slots": 0, "mega_rares": 3,
+        "name": "Chambers of Xeric", "type": "Raid", "ekc": 1700, "kph": 2.0, "slots": 18, "free_slots": 2, "mega_rares": 4,
         "combine_kc_keys": ["chambers_of_xeric_challenge_mode"]
     },
     "theatre_of_blood": {
-        "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 17, "free_slots": 0, "mega_rares": 2,
+        "name": "Theatre of Blood", "type": "Raid", "ekc": 1908, "kph": 3.0, "slots": 12, "free_slots": 1, "mega_rares": 2,
         "combine_kc_keys": ["theatre_of_blood_hard_mode"]
     },
     "tombs_of_amascut": {
-        "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 16, "free_slots": 0, "mega_rares": 2,
+        "name": "Tombs of Amascut", "type": "Raid", "ekc": 1186, "kph": 1.71, "slots": 15, "free_slots": 2, "mega_rares": 2,
         "combine_kc_keys": ["tombs_of_amascut_expert"]
     }
 }
@@ -132,7 +132,7 @@ def determine_luck_v10(actual_kc, info, actual_slots):
 
 # --- MAIN UI ---
 def main():
-    st.title("OSRS Luck & Time Analyzer")
+    st.title("Spoon Calc")
     st.markdown("Math: **Strict Power Curve**. Sensitive to low-KC progress.")
 
     clog_data = load_all_clog_data()
@@ -140,15 +140,15 @@ def main():
 
     with st.sidebar:
         st.header("Player Info")
-        player_names_input = st.text_input("Username(s)", value="Spencejliv")
+        player_names_input = st.text_input("Username(s)", value="Spencejliv,iPhone Game,Catchies,NotALadyBoy,iMogU,Luikang67,TheKizzler")
         filter_type = st.selectbox("Category", ["All", "Boss", "Raid", "Clue"])
-        analyze = st.button("Analyze Account(s)", type="primary", use_container_width=True)
+        analyze = st.button("Run", type="primary", use_container_width=True)
 
     if analyze:
         player_names = [name.strip() for name in player_names_input.split(",") if name.strip()]
         if not player_names: return
 
-        with st.spinner("Analyzing grinds..."):
+        with st.spinner("Pretending that Ryan is spooned"):
             all_player_tables = {}
             summary_stats = []
 
