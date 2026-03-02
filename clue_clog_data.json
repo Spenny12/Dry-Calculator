@@ -2,67 +2,67 @@
     "beginner_clues": {
         "name": "Beginner Clues",
         "ekc": 597.0,
-        "kph": 60.0
+        "kph": 60.0,
         "slots": 16
     },
     "easy_clues": {
         "name": "Easy Clues",
         "ekc": 7907.0,
-        "kph": 50.0
+        "kph": 50.0,
         "slots": 131
     },
     "medium_clues": {
         "name": "Medium Clues",
         "ekc": 2076.0,
-        "kph": 30.0
-        "slots": 115
+        "kph": 30.0,
+        "slots": 116
     },
     "hard_clues": {
         "name": "Hard Clues",
         "ekc": 5484.0,
-        "kph": 20.0
-        "slots": 134
+        "kph": 20.0,
+        "slots": 125
     },
     "elite_clues": {
         "name": "Elite Clues",
         "ekc": 7469.0,
-        "kph": 2.3
-        "slots": 59
+        "kph": 2.3,
+        "slots": 91
     },
     "master_clues": {
         "name": "Master Clues",
         "ekc": 7532.0,
-        "kph": 2.0
-        "slots": 49
+        "kph": 2.0,
+        "slots": 92
     },
     "elite_mega_rares": {
         "name": "Elite Mega Rares",
         "ekc": 663.0,
-        "kph": 2.3
-        "slots": 39
+        "kph": 2.3,
+        "slots": 15
     },
     "master_mega_rares": {
         "name": "Master Mega Rares",
         "ekc": 315.0,
-        "kph": 2.0
-        "slots": 45
+        "kph": 2.0,
+        "slots": 15
     },
     "gilded": {
         "name": "Gilded",
-        "ekc": 0.0,
-        "kph": 0.0
-        "slots": 21
+        "ekc": 1000.0,
+        "kph": 1.0,
+        "slots": 15
     },
     "3rd_age": {
         "name": "3rd Age",
-        "ekc": 0.0,
-        "kph": 0.0
-        "slots:": 23
+        "ekc": 10000.0,
+        "kph": 1.0,
+        "slots": 23
     },
     "shared_clues": {
         "name": "Shared Clues",
-        "ekc": NaN,
-        "kph": NaN
-        "slots": 49
+        "ekc": 1000.0,
+        "kph": 1.0,
+        "slots": 61
     }
 }

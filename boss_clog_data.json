@@ -244,5 +244,65 @@
         "ekc": 8466.0,
         "kph": 85.0,
         "slots": 9
-     }
+    },
+    "thermonuclear_smoke_devil": {
+        "name": "Thermonuclear Smoke Devil",
+        "ekc": 3826.0,
+        "kph": 125.0,
+        "slots": 5
+    },
+    "vardorvis": {
+        "name": "Vardorvis",
+        "ekc": 3419.0,
+        "kph": 37.0,
+        "slots": 8
+    },
+    "venenatis_and_spindel": {
+        "name": "Venenatis and Spindel",
+        "ekc": 3173.0,
+        "kph": 55.0,
+        "slots": 6
+    },
+    "vetion_and_calvarion": {
+        "name": "Vet'ion and Calvar'ion",
+        "ekc": 3173.0,
+        "kph": 55.0,
+        "slots": 6
+    },
+    "vorkath": {
+        "name": "Vorkath",
+        "ekc": 6939.0,
+        "kph": 34.0,
+        "slots": 9
+    },
+    "the_whisperer": {
+        "name": "The Whisperer",
+        "ekc": 2155.0,
+        "kph": 21.0,
+        "slots": 8
+    },
+    "wintertodt": {
+        "name": "Wintertodt",
+        "ekc": 5171.0,
+        "kph": 48.0,
+        "slots": 8
+    },
+    "yama": {
+        "name": "Yama",
+        "ekc": 3339.0,
+        "kph": 20.0,
+        "slots": 11
+    },
+    "zalcano": {
+        "name": "Zalcano",
+        "ekc": 2563.0,
+        "kph": 16.0,
+        "slots": 5
+    },
+    "zulrah": {
+        "name": "Zulrah",
+        "ekc": 10993.0,
+        "kph": 44.0,
+        "slots": 10
+    }
 }
