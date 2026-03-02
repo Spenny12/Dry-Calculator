@@ -86,7 +86,7 @@ def get_clog_counts(clog_payload, boss_key, local_info):
     return actual, total
 
 # --- TIME-WEIGHTED DUAL S-CURVE MATH ---
-def determine_luck_v3(actual_kc, info, actual_slots):
+def determine_luck_v4(actual_kc, info, actual_slots):
     expected_kc = info.get("ekc", 0)
     total_slots = info.get("slots", 0)
     free_slots = info.get("free_slots", 0)
@@ -104,12 +104,14 @@ def determine_luck_v3(actual_kc, info, actual_slots):
     safe_mega_rares = min(max(0, mega_rares), rng_total_slots)
     normal_slots_count = rng_total_slots - safe_mega_rares
 
-    # Dual Curve Steepness
+    # Constants for curve steepness
     c_normal = 0.03 if safe_mega_rares > 0 else (0.05 if info["type"] == "Clue" else 0.15)
     c_mega = 0.80
 
-    s_fraction_normal = (p ** 2) / ((p ** 2) + c_normal)
-    s_fraction_mega = (p ** 2) / ((p ** 2) + c_mega)
+    # EXPONENT UPGRADE: Using p^3 makes the start much flatter (forgiving)
+    # but the middle much steeper (punishing).
+    s_fraction_normal = (p ** 3) / ((p ** 3) + c_normal)
+    s_fraction_mega = (p ** 3) / ((p ** 3) + c_mega)
 
     exp_rng_slots = (normal_slots_count * s_fraction_normal) + (safe_mega_rares * s_fraction_mega)
     exp_slots_display = free_slots + min(exp_rng_slots, rng_total_slots)
@@ -121,11 +123,8 @@ def determine_luck_v3(actual_kc, info, actual_slots):
     else:
         ratio = exp_rng_slots / rng_actual_slots
 
-    # --- TIME WEIGHTING ---
-    # Total Hours expected to finish this log
+    # Spoon Points calculation
     total_ehc_weight = expected_kc / max(kph, 0.1)
-
-    # Spoon Points: Ratio deviation scaled by total hours of the grind
     spoon_points = (ratio - 1.0) * total_ehc_weight
 
     if ratio <= 0.5: status = "Spooned 🥄"
@@ -139,7 +138,7 @@ def determine_luck_v3(actual_kc, info, actual_slots):
 # --- MAIN UI ---
 def main():
     st.title("OSRS Time-Weighted Luck Analyzer")
-    st.markdown("Luck Ratio weighted by **Efficient Hours (EHC)**. Longer grinds affect your score more significantly!")
+    st.markdown("Math updated to **Algebraic Sigmoid (Degree 3)** for a flatter start and more aggressive late-grind scaling.")
 
     clog_data = load_all_clog_data()
     api_keys = list(clog_data.keys())
@@ -157,7 +156,7 @@ def main():
             st.warning("Please enter at least one username.")
             return
 
-        with st.spinner("Fetching data for all players..."):
+        with st.spinner("Calculating outcomes..."):
             all_player_tables = {}
             summary_stats = []
 
@@ -234,7 +233,7 @@ def main():
                     if actual_kc <= 0: continue
 
                     actual_slots, total_slots = get_clog_counts(clog_api, key, info)
-                    status, ratio, exp, s_points = determine_luck_v3(actual_kc, info, actual_slots)
+                    status, ratio, exp, s_points = determine_luck_v4(actual_kc, info, actual_slots)
 
                     results.append({
                         "Activity": info["name"],
@@ -242,7 +241,7 @@ def main():
                         "Expected Slots": f"{exp:.2f}",
                         "Your KC": f"{actual_kc:,}",
                         "Luck Ratio": f"{ratio:.2f}",
-                        "Spoon Points": round(s_points, 1),
+                        "Spoon Points": int(round(s_points)),
                         "Status": status
                     })
                     total_spoon_score += s_points
@@ -253,14 +252,13 @@ def main():
                     all_player_tables[player_name] = df
                     summary_stats.append({
                         "Player": player_name,
-                        "Spoon Score": round(total_spoon_score, 1),
+                        "Spoon Score": int(round(total_spoon_score)),
                         "Status": "Legendary Spoon 🥄" if total_spoon_score < -100 else "Standard" if total_spoon_score < 100 else "Deep Sea Dry 🏜️",
                         "EHC": f"{clog_api.get('ehc', 0):.1f}"
                     })
 
             if summary_stats:
                 st.subheader("🏆 Spoon Leaderboard")
-                st.write("Spoon Score = (Luck Ratio - 1) * Hours for Log. Lower is better (more hours saved).")
                 summary_df = pd.DataFrame(summary_stats).sort_values("Spoon Score")
                 st.table(summary_df)
 
