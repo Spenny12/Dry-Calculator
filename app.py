@@ -169,23 +169,6 @@ def main():
                 total_spoon_score = 0
 
                 for key, info in clog_data.items():
-    if filter_type != "All" and info["type"] != filter_type: continue
-
-    # Improved search keys to catch DT2 bosses
-    clean_key = key.lower()
-    kc_keys_to_try = [
-        clean_key,
-        clean_key.replace("the_", ""),
-        "the_" + clean_key if not clean_key.startswith("the_") else clean_key,
-        info["name"].lower().replace(" ", "_"),
-        info["name"].lower().replace("'", ""),
-    ]
-
-    # Handle the specific DT2 "The" prefix variants
-    if "whisperer" in clean_key: kc_keys_to_try.append("the_whisperer")
-    if "leviathan" in clean_key: kc_keys_to_try.append("the_leviathan")
-    if "vardorvis" in clean_key: kc_keys_to_try.append("vardorvis")
-    if "sucellus" in clean_key: kc_keys_to_try.append("duke_sucellus")for key, info in clog_data.items():
                     if filter_type != "All" and info["type"] != filter_type: continue
 
                     kc_keys_to_try = [
