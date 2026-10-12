@@ -3,62 +3,94 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dry Calculator – how spooned is your OSRS account?</title>
-<meta name="description" content="Compare your OSRS collection log with the drops you should have by now. Per-item drop rates, guaranteed drops and raid assumptions handled properly.">
+<title>Dry Calculator</title>
+<meta name="description" content="See how lucky or dry your Old School RuneScape drops are, boss by boss, using your TempleOSRS collection log.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header>
-  <h1>🥄 Dry Calculator</h1>
-  <p class="sub">How spooned (or dry) is your account? Data from <a href="https://templeosrs.com" target="_blank" rel="noopener">TempleOSRS</a>.</p>
-</header>
-<main>
-  <section class="panel">
-    <label for="players">Players (one per line or comma-separated)</label>
-    <textarea id="players" rows="3" placeholder="Zezima, Lynx Titan"></textarea>
-    <div class="row">
-      <label><input type="checkbox" id="approx"> Include approximate activities in overall score</label>
-      <button id="run">Calculate</button>
+<div class="shell">
+  <header class="top">
+    <a class="brand" href="./">Dry Calculator</a>
+    <a class="top__link" href="#method">How scoring works</a>
+  </header>
+
+  <section class="intro" id="intro">
+    <h1>How lucky are your drops, really?</h1>
+    <p class="intro__lede">Enter OSRS usernames. Each boss, raid and clue is scored against what a player with the same kill count would normally have in their collection log.</p>
+    <form class="search" id="form" autocomplete="off">
+      <label class="sr-only" for="players">Usernames</label>
+      <input id="players" name="players" type="text" placeholder="Usernames, separated by commas" spellcheck="false">
+      <button id="run" type="submit">Calculate</button>
+    </form>
+    <div class="options">
+      <label class="check"><input type="checkbox" id="approx"> Include activities with rough data in the overall score</label>
+      <button type="button" class="linkbtn" id="toggle-assume" aria-expanded="false" aria-controls="assume">Raid assumptions</button>
     </div>
-    <details>
-      <summary>Raid assumptions</summary>
-      <p class="muted">Raid uniques depend on points, raid level and team size, which Temple doesn't track. Adjust these to match how you play.</p>
-      <div class="grid">
+    <div id="assume" class="assume" hidden>
+      <p class="muted">Raid unique chances depend on points, team size and raid level, which Temple doesn't record. Change these to match how you play.</p>
+      <div class="assume__grid">
         <label>CoX points <input type="number" id="cox-points" value="26025"></label>
         <label>CoX CM points <input type="number" id="cox-cm" value="26025"></label>
         <label>ToB team size <input type="number" id="tob-team" min="1" max="5" value="4"></label>
-        <label>ToA level (normal) <input type="number" id="toa-n-rl" value="250"></label>
-        <label>ToA points (normal) <input type="number" id="toa-n-pts" value="20000"></label>
-        <label>ToA level (expert) <input type="number" id="toa-e-rl" value="350"></label>
-        <label>ToA points (expert) <input type="number" id="toa-e-pts" value="30000"></label>
+        <label>ToA level, normal <input type="number" id="toa-n-rl" value="250"></label>
+        <label>ToA points, normal <input type="number" id="toa-n-pts" value="20000"></label>
+        <label>ToA level, expert <input type="number" id="toa-e-rl" value="350"></label>
+        <label>ToA points, expert <input type="number" id="toa-e-pts" value="30000"></label>
       </div>
-    </details>
-    <div id="status" class="muted" role="status"></div>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
   </section>
 
-  <section id="leaderboard" class="panel" hidden>
-    <h2>Leaderboard</h2>
-    <table id="lb"><thead><tr><th>#</th><th>Player</th><th title="Lower is more spooned">Score</th><th>Overall</th><th>Activities</th><th>🥄 / 💧</th><th>🏜️ / 💀</th><th>EHC</th></tr></thead><tbody></tbody></table>
+  <section id="board" class="board" hidden aria-labelledby="board-title">
+    <div class="section-head">
+      <h2 id="board-title">Leaderboard</h2>
+      <p class="muted">Spoon score out of 100. Higher is luckier, 50 is typical.</p>
+    </div>
+    <ol id="ladder" class="ladder"></ol>
+    <ul id="failed" class="failed"></ul>
   </section>
 
-  <section id="detail" class="panel" hidden>
-    <div id="tabs" role="tablist"></div>
-    <div class="row"><label>Show <select id="filter"><option value="all">all</option><option value="boss">bosses</option><option value="raid">raids</option><option value="clue">clues</option></select></label></div>
-    <div id="detail-body"></div>
+  <section id="player" class="player" hidden aria-live="polite">
+    <div id="player-head" class="player__head"></div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Filter activities" id="filter">
+        <button type="button" data-f="all" aria-pressed="true">All</button>
+        <button type="button" data-f="boss" aria-pressed="false">Bosses</button>
+        <button type="button" data-f="raid" aria-pressed="false">Raids</button>
+        <button type="button" data-f="clue" aria-pressed="false">Clues</button>
+      </div>
+      <div class="seg" role="group" aria-label="Sort activities" id="sort">
+        <button type="button" data-s="luck" aria-pressed="true">Luckiest first</button>
+        <button type="button" data-s="dry" aria-pressed="false">Driest first</button>
+        <button type="button" data-s="kc" aria-pressed="false">Most kills</button>
+      </div>
+    </div>
+    <div id="rows" class="rows"></div>
   </section>
 
-  <section class="panel prose">
-    <h2>How it works</h2>
-    <ul>
-      <li>Every item has its own per-kill rate (per mode/source for raids and multi-boss activities). Guaranteed drops and KC-based capes are shown but never counted as luck.</li>
-      <li>Rarer items count for more: each item is weighted by its expected wait in kills.</li>
-      <li>Your haul is compared with 20,000 simulated players with your exact KC. Percentile 50 is average; high is spooned, low is dry.</li>
-      <li>Items with shared pools (Hydra pieces, Araxxor, Abyssal Sire, Vestiges, pity timers) are simulated as groups, not independent drops.</li>
-      <li>Overall score = −10 × combined z-score, so <strong>lower is more spooned</strong>. Activities with only approximate data are excluded unless you tick the box.</li>
-      <li>Rates were collected from the OSRS Wiki on 2026-10-12. Items marked partial/approx may be off; see <code>README.md</code>.</li>
-    </ul>
+  <section class="method" id="method">
+    <h2>How scoring works</h2>
+    <div class="method__cols">
+      <div>
+        <h3>Per activity</h3>
+        <p>Every item has its own drop rate for each boss or raid mode. Guaranteed drops and kill-count capes are shown but never counted as luck. Rarer items count for more than common ones.</p>
+        <p>Your haul is compared with 20,000 simulated players who made the same number of kills. The percentile says how many of them would have done worse than you: 50 is average, 97.5 and above is spooned, below 2.5 is very dry.</p>
+      </div>
+      <div>
+        <h3>Overall</h3>
+        <p>Each activity's luck is standardised and averaged, weighted by how much information it carries and how reliable its drop data is. The score is that average placed on a 0–100 scale.</p>
+        <p>Real accounts run luckier than the maths predicts, partly because people stop farming once they get the drop. The scale is calibrated so a typical tracked account lands near 50. This is an estimate from a handful of accounts, so treat scores as a guide, not a verdict.</p>
+      </div>
+      <div>
+        <h3>Data</h3>
+        <p>Kill counts and collection logs come from <a href="https://templeosrs.com" target="_blank" rel="noopener">TempleOSRS</a>, so update your profile there first. Drop rates come from the <a href="https://oldschool.runescape.wiki" target="_blank" rel="noopener">OSRS Wiki</a>. Activities tagged <em>partial</em> or <em>rough</em> have less certain rates.</p>
+      </div>
+    </div>
   </section>
-</main>
+</div>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

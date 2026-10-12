@@ -2,16 +2,24 @@ import { STATUS_BANDS } from './engine.js';
 import { fetchPlayer } from './temple.js';
 
 const $ = (s) => document.querySelector(s);
-const LS = 'dry-calc-v2';
+const LS = 'dry-calc-v3';
 let dataset = null;
-const players = new Map(); // name -> {results, summary, ehc, diagnostics} | {error}
+const players = new Map();
 let active = null;
+let filter = 'all';
+let sortBy = 'luck';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = (n, d = 1) => (n == null || Number.isNaN(n) ? '–' : Number(n).toLocaleString(undefined, { maximumFractionDigits: d }));
+const bandFor = (pct) => STATUS_BANDS.find((b) => pct >= b.min) || STATUS_BANDS[STATUS_BANDS.length - 1];
+const toneClass = (pct) => `tone-${bandFor(pct).key}`;
 
 function load() {
-  try { const s = JSON.parse(localStorage.getItem(LS) || '{}'); if (s.players) $('#players').value = s.players; if (s.approx) $('#approx').checked = true; } catch { /* ignore */ }
+  try {
+    const s = JSON.parse(localStorage.getItem(LS) || '{}');
+    if (s.players) $('#players').value = s.players;
+    if (s.approx) $('#approx').checked = true;
+  } catch { /* storage unavailable */ }
 }
 function save() {
   try { localStorage.setItem(LS, JSON.stringify({ players: $('#players').value, approx: $('#approx').checked })); } catch { /* ignore */ }
@@ -30,93 +38,137 @@ function analyse(payload) {
   return new Promise((resolve, reject) => {
     const w = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
     w.onmessage = (e) => { w.terminate(); e.data.ok ? resolve(e.data) : reject(new Error(e.data.error)); };
-    w.onerror = (e) => { w.terminate(); reject(new Error(e.message || 'Worker failed')); };
+    w.onerror = (e) => { w.terminate(); reject(new Error(e.message || 'Calculation failed')); };
     w.postMessage(payload);
   });
 }
 
-async function run() {
+function setStatus(msg, tone) { const el = $('#status'); el.textContent = msg; el.dataset.tone = tone || ''; }
+
+async function run(ev) {
+  ev?.preventDefault();
   save();
   const names = [...new Set($('#players').value.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean))].slice(0, 12);
-  if (!names.length) { $('#status').textContent = 'Enter at least one player.'; return; }
+  if (!names.length) { setStatus('Enter at least one username.', 'error'); return; }
+  if (!dataset) { setStatus('Drop data is still loading. Try again in a moment.', 'error'); return; }
   $('#run').disabled = true;
   players.clear();
   for (const [i, name] of names.entries()) {
-    $('#status').textContent = `Analysing ${name} (${i + 1}/${names.length})…`;
+    setStatus(`Scoring ${name} (${i + 1} of ${names.length})…`);
     try {
       const { stats, clog } = await fetchPlayer(name, dataset);
-      const out = await analyse({ id: name, dataset, stats, clog, assumptions: assumptions(), includeApprox: $('#approx').checked, sims: 20000 });
-      players.set(name, out);
+      players.set(name, await analyse({ id: name, dataset, stats, clog, assumptions: assumptions(), includeApprox: $('#approx').checked, sims: 20000 }));
     } catch (e) {
-      players.set(name, { error: e.message });
+      players.set(name, { error: friendly(e.message) });
     }
   }
-  $('#status').textContent = '';
+  setStatus('');
   $('#run').disabled = false;
-  active = names[0];
+  active = [...players].filter(([, v]) => !v.error).sort((a, b) => b[1].summary.score - a[1].summary.score)[0]?.[0] || null;
   render();
+  $('#board').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function friendly(msg) {
+  if (/not found/i.test(msg)) return 'Not found on TempleOSRS. Check the spelling, or visit templeosrs.com to add and update the player.';
+  return msg;
+}
+
+function strip(results, big) {
+  const scored = results.filter((r) => r.luck);
+  const dots = scored.map((r, i) => {
+    const p = r.luck.percentile;
+    const top = 50 + ((i % 5) - 2) * (big ? 9 : 7) - 8;
+    return `<span class="strip__dot ${toneClass(p)}" style="left:${p}%;top:${top}%" title="${esc(r.name)}: ${fmt(p, 0)}th percentile"></span>`;
+  }).join('');
+  return `<div class="strip ${big ? 'strip--lg' : ''}" role="img" aria-label="Each dot is one activity, placed from dry on the left to spooned on the right"><span class="strip__mid"></span><span class="strip__axis"></span>${dots}<span class="strip__ends"><span>Dry</span><span>Spooned</span></span></div>`;
 }
 
 function render() {
-  const ok = [...players].filter(([, v]) => !v.error).sort((a, b) => a[1].summary.score - b[1].summary.score);
+  const ok = [...players].filter(([, v]) => !v.error).sort((a, b) => b[1].summary.score - a[1].summary.score);
   const bad = [...players].filter(([, v]) => v.error);
-  $('#leaderboard').hidden = false;
-  $('#lb tbody').innerHTML = ok.map(([n, v], i) => {
-    const b = statusLabel(v.summary.percentile);
-    return `<tr><td>${i + 1}</td><td><a href="#" data-p="${esc(n)}">${esc(n)}</a></td><td><strong>${fmt(v.summary.score)}</strong></td><td>${b} ${fmt(v.summary.percentile, 0)}%</td><td>${v.summary.used}</td><td>${v.summary.spooned}</td><td>${v.summary.dry}</td><td>${fmt(v.ehc, 0)}</td></tr>`;
-  }).join('') + bad.map(([n, v]) => `<tr><td></td><td>${esc(n)}</td><td colspan="6" class="err">${esc(v.error)}</td></tr>`).join('');
-  $('#detail').hidden = !ok.length;
-  $('#tabs').innerHTML = ok.map(([n]) => `<button class="${n === active ? 'on' : ''}" data-p="${esc(n)}">${esc(n)}</button>`).join('');
-  renderDetail();
+  $('#board').hidden = false;
+  $('#ladder').innerHTML = ok.map(([n, v], i) => `
+    <li><button class="ladder__row" data-p="${esc(n)}" ${n === active ? 'aria-current="true"' : ''}>
+      <span class="ladder__rank">${i + 1}</span>
+      <span class="ladder__name">${esc(n)}<span class="ladder__meta">${v.summary.used} activities${v.ehc ? ` · ${fmt(v.ehc, 0)} EHC` : ''}</span></span>
+      ${strip(v.results)}
+      <span class="score"><span class="score__n">${fmt(v.summary.score, 0)}</span><span class="score__l">spoon score</span></span>
+    </button></li>`).join('');
+  $('#failed').innerHTML = bad.map(([n, v]) => `<li><b>${esc(n)}</b>: ${esc(v.error)}</li>`).join('');
+  renderPlayer();
 }
 
-function statusLabel(pct) {
-  for (const b of STATUS_BANDS) if (pct >= b.min) return `${b.emoji} ${b.label}`;
-  return '';
-}
-
-function renderDetail() {
+function renderPlayer() {
   const v = players.get(active);
-  if (!v || v.error) { $('#detail-body').innerHTML = ''; return; }
-  const f = $('#filter').value;
-  const rows = v.results.filter((r) => f === 'all' || r.type === f).sort((a, b) => (a.luck ? a.luck.percentile : 50) - (b.luck ? b.luck.percentile : 50) * 1);
-  let html = '';
+  $('#player').hidden = !v || !!v.error;
+  if (!v || v.error) return;
+  const s = v.summary;
   const d = v.diagnostics || {};
-  if (d.clogError) html += `<p class="warn">Collection log unavailable (${esc(d.clogError)}). Showing expected drops only.</p>`;
-  html += '<div class="table-wrap"><table><thead><tr><th>Activity</th><th>KC</th><th>Log</th><th>Expected</th><th>Percentile</th><th>Status</th></tr></thead><tbody>';
-  for (const r of rows) {
-    const kc = Object.entries(r.kc).filter(([, n]) => n > 0).map(([s, n]) => (Object.keys(r.kc).length > 1 ? `${esc(s)} ${fmt(n, 0)}` : fmt(n, 0))).join(' · ');
-    const slots = r.slots ? `${r.slots.obtained}${r.slots.total ? '/' + r.slots.total : ''}` : '–';
-    const exp = r.expectedSlots != null ? fmt(r.expectedSlots) : '–';
-    const p = r.luck ? r.luck.percentile : null;
-    html += `<tr><td><details><summary>${esc(r.name)} ${r.confidence !== 'high' ? `<span class="tag">${esc(r.confidence)}</span>` : ''}</summary>${breakdown(r)}</details></td><td>${kc}</td><td>${slots}</td><td>${exp}</td>`
-      + `<td>${p == null ? '–' : `<div class="bar"><i style="left:calc(${p}% - 1px)"></i></div>${fmt(p, 1)}`}</td><td>${r.luck ? esc(statusLabel(p)) : '–'}</td></tr>`;
-  }
-  html += '</tbody></table></div>';
-  $('#detail-body').innerHTML = html;
+  $('#player-head').innerHTML = `
+    <div><h2 class="player__name">${esc(active)}</h2>
+    <p class="player__facts"><b>${s.spooned}</b> spooned or lucky · <b>${s.bands['on-rate']}</b> on rate · <b>${s.dry}</b> dry or very dry</p></div>
+    <div class="score"><span class="score__n">${fmt(s.score, 0)}</span><span class="score__l">spoon score</span></div>
+    <div class="player__strip">${strip(v.results, true)}</div>
+    ${d.clogError ? `<div class="notice player__strip">Collection log unavailable (${esc(d.clogError)}). Showing expected drops only.</div>` : ''}`;
+  const rows = v.results.filter((r) => filter === 'all' || r.type === filter);
+  const key = (r) => (r.luck ? r.luck.percentile : 50);
+  rows.sort((a, b) => (sortBy === 'luck' ? key(b) - key(a) : sortBy === 'dry' ? key(a) - key(b) : b.kcTotal - a.kcTotal));
+  $('#rows').innerHTML = `<div class="rows__head"><span>Activity</span><span class="num">Kills</span><span class="num">Log</span><span class="num">Expected</span><span>Luck percentile</span><span>Verdict</span></div>`
+    + (rows.length ? rows.map(row).join('') : '<p class="empty">No activities with kills in this category.</p>');
+}
+
+function row(r) {
+  const kc = fmt(r.kcTotal, 0);
+  const slots = r.slots ? `${r.slots.obtained}${r.slots.total ? '/' + r.slots.total : ''}` : '–';
+  const p = r.luck ? r.luck.percentile : null;
+  const tag = r.confidence === 'partial' ? '<span class="tag">partial</span>' : r.confidence === 'approx' ? '<span class="tag">rough</span>' : '';
+  const meter = p == null ? '<span class="muted">Not scored</span>'
+    : `<div class="meter ${toneClass(p)}"><span class="meter__zone"></span><span class="meter__mark" style="left:${p}%"></span></div><div class="meter__val">${fmt(p, 1)}</div>`;
+  const verdict = p == null ? '<span class="muted">–</span>' : `<span class="pill ${toneClass(p)}"><span class="pill__dot"></span>${bandFor(p).label}</span>`;
+  return `<details class="act"><summary><div class="act__main">
+    <span class="act__name">${esc(r.name)} ${tag}</span>
+    <span class="num act__kc">${kc}</span><span class="num act__log">${slots}</span><span class="num act__exp">${r.expectedSlots != null ? fmt(r.expectedSlots) : '–'}</span>
+    <span class="meter-cell">${meter}</span><span>${verdict}</span></div></summary>${breakdown(r)}</details>`;
 }
 
 function breakdown(r) {
-  let h = '';
+  let h = '<div class="act__body">';
+  if (Object.keys(r.kc).length > 1) h += `<p class="muted">Kills by source: ${Object.entries(r.kc).filter(([, n]) => n > 0).map(([s, n]) => `${esc(s)} ${fmt(n, 0)}`).join(', ')}</p>`;
   if (r.note) h += `<p class="muted">${esc(r.note)}</p>`;
   for (const w of r.warnings) h += `<p class="warn">${esc(w)}</p>`;
   if (r.items.length) {
-    h += '<table class="sub-table"><tr><th>Item</th><th>Rate/kill</th><th>Expected</th><th>Have</th><th>P(≥ have)</th></tr>';
-    for (const i of r.items) h += `<tr><td>${esc(i.name)}</td><td>1/${fmt(1 / (i.perKc || 1e-9), 0)}</td><td>${fmt(i.expected, 2)}</td><td>${i.observed ?? '–'}</td><td>${i.pAtLeast == null ? '–' : fmt(i.pAtLeast * 100, 1) + '%'}</td></tr>`;
-    h += '</table>';
+    h += '<table><thead><tr><th>Item</th><th class="n">Rate</th><th class="n">Expected</th><th class="n">Have</th><th class="n">Chance of having this many</th></tr></thead><tbody>';
+    for (const i of r.items) h += `<tr><td>${esc(i.name)}</td><td class="n">1/${fmt(1 / (i.perKc || 1e-9), 0)}</td><td class="n">${fmt(i.expected, 2)}</td><td class="n">${i.observed ?? '–'}</td><td class="n">${i.pAtLeast == null ? '–' : fmt(i.pAtLeast * 100, 1) + '%'}</td></tr>`;
+    h += '</tbody></table>';
   }
-  if (r.free.length) h += `<p class="muted">Not counted as luck: ${r.free.map((x) => esc(x.name) + (x.at ? ` (${x.at} KC)` : '')).join(', ')}</p>`;
-  if (r.wiki) h += `<p><a href="${esc(r.wiki)}" target="_blank" rel="noopener">Wiki</a></p>`;
-  return h;
+  if (r.free.length) h += `<p class="muted">Not counted as luck: ${r.free.map((x) => esc(x.name) + (x.at ? ` (${x.at} kills)` : '')).join(', ')}.</p>`;
+  if (r.wiki) h += `<p><a href="${esc(r.wiki)}" target="_blank" rel="noopener">Drop table on the wiki</a></p>`;
+  return h + '</div>';
 }
 
 document.addEventListener('click', (e) => {
   const a = e.target.closest('[data-p]');
-  if (a) { e.preventDefault(); active = a.dataset.p; render(); }
+  if (a) { active = a.dataset.p; render(); $('#player').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 });
-$('#run').addEventListener('click', run);
-$('#filter').addEventListener('change', renderDetail);
+function seg(id, attr, apply) {
+  $(id).addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    apply(b.dataset[attr]);
+    for (const x of $(id).querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+    renderPlayer();
+  });
+}
+seg('#filter', 'f', (v) => { filter = v; });
+seg('#sort', 's', (v) => { sortBy = v; });
+$('#form').addEventListener('submit', run);
 $('#players').addEventListener('input', save);
+$('#approx').addEventListener('change', save);
+$('#toggle-assume').addEventListener('click', (e) => {
+  const open = $('#assume').hidden;
+  $('#assume').hidden = !open;
+  e.currentTarget.setAttribute('aria-expanded', String(open));
+});
 
 load();
-fetch('data/activities.json').then((r) => r.json()).then((d) => { dataset = d; }).catch(() => { $('#status').textContent = 'Failed to load activity data.'; $('#run').disabled = true; });
+fetch('data/activities.json').then((r) => r.json()).then((d) => { dataset = d; }).catch(() => setStatus('Could not load drop data. Refresh the page to try again.', 'error'));

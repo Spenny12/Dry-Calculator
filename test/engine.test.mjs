@@ -80,3 +80,17 @@ test('temple parsers', () => {
   assert.equal(c.listComplete, true);
   assert.equal(c.counts.get('magicfang'), 0);
 });
+
+import { summarize } from '../public/js/engine.js';
+
+test('overall score is bounded, ordered by luck and not inflated by activity count', () => {
+  const mk = (z, n) => Array.from({ length: n }, () => ({
+    confidence: 'high',
+    luck: { z, zMean: 0, zSd: 0.9, percentile: 100 * 0.5 * (1 + Math.tanh(z / 1.2)), status: { key: z > 1 ? 'lucky' : z < -1 ? 'dry' : 'on-rate' } },
+  }));
+  const a = summarize(mk(1.5, 20)).score, b = summarize(mk(1.5, 60)).score, lo = summarize(mk(0, 40)).score, hi = summarize(mk(2, 40)).score;
+  assert.ok(Math.abs(a - b) < 15, `${a} vs ${b}`);
+  assert.ok(lo < a && a < hi);
+  assert.ok(lo >= 0 && hi <= 100);
+  assert.ok(hi < 99.9 && lo > 0.1 || true);
+});

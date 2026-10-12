@@ -20,7 +20,7 @@
 
 import { resolveRaidItems, mergeAssumptions } from './raids.js';
 
-export const MODEL_VERSION = 'v11';
+export const MODEL_VERSION = 'v12';
 export const DEFAULT_SIMS = 20000;
 
 // ---------------------------------------------------------------------------
@@ -230,11 +230,11 @@ function lookupObserved(item, clog) {
 // status buckets from luck percentile (0-100)
 // ---------------------------------------------------------------------------
 export const STATUS_BANDS = [
-  { min: 97.5, key: 'spooned', label: 'Spooned', emoji: '🥄' },
-  { min: 85, key: 'wet', label: 'Wet', emoji: '💧' },
-  { min: 15, key: 'on-rate', label: 'On-rate', emoji: '🎯' },
-  { min: 2.5, key: 'dry', label: 'Dry', emoji: '🏜️' },
-  { min: -1, key: 'very-dry', label: 'Very dry', emoji: '💀' },
+  { min: 97.5, key: 'spooned', label: 'Spooned' },
+  { min: 85, key: 'lucky', label: 'Lucky' },
+  { min: 15, key: 'on-rate', label: 'On rate' },
+  { min: 2.5, key: 'dry', label: 'Dry' },
+  { min: -1, key: 'very-dry', label: 'Very dry' },
 ];
 
 export function statusFor(percentile) {
@@ -365,7 +365,7 @@ export function analyzeActivity(act, ctx) {
         continue;
       }
       const p1 = 1 - Math.exp(logNone);
-      const w = Math.max(1, Math.round(10 * total / lambda));
+      const w = Math.max(1, Math.round(10 * Math.sqrt(total / lambda)));
       plain.push({ srcs, cap, w });
       vObs += capped * w;
       expectedDistinct += p1;
@@ -388,7 +388,7 @@ export function analyzeActivity(act, ctx) {
         groupMap.set(item.group, g);
       }
       if (g.lambda <= 0) continue;
-      const w = Math.max(1, Math.round(10 * item.needs * total / g.lambda));
+      const w = Math.max(1, Math.round(10 * Math.sqrt(item.needs * total / g.lambda)));
       g.items.push({ needs: item.needs, w });
       if (count > 0) vObs += w;
       const p1 = poissonAtLeast(item.needs, g.lambda);
@@ -400,7 +400,7 @@ export function analyzeActivity(act, ctx) {
     } else if (item.type === 'pity') {
       const p1 = pityProbability(item.pity, total);
       const wait = pityMeanWait(item.pity);
-      const w = Math.max(1, Math.round(10 * wait));
+      const w = Math.max(1, Math.round(10 * Math.sqrt(wait)));
       pities.push({ p: p1, w });
       if (count > 0) vObs += w;
       expectedDistinct += p1;
@@ -460,25 +460,42 @@ function finishLuck(u, zs, N) {
 // ---------------------------------------------------------------------------
 // overall score across activities
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Overall score (0-100, higher = more spooned)
+//
+// Each activity gives a standardised luck value s (null mean 0, sd 1, clipped to
+// +-3). The account's luck index L is the information-weighted mean of s, so it
+// does not grow with the number of activities the way a summed z-score does.
+//
+// Real accounts are not a random sample from the model: players stop farming a
+// boss once they have what they came for, so final hauls lean lucky, and some
+// rates/KC are imperfect. BASELINE is the average L seen on the first four real
+// test accounts (rough, ~0.8) and TAU the account-to-account spread around it.
+// Both are calibration constants, not statistics; re-fit them with more data.
+// ---------------------------------------------------------------------------
+export const SCORE_BASELINE = 0.8;
+export const SCORE_TAU = 0.4;
+const CONF_WEIGHT = { high: 1, partial: 0.8, approx: 0.5 };
+
 export function summarize(results, opts = {}) {
   const includeApprox = !!opts.includeApprox;
-  let zSum = 0, varSum = 0, used = 0, spooned = 0, dry = 0;
+  let wSum = 0, wsSum = 0, w2Sum = 0, used = 0;
+  const bands = { spooned: 0, lucky: 0, 'on-rate': 0, dry: 0, 'very-dry': 0 };
   for (const r of results) {
     if (!r || !r.luck) continue;
+    bands[r.luck.status.key]++;
     if (r.confidence === 'approx' && !includeApprox) continue;
-    zSum += r.luck.z - r.luck.zMean;
-    varSum += r.luck.zSd * r.luck.zSd;
+    const sd = Math.max(r.luck.zSd, 0.3);
+    const s = Math.max(-3, Math.min(3, (r.luck.z - r.luck.zMean) / sd));
+    const w = (CONF_WEIGHT[r.confidence] ?? 1) * Math.min(1, sd);
+    wSum += w; wsSum += w * s; w2Sum += w * w;
     used++;
-    if (r.luck.status.key === 'spooned' || r.luck.status.key === 'wet') spooned++;
-    if (r.luck.status.key === 'dry' || r.luck.status.key === 'very-dry') dry++;
   }
-  const z = varSum > 0 ? zSum / Math.sqrt(varSum) : 0;
-  return {
-    z, percentile: normCdf(z) * 100,
-    // lower = more spooned, to match the old leaderboard convention
-    score: Math.round(-z * 100) / 10,
-    used, spooned, dry,
-  };
+  const index = wSum > 0 ? wsSum / wSum : 0;
+  const se = wSum > 0 ? Math.sqrt(w2Sum) / wSum : 1;
+  const spread = Math.sqrt(se * se + SCORE_TAU * SCORE_TAU);
+  const score = Math.round(normCdf((index - SCORE_BASELINE) / spread) * 1000) / 10;
+  return { score, index, se, used, bands, spooned: bands.spooned + bands.lucky, dry: bands.dry + bands['very-dry'] };
 }
 
 export function analyzeAll(dataset, perActivity, opts = {}) {
