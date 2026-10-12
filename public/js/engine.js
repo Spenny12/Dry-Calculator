@@ -196,7 +196,7 @@ export function resolveItems(act, assumptions) {
   }
 
   const items = (act.items || []).map((it) => {
-    const base = { name: it.name, aliases: it.alias || [], kind: it.kind || 'rng', max: it.max, milestoneAt: it.at };
+    const base = { name: it.name, aliases: it.alias || [], kind: it.kind || 'rng', max: it.max, milestoneAt: it.at, sharedWith: it.sharedWith };
     if (base.kind !== 'rng') return { ...base, type: 'free' };
     if (it.group) return { ...base, type: 'group', group: it.group, needs: it.needs || 1 };
     if (it.pity) return { ...base, type: 'pity', pity: it.pity };
@@ -335,7 +335,9 @@ export function analyzeActivity(act, ctx) {
       if (clog) { const r = lookupObserved(item, clog); count = r.count; found = r.found; }
       let expectedHave = 1;
       if (item.kind === 'milestone') expectedHave = item.milestoneAt && total >= item.milestoneAt ? 1 : 0;
-      base.free.push({ name: item.name, kind: item.kind, count, found, expected: expectedHave, at: item.milestoneAt || null });
+      // shared items also drop elsewhere: never scored, and neutral in the expected-vs-have comparison
+      if (item.kind === 'shared') expectedHave = count > 0 ? 1 : 0;
+      base.free.push({ name: item.name, kind: item.kind, count, found, expected: expectedHave, at: item.milestoneAt || null, sharedWith: item.sharedWith || null });
       if (found || !clog) expectedDistinct += expectedHave;
       continue;
     }

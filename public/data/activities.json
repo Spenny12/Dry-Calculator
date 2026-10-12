@@ -1,846 +1,3032 @@
 {
-  "version": 1,
-  "retrieved": "2026-10-12",
-  "notes": [
-    "Rates are per kill/completion unless stated. 'NxA/B' means N independent rolls at A/B.",
-    "kind: rng (default) | guaranteed | common | derived | milestone. Only rng items (and groups/pity items) feed the luck maths.",
-    "max:1 means a second copy cannot drop (pets), so extra rolls after the first are ignored.",
-    "confidence: high = per-item rates taken from the OSRS wiki drop tables; partial = some rates missing/assumed; approx = equal-rate model calibrated to Temple's expected KC (no per-item rates yet).",
-    "Check/refresh with: npm run check-data"
-  ],
-  "activities": {
-
-    "zulrah": {
-      "name": "Zulrah", "type": "boss", "kph": 44, "confidence": "high", "templeEkc": 10993,
-      "wiki": "https://oldschool.runescape.wiki/w/Zulrah",
-      "sources": { "main": ["Zulrah"] },
-      "items": [
-        { "name": "Tanzanite fang", "rate": "2x1/1024" },
-        { "name": "Magic fang", "rate": "2x1/1024" },
-        { "name": "Serpentine visage", "rate": "2x1/1024" },
-        { "name": "Uncut onyx", "rate": "2x1/1024" },
-        { "name": "Tanzanite mutagen", "rate": "2x1/13107" },
-        { "name": "Magma mutagen", "rate": "2x1/13107" },
-        { "name": "Jar of swamp", "rate": "1/3000" },
-        { "name": "Pet snakeling", "rate": "1/4000", "max": 1, "alias": ["Snakeling"] }
-      ]
+ "version": 1,
+ "retrieved": "2026-10-12",
+ "notes": [
+  "Rates are per kill/completion unless stated. 'NxA/B' means N independent rolls at A/B.",
+  "kind: rng (default) | guaranteed | common | derived | milestone. Only rng items (and groups/pity items) feed the luck maths.",
+  "max:1 means a second copy cannot drop (pets), so extra rolls after the first are ignored.",
+  "confidence: high = per-item rates taken from the OSRS wiki drop tables; partial = some rates missing/assumed; approx = equal-rate model calibrated to Temple's expected KC (no per-item rates yet).",
+  "Check/refresh with: npm run check-data"
+ ],
+ "activities": {
+  "zulrah": {
+   "name": "Zulrah",
+   "type": "boss",
+   "kph": 44,
+   "confidence": "high",
+   "templeEkc": 10993,
+   "wiki": "https://oldschool.runescape.wiki/w/Zulrah",
+   "sources": {
+    "main": [
+     "Zulrah"
+    ]
+   },
+   "items": [
+    {
+     "name": "Tanzanite fang",
+     "rate": "2x1/1024"
     },
-
-    "abyssal_sire": {
-      "name": "Abyssal Sire", "type": "boss", "kph": 45, "confidence": "high", "templeEkc": 2873,
-      "wiki": "https://oldschool.runescape.wiki/w/Unsired",
-      "sources": { "main": ["Abyssal Sire"] },
-      "note": "Unsired (1/100) then a weighted table. The three bludgeon pieces share one pool (62/128 of Unsired) and are handed out without duplicates until the set is complete.",
-      "groups": { "bludgeon": { "rate": "62/12800" } },
-      "items": [
-        { "name": "Bludgeon claw", "group": "bludgeon", "needs": 1 },
-        { "name": "Bludgeon spine", "group": "bludgeon", "needs": 2 },
-        { "name": "Bludgeon axon", "group": "bludgeon", "needs": 3 },
-        { "name": "Abyssal dagger", "rate": "26/12800" },
-        { "name": "Abyssal whip", "rate": "12/12800" },
-        { "name": "Jar of miasma", "rate": "13/12800" },
-        { "name": "Abyssal head", "rate": "10/12800" },
-        { "name": "Abyssal orphan", "rate": "5/12800", "max": 1 },
-        { "name": "Abyssal bludgeon", "kind": "derived" }
-      ]
+    {
+     "name": "Magic fang",
+     "rate": "2x1/1024"
     },
-
-    "alchemical_hydra": {
-      "name": "Alchemical Hydra", "type": "boss", "kph": 33, "confidence": "partial", "templeEkc": 3967,
-      "wiki": "https://oldschool.runescape.wiki/w/Alchemical_Hydra",
-      "sources": { "main": ["Alchemical Hydra"] },
-      "note": "Eye, fang and heart are received in that order (modelled as a progressive group). Pet and jar rates are from memory, not re-checked.",
-      "groups": { "ring": { "rate": "1/181.1" } },
-      "items": [
-        { "name": "Hydra's eye", "group": "ring", "needs": 1 },
-        { "name": "Hydra's fang", "group": "ring", "needs": 2 },
-        { "name": "Hydra's heart", "group": "ring", "needs": 3 },
-        { "name": "Hydra's claw", "rate": "1/1001" },
-        { "name": "Hydra tail", "rate": "1/513" },
-        { "name": "Hydra leather", "rate": "1/514" },
-        { "name": "Dragon thrownaxe", "rate": "1/2000" },
-        { "name": "Dragon knife", "rate": "1/2001" },
-        { "name": "Jar of chemicals", "rate": "1/2000" },
-        { "name": "Ikkle hydra", "rate": "1/3000", "max": 1 },
-        { "name": "Brimstone ring", "kind": "derived" }
-      ]
+    {
+     "name": "Serpentine visage",
+     "rate": "2x1/1024"
     },
-
-    "amoxliatl": {
-      "name": "Amoxliatl", "type": "boss", "kph": 75, "confidence": "high", "templeEkc": 3003,
-      "wiki": "https://oldschool.runescape.wiki/w/Amoxliatl",
-      "sources": { "main": ["Amoxliatl"] },
-      "items": [
-        { "name": "Glacial temotli", "rate": "1/100" },
-        { "name": "Pendant of Ates (inert)", "rate": "1/25", "alias": ["Pendant of Ates"] },
-        { "name": "Moxi", "rate": "1/3000", "max": 1 },
-        { "name": "Frozen tear", "kind": "common" }
-      ]
+    {
+     "name": "Uncut onyx",
+     "rate": "2x1/1024",
+     "kind": "shared",
+     "sharedWith": "Zulrah, Skotizo and Zalcano"
     },
-
-    "araxxor": {
-      "name": "Araxxor", "type": "boss", "kph": 40, "confidence": "high", "templeEkc": 2655,
-      "wiki": "https://oldschool.runescape.wiki/w/Araxxor",
-      "sources": { "main": ["Araxxor"] },
-      "note": "Each halberd piece is 1/200, but duplicates are not given until the set is complete, so the three pieces are one pool at 3/200. Nid assumes the standard 'harvest' option.",
-      "groups": { "halberd": { "rate": "3/200" } },
-      "items": [
-        { "name": "Noxious pommel", "group": "halberd", "needs": 1 },
-        { "name": "Noxious point", "group": "halberd", "needs": 2 },
-        { "name": "Noxious blade", "group": "halberd", "needs": 3 },
-        { "name": "Noxious halberd", "kind": "derived" },
-        { "name": "Araxyte fang", "rate": "1/600" },
-        { "name": "Araxyte head", "rate": "1/250" },
-        { "name": "Jar of venom", "rate": "1/1500" },
-        { "name": "Nid", "rate": "1/3000", "max": 1 }
-      ]
+    {
+     "name": "Tanzanite mutagen",
+     "rate": "2x1/13107"
     },
-
-    "barrows_chests": {
-      "name": "Barrows Chests", "type": "boss", "kph": 24, "confidence": "high", "templeEkc": 1321,
-      "wiki": "https://oldschool.runescape.wiki/w/Chest_(Barrows)",
-      "sources": { "main": ["Barrows Chests", "Barrows"] },
-      "note": "Assumes all six brothers killed (7 rolls at 1/102, each of the 24 pieces equally likely). Fewer brothers means worse odds, so this is the optimistic case. Bolt rack depends on reward potential and is treated as common.",
-      "items": [
-        { "name": "Karil's coif", "rate": "7/2448" }, { "name": "Karil's leathertop", "rate": "7/2448" },
-        { "name": "Karil's leatherskirt", "rate": "7/2448" }, { "name": "Karil's crossbow", "rate": "7/2448" },
-        { "name": "Ahrim's hood", "rate": "7/2448" }, { "name": "Ahrim's robetop", "rate": "7/2448" },
-        { "name": "Ahrim's robeskirt", "rate": "7/2448" }, { "name": "Ahrim's staff", "rate": "7/2448" },
-        { "name": "Dharok's helm", "rate": "7/2448" }, { "name": "Dharok's platebody", "rate": "7/2448" },
-        { "name": "Dharok's platelegs", "rate": "7/2448" }, { "name": "Dharok's greataxe", "rate": "7/2448" },
-        { "name": "Guthan's helm", "rate": "7/2448" }, { "name": "Guthan's platebody", "rate": "7/2448" },
-        { "name": "Guthan's chainskirt", "rate": "7/2448" }, { "name": "Guthan's warspear", "rate": "7/2448" },
-        { "name": "Torag's helm", "rate": "7/2448" }, { "name": "Torag's platebody", "rate": "7/2448" },
-        { "name": "Torag's platelegs", "rate": "7/2448" }, { "name": "Torag's hammers", "rate": "7/2448" },
-        { "name": "Verac's helm", "rate": "7/2448" }, { "name": "Verac's brassard", "rate": "7/2448" },
-        { "name": "Verac's plateskirt", "rate": "7/2448" }, { "name": "Verac's flail", "rate": "7/2448" },
-        { "name": "Bolt rack", "kind": "common" }
-      ]
+    {
+     "name": "Magma mutagen",
+     "rate": "2x1/13107"
     },
-
-    "bryophyta": {
-      "name": "Bryophyta", "type": "boss", "kph": 8, "confidence": "high", "templeEkc": 118,
-      "sources": { "main": ["Bryophyta"] },
-      "items": [ { "name": "Bryophyta's staff", "rate": "1/118" } ]
+    {
+     "name": "Jar of swamp",
+     "rate": "1/3000"
     },
-
-    "callisto_and_artio": {
-      "name": "Callisto and Artio", "type": "boss", "kph": 65, "confidence": "high", "templeEkc": 3173,
-      "wiki": "https://oldschool.runescape.wiki/w/Callisto",
-      "sources": { "callisto": ["Callisto"], "artio": ["Artio"] },
-      "note": "Artio shares Callisto's drops at lower rates.",
-      "items": [
-        { "name": "Claws of Callisto", "rates": { "callisto": "1/196", "artio": "1/618" } },
-        { "name": "Dragon 2h sword", "rates": { "callisto": "1/256", "artio": "1/358" } },
-        { "name": "Dragon pickaxe", "rates": { "callisto": "1/256", "artio": "1/358" } },
-        { "name": "Voidwaker hilt", "rates": { "callisto": "1/360", "artio": "1/912" } },
-        { "name": "Tyrannical ring", "rates": { "callisto": "1/512", "artio": "1/716" } },
-        { "name": "Callisto cub", "rates": { "callisto": "1/1500", "artio": "1/2800" }, "max": 1 }
-      ]
+    {
+     "name": "Pet snakeling",
+     "rate": "1/4000",
+     "max": 1,
+     "alias": [
+      "Snakeling"
+     ]
+    }
+   ]
+  },
+  "abyssal_sire": {
+   "name": "Abyssal Sire",
+   "type": "boss",
+   "kph": 45,
+   "confidence": "high",
+   "templeEkc": 2873,
+   "wiki": "https://oldschool.runescape.wiki/w/Unsired",
+   "sources": {
+    "main": [
+     "Abyssal Sire"
+    ]
+   },
+   "note": "Unsired (1/100) then a weighted table. The three bludgeon pieces share one pool (62/128 of Unsired) and are handed out without duplicates until the set is complete.",
+   "groups": {
+    "bludgeon": {
+     "rate": "62/12800"
+    }
+   },
+   "items": [
+    {
+     "name": "Bludgeon claw",
+     "group": "bludgeon",
+     "needs": 1
     },
-
-    "venenatis_and_spindel": {
-      "name": "Venenatis and Spindel", "type": "boss", "kph": 55, "confidence": "high", "templeEkc": 3173,
-      "wiki": "https://oldschool.runescape.wiki/w/Venenatis",
-      "sources": { "venenatis": ["Venenatis"], "spindel": ["Spindel"] },
-      "items": [
-        { "name": "Fangs of Venenatis", "rates": { "venenatis": "1/196", "spindel": "1/618" } },
-        { "name": "Dragon 2h sword", "rates": { "venenatis": "1/256", "spindel": "1/358" } },
-        { "name": "Dragon pickaxe", "rates": { "venenatis": "1/256", "spindel": "1/358" } },
-        { "name": "Voidwaker gem", "rates": { "venenatis": "1/360", "spindel": "1/912" } },
-        { "name": "Treasonous ring", "rates": { "venenatis": "1/512", "spindel": "1/716" } },
-        { "name": "Venenatis spiderling", "rates": { "venenatis": "1/1500", "spindel": "1/2800" }, "max": 1 }
-      ]
+    {
+     "name": "Bludgeon spine",
+     "group": "bludgeon",
+     "needs": 2
     },
-
-    "vetion_and_calvarion": {
-      "name": "Vet'ion and Calvar'ion", "type": "boss", "kph": 55, "confidence": "high", "templeEkc": 3173,
-      "wiki": "https://oldschool.runescape.wiki/w/Vet%27ion",
-      "sources": { "vetion": ["Vet'ion"], "calvarion": ["Calvar'ion"] },
-      "items": [
-        { "name": "Skull of Vet'ion", "rates": { "vetion": "1/196", "calvarion": "1/618" } },
-        { "name": "Dragon 2h sword", "rates": { "vetion": "1/256", "calvarion": "1/358" } },
-        { "name": "Dragon pickaxe", "rates": { "vetion": "1/256", "calvarion": "1/358" } },
-        { "name": "Voidwaker blade", "rates": { "vetion": "1/360", "calvarion": "1/912" } },
-        { "name": "Ring of the gods", "rates": { "vetion": "1/512", "calvarion": "1/716" } },
-        { "name": "Vet'ion jr.", "rates": { "vetion": "1/1500", "calvarion": "1/2800" }, "max": 1, "alias": ["Vet'ion Jr"] }
-      ]
+    {
+     "name": "Bludgeon axon",
+     "group": "bludgeon",
+     "needs": 3
     },
-
-    "cerberus": {
-      "name": "Cerberus", "type": "boss", "kph": 65, "confidence": "high", "templeEkc": 3883,
-      "wiki": "https://oldschool.runescape.wiki/w/Cerberus",
-      "sources": { "main": ["Cerberus"] },
-      "items": [
-        { "name": "Primordial crystal", "rate": "1/520" },
-        { "name": "Pegasian crystal", "rate": "1/520" },
-        { "name": "Eternal crystal", "rate": "1/520" },
-        { "name": "Smouldering stone", "rate": "1/520" },
-        { "name": "Jar of souls", "rate": "1/2000" },
-        { "name": "Hellpuppy", "rate": "1/3000", "max": 1 },
-        { "name": "Key master teleport", "kind": "guaranteed" }
-      ]
+    {
+     "name": "Abyssal dagger",
+     "rate": "26/12800"
     },
-
-    "chaos_elemental": {
-      "name": "Chaos Elemental", "type": "boss", "kph": 60, "confidence": "partial", "templeEkc": 211.7,
-      "wiki": "https://oldschool.runescape.wiki/w/Chaos_Elemental",
-      "sources": { "main": ["Chaos Elemental"] },
-      "note": "Temple's expected KC (211.7) is lower than the pet's 1/300, so Temple is evidently assuming something else (e.g. a slayer-task pet boost).",
-      "items": [
-        { "name": "Dragon pickaxe", "rate": "1/256" },
-        { "name": "Dragon 2h sword", "rate": "2/128" },
-        { "name": "Pet chaos elemental", "rate": "1/300", "max": 1 }
-      ]
+    {
+     "name": "Abyssal whip",
+     "rate": "12/12800",
+     "kind": "shared",
+     "sharedWith": "abyssal demons"
     },
-
-    "chaos_fanatic": {
-      "name": "Chaos Fanatic", "type": "boss", "kph": 100, "confidence": "high", "templeEkc": 384,
-      "wiki": "https://oldschool.runescape.wiki/w/Chaos_Fanatic",
-      "sources": { "main": ["Chaos Fanatic"] },
-      "items": [
-        { "name": "Odium shard 1", "rate": "1/256" },
-        { "name": "Malediction shard 1", "rate": "1/256" },
-        { "name": "Pet chaos elemental", "rate": "1/1000", "max": 1 }
-      ]
+    {
+     "name": "Jar of miasma",
+     "rate": "13/12800"
     },
-
-    "crazy_archaeologist": {
-      "name": "Crazy Archaeologist", "type": "boss", "kph": 85, "confidence": "high", "templeEkc": 405,
-      "wiki": "https://oldschool.runescape.wiki/w/Crazy_archaeologist",
-      "sources": { "main": ["Crazy Archaeologist", "Deranged Archaeologist"] },
-      "items": [
-        { "name": "Fedora", "rate": "1/128" },
-        { "name": "Odium shard 2", "rate": "1/256" },
-        { "name": "Malediction shard 2", "rate": "1/256" }
-      ]
+    {
+     "name": "Abyssal head",
+     "rate": "10/12800"
     },
-
-    "scorpia": {
-      "name": "Scorpia", "type": "boss", "kph": 130, "confidence": "high", "templeEkc": 2066,
-      "wiki": "https://oldschool.runescape.wiki/w/Scorpia",
-      "sources": { "main": ["Scorpia"] },
-      "items": [
-        { "name": "Dragon 2h sword", "rate": "1/128" },
-        { "name": "Odium shard 3", "rate": "1/256" },
-        { "name": "Malediction shard 3", "rate": "1/256" },
-        { "name": "Scorpia's offspring", "rate": "1/2015.75", "max": 1 }
-      ]
+    {
+     "name": "Abyssal orphan",
+     "rate": "5/12800",
+     "max": 1
     },
-
-    "commander_zilyana": {
-      "name": "Commander Zilyana", "type": "boss", "kph": 55, "confidence": "high", "templeEkc": 5087,
-      "wiki": "https://oldschool.runescape.wiki/w/Commander_Zilyana",
-      "sources": { "main": ["Commander Zilyana"] },
-      "items": [
-        { "name": "Saradomin sword", "rate": "1/127" },
-        { "name": "Saradomin's light", "rate": "1/254" },
-        { "name": "Armadyl crossbow", "rate": "1/508" },
-        { "name": "Saradomin hilt", "rate": "1/508" },
-        { "name": "Godsword shard 1", "rate": "1/762" },
-        { "name": "Godsword shard 2", "rate": "1/762" },
-        { "name": "Godsword shard 3", "rate": "1/762" },
-        { "name": "Pet zilyana", "rate": "1/5000", "max": 1 }
-      ]
+    {
+     "name": "Abyssal bludgeon",
+     "kind": "derived"
+    }
+   ]
+  },
+  "alchemical_hydra": {
+   "name": "Alchemical Hydra",
+   "type": "boss",
+   "kph": 33,
+   "confidence": "partial",
+   "templeEkc": 3967,
+   "wiki": "https://oldschool.runescape.wiki/w/Alchemical_Hydra",
+   "sources": {
+    "main": [
+     "Alchemical Hydra"
+    ]
+   },
+   "note": "Eye, fang and heart are received in that order (modelled as a progressive group). Pet and jar rates are from memory, not re-checked.",
+   "groups": {
+    "ring": {
+     "rate": "1/181.1"
+    }
+   },
+   "items": [
+    {
+     "name": "Hydra's eye",
+     "group": "ring",
+     "needs": 1
     },
-
-    "general_graardor": {
-      "name": "General Graardor", "type": "boss", "kph": 55, "confidence": "high", "templeEkc": 5092,
-      "wiki": "https://oldschool.runescape.wiki/w/General_Graardor",
-      "sources": { "main": ["General Graardor"] },
-      "items": [
-        { "name": "Bandos chestplate", "rate": "1/381" },
-        { "name": "Bandos tassets", "rate": "1/381" },
-        { "name": "Bandos boots", "rate": "1/381" },
-        { "name": "Bandos hilt", "rate": "1/508" },
-        { "name": "Godsword shard 1", "rate": "1/762" },
-        { "name": "Godsword shard 2", "rate": "1/762" },
-        { "name": "Godsword shard 3", "rate": "1/762" },
-        { "name": "Pet general graardor", "rate": "1/5000", "max": 1 }
-      ]
+    {
+     "name": "Hydra's fang",
+     "group": "ring",
+     "needs": 2
     },
-
-    "kree_arra": {
-      "name": "Kree'arra", "type": "boss", "kph": 40, "confidence": "high", "templeEkc": 5092,
-      "wiki": "https://oldschool.runescape.wiki/w/Kree%27arra",
-      "sources": { "main": ["Kree'arra", "Kree'Arra"] },
-      "items": [
-        { "name": "Armadyl helmet", "rate": "1/381" },
-        { "name": "Armadyl chestplate", "rate": "1/381" },
-        { "name": "Armadyl chainskirt", "rate": "1/381" },
-        { "name": "Armadyl hilt", "rate": "1/508" },
-        { "name": "Godsword shard 1", "rate": "1/762" },
-        { "name": "Godsword shard 2", "rate": "1/762" },
-        { "name": "Godsword shard 3", "rate": "1/762" },
-        { "name": "Pet kree'arra", "rate": "1/5000", "max": 1 }
-      ]
+    {
+     "name": "Hydra's heart",
+     "group": "ring",
+     "needs": 3
     },
-
-    "kril_tsutsaroth": {
-      "name": "K'ril Tsutsaroth", "type": "boss", "kph": 65, "confidence": "high", "templeEkc": 5083,
-      "wiki": "https://oldschool.runescape.wiki/w/K%27ril_Tsutsaroth",
-      "sources": { "main": ["K'ril Tsutsaroth", "Kril Tsutsaroth"] },
-      "items": [
-        { "name": "Steam battlestaff", "rate": "1/127" },
-        { "name": "Zamorakian spear", "rate": "1/127" },
-        { "name": "Staff of the dead", "rate": "1/508" },
-        { "name": "Zamorak hilt", "rate": "1/508" },
-        { "name": "Godsword shard 1", "rate": "1/762" },
-        { "name": "Godsword shard 2", "rate": "1/762" },
-        { "name": "Godsword shard 3", "rate": "1/762" },
-        { "name": "Pet k'ril tsutsaroth", "rate": "1/5000", "max": 1 }
-      ]
+    {
+     "name": "Hydra's claw",
+     "rate": "1/1001"
     },
-
-    "corporeal_beast": {
-      "name": "Corporeal Beast", "type": "boss", "kph": 60, "confidence": "high", "templeEkc": 7095,
-      "wiki": "https://oldschool.runescape.wiki/w/Corporeal_Beast",
-      "sources": { "main": ["Corporeal Beast"] },
-      "items": [
-        { "name": "Spectral sigil", "rate": "1/1365" },
-        { "name": "Arcane sigil", "rate": "1/1365" },
-        { "name": "Elysian sigil", "rate": "1/4095" },
-        { "name": "Spirit shield", "rate": "8/512" },
-        { "name": "Holy elixir", "rate": "3/512" },
-        { "name": "Jar of spirits", "rate": "1/1000" },
-        { "name": "Pet dark core", "rate": "1/5000", "max": 1 }
-      ]
+    {
+     "name": "Hydra tail",
+     "rate": "1/513"
     },
-
-    "dagannoth_kings": {
-      "name": "Dagannoth Kings", "type": "boss", "kph": 100, "confidence": "high", "templeEkc": 15017,
-      "wiki": "https://oldschool.runescape.wiki/w/Dagannoth_Rex",
-      "sources": { "rex": ["Dagannoth Rex"], "prime": ["Dagannoth Prime"], "supreme": ["Dagannoth Supreme"] },
-      "note": "Each king has its own kill count and drop table; the dragon axe drops from all three. (The old data used the key 'dagganoth_kings', a typo that never matched Temple's category.)",
-      "items": [
-        { "name": "Warrior ring", "rates": { "rex": "1/128" } },
-        { "name": "Berserker ring", "rates": { "rex": "1/128" } },
-        { "name": "Seers ring", "rates": { "prime": "1/128" } },
-        { "name": "Mud battlestaff", "rates": { "prime": "1/128" } },
-        { "name": "Archers ring", "rates": { "supreme": "1/128" } },
-        { "name": "Seercull", "rates": { "supreme": "1/128" } },
-        { "name": "Dragon axe", "rates": { "rex": "1/128", "prime": "1/128", "supreme": "1/128" } },
-        { "name": "Pet dagannoth rex", "rates": { "rex": "1/5000" }, "max": 1 },
-        { "name": "Pet dagannoth prime", "rates": { "prime": "1/5000" }, "max": 1 },
-        { "name": "Pet dagannoth supreme", "rates": { "supreme": "1/5000" }, "max": 1 }
-      ]
+    {
+     "name": "Hydra leather",
+     "rate": "1/514"
     },
-
-    "giant_mole": {
-      "name": "Giant Mole", "type": "boss", "kph": 100, "confidence": "high", "templeEkc": 3000,
-      "sources": { "main": ["Giant Mole"] },
-      "items": [
-        { "name": "Mole claw", "kind": "guaranteed" },
-        { "name": "Mole skin", "kind": "guaranteed" },
-        { "name": "Baby mole", "rate": "1/3000", "max": 1 }
-      ]
+    {
+     "name": "Dragon thrownaxe",
+     "rate": "1/2000",
+     "kind": "shared",
+     "sharedWith": "wyrms, drakes and other dragons, and dropped as stacks of several"
     },
-
-    "grotesque_guardians": {
-      "name": "Grotesque Guardians", "type": "boss", "kph": 36, "confidence": "high", "templeEkc": 6143,
-      "wiki": "https://oldschool.runescape.wiki/w/Grotesque_Guardians",
-      "sources": { "main": ["Grotesque Guardians"] },
-      "items": [
-        { "name": "Black tourmaline core", "rate": "2x1/1000" },
-        { "name": "Granite gloves", "rate": "2x1/500" },
-        { "name": "Granite ring", "rate": "2x1/500" },
-        { "name": "Granite hammer", "rate": "2x1/750" },
-        { "name": "Jar of stone", "rate": "1/5000" },
-        { "name": "Noon", "rate": "1/3000", "max": 1 },
-        { "name": "Granite dust", "kind": "guaranteed" }
-      ]
+    {
+     "name": "Dragon knife",
+     "rate": "1/2001",
+     "kind": "shared",
+     "sharedWith": "wyrms, drakes and other dragons, and dropped as stacks of several"
     },
-
-    "hespori": {
-      "name": "Hespori", "type": "boss", "kph": 90, "confidence": "high", "templeEkc": 36,
-      "sources": { "main": ["Hespori"] },
-      "items": [
-        { "name": "Bottomless compost bucket", "rate": "1/35" },
-        { "name": "Attas seed", "kind": "common" },
-        { "name": "Iasor seed", "kind": "common" },
-        { "name": "Kronos seed", "kind": "common" }
-      ]
+    {
+     "name": "Jar of chemicals",
+     "rate": "1/2000"
     },
-
-    "kalphite_queen": {
-      "name": "Kalphite Queen", "type": "boss", "kph": 50, "confidence": "high", "templeEkc": 3801,
-      "wiki": "https://oldschool.runescape.wiki/w/Kalphite_Queen",
-      "sources": { "main": ["Kalphite Queen"] },
-      "items": [
-        { "name": "Dragon chainbody", "rate": "1/128" },
-        { "name": "Dragon 2h sword", "rate": "1/256" },
-        { "name": "Dragon pickaxe", "rate": "1/400" },
-        { "name": "KQ head", "rate": "1/128" },
-        { "name": "KQ head (tattered)", "kind": "derived" },
-        { "name": "Jar of sand", "rate": "1/2000" },
-        { "name": "Kalphite princess", "rate": "1/3000", "max": 1 }
-      ]
+    {
+     "name": "Ikkle hydra",
+     "rate": "1/3000",
+     "max": 1
     },
-
-    "king_black_dragon": {
-      "name": "King Black Dragon", "type": "boss", "kph": 120, "confidence": "high", "templeEkc": 3005,
-      "wiki": "https://oldschool.runescape.wiki/w/King_Black_Dragon",
-      "sources": { "main": ["King Black Dragon"] },
-      "items": [
-        { "name": "Dragon pickaxe", "rate": "1/1000" },
-        { "name": "Draconic visage", "rate": "1/5000" },
-        { "name": "KBD heads", "rate": "1/128" },
-        { "name": "Prince black dragon", "rate": "1/3000", "max": 1 }
-      ]
+    {
+     "name": "Brimstone ring",
+     "kind": "derived"
+    }
+   ]
+  },
+  "amoxliatl": {
+   "name": "Amoxliatl",
+   "type": "boss",
+   "kph": 75,
+   "confidence": "high",
+   "templeEkc": 3003,
+   "wiki": "https://oldschool.runescape.wiki/w/Amoxliatl",
+   "sources": {
+    "main": [
+     "Amoxliatl"
+    ]
+   },
+   "items": [
+    {
+     "name": "Glacial temotli",
+     "rate": "1/100"
     },
-
-    "kraken": {
-      "name": "Kraken", "type": "boss", "kph": 100, "confidence": "high", "templeEkc": 3307,
-      "wiki": "https://oldschool.runescape.wiki/w/Kraken",
-      "sources": { "main": ["Kraken"] },
-      "items": [
-        { "name": "Trident of the seas (full)", "rate": "1/512", "alias": ["Trident of the seas"] },
-        { "name": "Kraken tentacle", "rate": "1/400" },
-        { "name": "Jar of dirt", "rate": "1/1000" },
-        { "name": "Pet kraken", "rate": "1/3000", "max": 1 }
-      ]
+    {
+     "name": "Pendant of Ates (inert)",
+     "rate": "1/25",
+     "alias": [
+      "Pendant of Ates"
+     ]
     },
-
-    "thermonuclear_smoke_devil": {
-      "name": "Thermonuclear Smoke Devil", "type": "boss", "kph": 125, "confidence": "high", "templeEkc": 3826,
-      "wiki": "https://oldschool.runescape.wiki/w/Thermonuclear_smoke_devil",
-      "sources": { "main": ["Thermonuclear Smoke Devil"] },
-      "items": [
-        { "name": "Dragon chainbody", "rate": "1/2000" },
-        { "name": "Smoke battlestaff", "rate": "1/512" },
-        { "name": "Occult necklace", "rate": "1/350" },
-        { "name": "Jar of smoke", "rate": "1/2000" },
-        { "name": "Pet smoke devil", "rate": "1/3000", "max": 1 }
-      ]
+    {
+     "name": "Moxi",
+     "rate": "1/3000",
+     "max": 1
     },
-
-    "obor": {
-      "name": "Obor", "type": "boss", "kph": 8, "confidence": "high", "templeEkc": 118,
-      "sources": { "main": ["Obor"] },
-      "items": [ { "name": "Hill giant club", "rate": "1/118" } ]
+    {
+     "name": "Frozen tear",
+     "kind": "common"
+    }
+   ]
+  },
+  "araxxor": {
+   "name": "Araxxor",
+   "type": "boss",
+   "kph": 40,
+   "confidence": "high",
+   "templeEkc": 2655,
+   "wiki": "https://oldschool.runescape.wiki/w/Araxxor",
+   "sources": {
+    "main": [
+     "Araxxor"
+    ]
+   },
+   "note": "Each halberd piece is 1/200, but duplicates are not given until the set is complete, so the three pieces are one pool at 3/200. Nid assumes the standard 'harvest' option.",
+   "groups": {
+    "halberd": {
+     "rate": "3/200"
+    }
+   },
+   "items": [
+    {
+     "name": "Noxious pommel",
+     "group": "halberd",
+     "needs": 1
     },
-
-    "sarachnis": {
-      "name": "Sarachnis", "type": "boss", "kph": 100, "confidence": "high", "templeEkc": 3812,
-      "wiki": "https://oldschool.runescape.wiki/w/Sarachnis",
-      "sources": { "main": ["Sarachnis"] },
-      "items": [
-        { "name": "Sarachnis cudgel", "rate": "1/384" },
-        { "name": "Jar of eyes", "rate": "1/2000" },
-        { "name": "Sraracha", "rate": "1/3000", "max": 1 },
-        { "name": "Giant egg sac(full)", "rate": "1/20", "alias": ["Giant egg sac"] },
-        { "name": "Pristine spider silk", "rate": "1/50" }
-      ]
+    {
+     "name": "Noxious point",
+     "group": "halberd",
+     "needs": 2
     },
-
-    "scurrius": {
-      "name": "Scurrius", "type": "boss", "kph": 60, "confidence": "high", "templeEkc": 3000,
-      "wiki": "https://oldschool.runescape.wiki/w/Scurrius",
-      "sources": { "main": ["Scurrius"] },
-      "note": "Pet is MVP-only; this assumes the player is MVP (solo).",
-      "items": [
-        { "name": "Scurrius' spine", "rate": "1/33" },
-        { "name": "Scurry", "rate": "1/3000", "max": 1 }
-      ]
+    {
+     "name": "Noxious blade",
+     "group": "halberd",
+     "needs": 3
     },
-
-    "skotizo": {
-      "name": "Skotizo", "type": "boss", "kph": 45, "confidence": "high", "templeEkc": 259,
-      "wiki": "https://oldschool.runescape.wiki/w/Skotizo",
-      "sources": { "main": ["Skotizo"] },
-      "items": [
-        { "name": "Dark claw", "rate": "1/25" },
-        { "name": "Uncut onyx", "rate": "1/1000" },
-        { "name": "Jar of darkness", "rate": "1/200" },
-        { "name": "Skotos", "rate": "1/65", "max": 1 },
-        { "name": "Dark totem base", "rate": "3/128" },
-        { "name": "Dark totem middle", "rate": "3/128" },
-        { "name": "Dark totem top", "rate": "3/128" }
-      ]
+    {
+     "name": "Noxious halberd",
+     "kind": "derived"
     },
-
-    "vorkath": {
-      "name": "Vorkath", "type": "boss", "kph": 34, "confidence": "partial", "templeEkc": 6939,
-      "wiki": "https://oldschool.runescape.wiki/w/Vorkath%27s_head",
-      "sources": { "main": ["Vorkath"] },
-      "note": "Vorkath's head is 1/50 and guaranteed by kill 50, so it is a pity item. The other rates (visages 1/5000, necklace 1/1000, jar/pet 1/3000) are from memory and not re-checked.",
-      "items": [
-        { "name": "Vorkath's head", "pity": { "start": "1/50", "end": "1/50", "guaranteeAt": 50 } },
-        { "name": "Dragonbone necklace", "rate": "1/1000" },
-        { "name": "Draconic visage", "rate": "1/5000" },
-        { "name": "Skeletal visage", "rate": "1/5000" },
-        { "name": "Jar of decay", "rate": "1/3000" },
-        { "name": "Vorki", "rate": "1/3000", "max": 1 }
-      ]
+    {
+     "name": "Araxyte fang",
+     "rate": "1/600"
     },
-
-    "nex": {
-      "name": "Nex", "type": "boss", "kph": 2.87, "confidence": "partial", "templeEkc": 902,
-      "wiki": "https://oldschool.runescape.wiki/w/Nex",
-      "sources": { "main": ["Nex"] },
-      "note": "Rates as listed on the wiki; team size, contribution and MVP change the real unique chance, which is not modelled.",
-      "items": [
-        { "name": "Zaryte vambraces", "rate": "1/172" },
-        { "name": "Nihil horn", "rate": "1/258" },
-        { "name": "Torva full helm (damaged)", "rate": "1/258", "alias": ["Torva full helm"] },
-        { "name": "Torva platebody (damaged)", "rate": "1/258", "alias": ["Torva platebody"] },
-        { "name": "Torva platelegs (damaged)", "rate": "1/258", "alias": ["Torva platelegs"] },
-        { "name": "Ancient hilt", "rate": "1/516" },
-        { "name": "Nexling", "rate": "1/500", "max": 1 },
-        { "name": "Nihil shard", "kind": "common" }
-      ]
+    {
+     "name": "Araxyte head",
+     "rate": "1/250"
     },
-
-    "the_nightmare": {
-      "name": "The Nightmare", "type": "boss", "kph": 7.5, "confidence": "partial", "templeEkc": 5315,
-      "wiki": "https://oldschool.runescape.wiki/w/The_Nightmare",
-      "sources": { "nightmare": ["The Nightmare", "Nightmare"], "phosani": ["Phosani's Nightmare"] },
-      "note": "Nightmare rates improve with team size (wiki gives a range); the better-end (large team) figures are used. Phosani's rates are fixed. The pity-free Slepey tablet is common.",
-      "items": [
-        { "name": "Inquisitor's mace", "rates": { "nightmare": "1/428.7", "phosani": "31/35000" } },
-        { "name": "Inquisitor's great helm", "rates": { "nightmare": "1/240.1", "phosani": "1/700" } },
-        { "name": "Inquisitor's hauberk", "rates": { "nightmare": "1/240.1", "phosani": "1/700" } },
-        { "name": "Inquisitor's plateskirt", "rates": { "nightmare": "1/240.1", "phosani": "1/700" } },
-        { "name": "Nightmare staff", "rates": { "nightmare": "1/171.5", "phosani": "69/35000" } },
-        { "name": "Eldritch orb", "rates": { "nightmare": "1/548.7", "phosani": "1/1600" } },
-        { "name": "Harmonised orb", "rates": { "nightmare": "1/548.7", "phosani": "1/1600" } },
-        { "name": "Volatile orb", "rates": { "nightmare": "1/548.7", "phosani": "1/1600" } },
-        { "name": "Little nightmare", "rates": { "nightmare": "1/800", "phosani": "1/1400" }, "max": 1 },
-        { "name": "Jar of dreams", "rates": { "nightmare": "1/1900", "phosani": "1/4000" } },
-        { "name": "Parasitic egg", "rates": { "phosani": "1/200" } },
-        { "name": "Slepey tablet", "kind": "common" }
-      ]
+    {
+     "name": "Jar of venom",
+     "rate": "1/1500"
     },
-
-    "phantom_muspah": {
-      "name": "Phantom Muspah", "type": "boss", "kph": 30, "confidence": "partial", "templeEkc": 2504,
-      "wiki": "https://oldschool.runescape.wiki/w/Phantom_Muspah",
-      "sources": { "main": ["Phantom Muspah"] },
-      "note": "Shard/icon/cache rates are from the wiki; Saturated heart (1/150) and Muphin (1/2500) are from memory.",
-      "items": [
-        { "name": "Venator shard", "rate": "1/100" },
-        { "name": "Ancient icon", "rate": "2/100" },
-        { "name": "Saturated heart", "rate": "1/150" },
-        { "name": "Muphin", "rate": "1/2500", "max": 1 },
-        { "name": "Frozen cache", "kind": "common" },
-        { "name": "Charged ice", "kind": "common" }
-      ]
+    {
+     "name": "Nid",
+     "rate": "1/3000",
+     "max": 1
+    }
+   ]
+  },
+  "barrows_chests": {
+   "name": "Barrows Chests",
+   "type": "boss",
+   "kph": 24,
+   "confidence": "high",
+   "templeEkc": 1321,
+   "wiki": "https://oldschool.runescape.wiki/w/Chest_(Barrows)",
+   "sources": {
+    "main": [
+     "Barrows Chests",
+     "Barrows"
+    ]
+   },
+   "note": "Assumes all six brothers killed (7 rolls at 1/102, each of the 24 pieces equally likely). Fewer brothers means worse odds, so this is the optimistic case. Bolt rack depends on reward potential and is treated as common.",
+   "items": [
+    {
+     "name": "Karil's coif",
+     "rate": "7/2448"
     },
-
-    "royal_titans": {
-      "name": "The Royal Titans", "type": "boss", "kph": 30, "confidence": "partial", "templeEkc": 221,
-      "wiki": "https://oldschool.runescape.wiki/w/Royal_Titans",
-      "sources": { "main": ["The Royal Titans", "Royal Titans"] },
-      "note": "Rates assume full damage share on each titan. Prayer scrolls stop dropping once read.",
-      "items": [
-        { "name": "Fire element staff crown", "rate": "1/75" },
-        { "name": "Ice element staff crown", "rate": "1/75" },
-        { "name": "Deadeye prayer scroll", "rate": "1/75", "max": 1 },
-        { "name": "Mystic vigour prayer scroll", "rate": "1/75", "max": 1 },
-        { "name": "Giantsoul amulet", "rate": "2x1/16" },
-        { "name": "Bran", "rate": "1/3000", "max": 1 },
-        { "name": "Desiccated page", "kind": "common" }
-      ]
+    {
+     "name": "Karil's leathertop",
+     "rate": "7/2448"
     },
-
-    "hueycoatl": {
-      "name": "The Hueycoatl", "type": "boss", "kph": 10, "confidence": "partial", "templeEkc": 480,
-      "wiki": "https://oldschool.runescape.wiki/w/The_Hueycoatl",
-      "sources": { "main": ["The Hueycoatl", "Hueycoatl"] },
-      "note": "Rates assume a solo kill. Hueycoatl hide is common.",
-      "items": [
-        { "name": "Dragon hunter wand", "rate": "1/105" },
-        { "name": "Tome of earth (empty)", "rate": "1/90", "alias": ["Tome of earth"] },
-        { "name": "Huberte", "rate": "1/400", "max": 1 },
-        { "name": "Hueycoatl hide", "kind": "common" },
-        { "name": "Hueycoatl tail", "kind": "common" }
-      ]
+    {
+     "name": "Karil's leatherskirt",
+     "rate": "7/2448"
     },
-
-    "shellbane_gryphon": {
-      "name": "Shellbane Gryphon", "type": "boss", "kph": 50, "confidence": "high", "templeEkc": 3000,
-      "wiki": "https://oldschool.runescape.wiki/w/Shellbane_Gryphon",
-      "sources": { "main": ["Shellbane Gryphon"] },
-      "items": [
-        { "name": "Gull", "rate": "1/3000", "max": 1 },
-        { "name": "Jar of feathers", "rate": "1/2000" },
-        { "name": "Belle's folly (tarnished)", "rate": "1/75", "alias": ["Belle's folly"] },
-        { "name": "Gryphon feather", "kind": "guaranteed" }
-      ]
+    {
+     "name": "Karil's crossbow",
+     "rate": "7/2448"
     },
-
-    "duke_sucellus": {
-      "name": "Duke Sucellus", "type": "boss", "kph": 30, "confidence": "approx", "templeEkc": 2734,
-      "sources": { "main": ["Duke Sucellus"] },
-      "approx": { "slots": 10, "free": 7 }
+    {
+     "name": "Ahrim's hood",
+     "rate": "7/2448"
     },
-
-    "vardorvis": {
-      "name": "Vardorvis", "type": "boss", "kph": 37, "confidence": "partial", "templeEkc": 3419,
-      "wiki": "https://oldschool.runescape.wiki/w/Vardorvis",
-      "sources": { "main": ["Vardorvis"] },
-      "note": "Normal-mode rates (awakened has a 3x unique table and is not tracked separately by the hiscores). The vestige needs three qualifying rolls. Blood quartz scales from 1/200 to 1/50 over the first 300 kills until the first drop. Strangled tablet's scaling is not documented, so it is treated as common.",
-      "groups": { "ultor": { "rate": "1/1088" } },
-      "items": [
-        { "name": "Ultor vestige", "group": "ultor", "needs": 3 },
-        { "name": "Executioner's axe head", "rate": "1/1088" },
-        { "name": "Virtus mask", "rate": "1/3264" },
-        { "name": "Virtus robe top", "rate": "1/3264" },
-        { "name": "Virtus robe bottom", "rate": "1/3264" },
-        { "name": "Chromium ingot", "rate": "3/1088" },
-        { "name": "Awakener's orb", "rate": "1/80.6" },
-        { "name": "Blood quartz", "pity": { "start": "1/200", "end": "1/50", "atKc": 300 } },
-        { "name": "Strangled tablet", "kind": "common" },
-        { "name": "Butch", "rate": "1/3000", "max": 1 }
-      ]
+    {
+     "name": "Ahrim's robetop",
+     "rate": "7/2448"
     },
-
-    "the_whisperer": {
-      "name": "The Whisperer", "type": "boss", "kph": 21, "confidence": "partial", "templeEkc": 2155,
-      "wiki": "https://oldschool.runescape.wiki/w/The_Whisperer",
-      "sources": { "main": ["The Whisperer", "Whisperer"] },
-      "note": "Normal-mode rates. The vestige needs three qualifying rolls. Shadow quartz scaling assumed to match blood quartz (1/200 to 1/50 over 300 kills).",
-      "groups": { "bellator": { "rate": "1/512" } },
-      "items": [
-        { "name": "Bellator vestige", "group": "bellator", "needs": 3 },
-        { "name": "Siren's staff", "rate": "1/512" },
-        { "name": "Virtus mask", "rate": "1/1536" },
-        { "name": "Virtus robe top", "rate": "1/1536" },
-        { "name": "Virtus robe bottom", "rate": "1/1536" },
-        { "name": "Chromium ingot", "rate": "3/512" },
-        { "name": "Awakener's orb", "rate": "1/34.5" },
-        { "name": "Shadow quartz", "pity": { "start": "1/200", "end": "1/50", "atKc": 300 } },
-        { "name": "Sirenic tablet", "kind": "common" },
-        { "name": "Wisp", "rate": "1/2000", "max": 1 }
-      ]
+    {
+     "name": "Ahrim's robeskirt",
+     "rate": "7/2448"
     },
-
-    "the_leviathan": {
-      "name": "The Leviathan", "type": "boss", "kph": 32, "confidence": "partial", "templeEkc": 2762,
-      "wiki": "https://oldschool.runescape.wiki/w/The_Leviathan",
-      "sources": { "main": ["The Leviathan", "Leviathan"] },
-      "note": "Normal-mode rates. The vestige needs three qualifying rolls. Quartz/tablet items are treated as common because their scaling was not available.",
-      "groups": { "venator": { "rate": "1/768" } },
-      "items": [
-        { "name": "Venator vestige", "group": "venator", "needs": 3 },
-        { "name": "Leviathan's lure", "rate": "1/768" },
-        { "name": "Virtus mask", "rate": "1/2304" },
-        { "name": "Virtus robe top", "rate": "1/2304" },
-        { "name": "Virtus robe bottom", "rate": "1/2304" },
-        { "name": "Chromium ingot", "rate": "3/768" },
-        { "name": "Awakener's orb", "rate": "1/53.6" },
-        { "name": "Scarred tablet", "kind": "common" },
-        { "name": "Lil'viathan", "rate": "1/2500", "max": 1 }
-      ]
+    {
+     "name": "Ahrim's staff",
+     "rate": "7/2448"
     },
-
-    "yama": {
-      "name": "Yama", "type": "boss", "kph": 20, "confidence": "partial", "templeEkc": 3339,
-      "wiki": "https://oldschool.runescape.wiki/w/Yama",
-      "sources": { "main": ["Yama"] },
-      "note": "Only the soulflame horn, oathplate pieces and Yami were available; remaining slots are treated as common.",
-      "items": [
-        { "name": "Soulflame horn", "rate": "2/600" },
-        { "name": "Oathplate helm", "rate": "1/600" },
-        { "name": "Oathplate chest", "rate": "1/600" },
-        { "name": "Oathplate legs", "rate": "1/600" },
-        { "name": "Yami", "rate": "1/2500", "max": 1 },
-        { "name": "Dossier", "kind": "common" },
-        { "name": "Forgotten lockbox", "kind": "common" },
-        { "name": "Oathplate shards", "kind": "common" }
-      ]
+    {
+     "name": "Dharok's helm",
+     "rate": "7/2448"
     },
-
-    "tempoross": {
-      "name": "Tempoross", "type": "boss", "kph": 85, "confidence": "approx", "templeEkc": 8466,
-      "sources": { "main": ["Tempoross"] },
-      "note": "Reward rolls scale with points, which isn't visible in KC, so no per-item model.",
-      "approx": { "slots": 12, "free": 6 }
+    {
+     "name": "Dharok's platebody",
+     "rate": "7/2448"
     },
-
-    "wintertodt": {
-      "name": "Wintertodt", "type": "boss", "kph": 48, "confidence": "approx", "templeEkc": 5171,
-      "sources": { "main": ["Wintertodt"] },
-      "note": "Rewards scale with points, so no per-item model.",
-      "approx": { "slots": 10, "free": 0 }
+    {
+     "name": "Dharok's platelegs",
+     "rate": "7/2448"
     },
-
-    "zalcano": {
-      "name": "Zalcano", "type": "boss", "kph": 16, "confidence": "partial", "templeEkc": 2563,
-      "wiki": "https://oldschool.runescape.wiki/w/Zalcano",
-      "sources": { "main": ["Zalcano"] },
-      "note": "Rates scale with contribution; the better end of the listed range is used for the shard.",
-      "items": [
-        { "name": "Uncut onyx", "rate": "1/8000" },
-        { "name": "Crystal tool seed", "rate": "39/8000" },
-        { "name": "Zalcano shard", "rate": "1/750" },
-        { "name": "Smolcano", "rate": "1/2250", "max": 1 }
-      ]
+    {
+     "name": "Dharok's greataxe",
+     "rate": "7/2448"
     },
-
-    "sol_heredit": {
-      "name": "Fortis Colosseum", "type": "boss", "kph": 2.5, "confidence": "approx", "templeEkc": 139.7,
-      "sources": { "main": ["Sol Heredit", "Fortis Colosseum"] },
-      "note": "Unique rates depend on the wave reached and aren't published as per-item rates.",
-      "approx": { "slots": 9, "free": 2 }
+    {
+     "name": "Guthan's helm",
+     "rate": "7/2448"
     },
-
-    "moons_of_peril": {
-      "name": "Moons of Peril", "type": "boss", "kph": 15, "confidence": "partial", "templeEkc": 500,
-      "wiki": "https://oldschool.runescape.wiki/w/Lunar_Chest",
-      "sources": { "main": ["Lunar Chest", "Lunar Chests", "Moons of Peril"] },
-      "note": "Per chest: 1/56 per moon defeated for a piece of that moon's set, handed out without duplicates. Assumes all three moons per run, so each set pool is 1/56 per chest.",
-      "groups": {
-        "eclipse": { "rate": "1/56" },
-        "blood": { "rate": "1/56" },
-        "blue": { "rate": "1/56" }
-      },
-      "items": [
-        { "name": "Eclipse atlatl", "group": "eclipse", "needs": 1 },
-        { "name": "Eclipse moon helm", "group": "eclipse", "needs": 2 },
-        { "name": "Eclipse moon chestplate", "group": "eclipse", "needs": 3 },
-        { "name": "Eclipse moon tassets", "group": "eclipse", "needs": 4 },
-        { "name": "Dual macuahuitl", "group": "blood", "needs": 1 },
-        { "name": "Blood moon helm", "group": "blood", "needs": 2 },
-        { "name": "Blood moon chestplate", "group": "blood", "needs": 3 },
-        { "name": "Blood moon tassets", "group": "blood", "needs": 4 },
-        { "name": "Blue moon spear", "group": "blue", "needs": 1 },
-        { "name": "Blue moon helm", "group": "blue", "needs": 2 },
-        { "name": "Blue moon chestplate", "group": "blue", "needs": 3 },
-        { "name": "Blue moon tassets", "group": "blue", "needs": 4 }
-      ]
+    {
+     "name": "Guthan's platebody",
+     "rate": "7/2448"
     },
-
-    "the_fight_caves": {
-      "name": "The Fight Caves", "type": "boss", "kph": 2.5, "confidence": "high", "templeEkc": 67,
-      "wiki": "https://oldschool.runescape.wiki/w/TzTok-Jad",
-      "sources": { "main": ["TzTok-Jad", "The Fight Caves", "Fight Caves"] },
-      "note": "Fire cape is guaranteed on completion. Pet is 1/200 off-task (1/100 on a TzHaar task, and sacrificing the cape gives another roll); off-task is assumed.",
-      "items": [
-        { "name": "Fire cape", "kind": "guaranteed" },
-        { "name": "Tzrek-jad", "rate": "1/200", "max": 1, "alias": ["TzRek-Jad"] }
-      ]
+    {
+     "name": "Guthan's chainskirt",
+     "rate": "7/2448"
     },
-
-    "the_inferno": {
-      "name": "The Inferno", "type": "boss", "kph": 0.8, "confidence": "high", "templeEkc": 43,
-      "wiki": "https://oldschool.runescape.wiki/w/TzKal-Zuk",
-      "sources": { "main": ["TzKal-Zuk", "The Inferno", "Inferno"] },
-      "note": "Infernal cape is guaranteed on completion. Pet is 1/100 (1/75 on a TzHaar task); off-task assumed.",
-      "items": [
-        { "name": "Infernal cape", "kind": "guaranteed" },
-        { "name": "Jal-nib-rek", "rate": "1/100", "max": 1 }
-      ]
+    {
+     "name": "Guthan's warspear",
+     "rate": "7/2448"
     },
-
-    "the_gauntlet": {
-      "name": "Gauntlet", "type": "boss", "kph": 7, "confidence": "high", "templeEkc": 934,
-      "wiki": "https://oldschool.runescape.wiki/w/The_Gauntlet",
-      "sources": { "normal": ["The Gauntlet", "Gauntlet"], "corrupted": ["The Corrupted Gauntlet", "Corrupted Gauntlet"] },
-      "note": "Normal and corrupted runs have different rates. Gauntlet cape is guaranteed on a corrupted completion.",
-      "items": [
-        { "name": "Crystal armour seed", "rates": { "normal": "1/120", "corrupted": "1/50" } },
-        { "name": "Crystal weapon seed", "rates": { "normal": "1/120", "corrupted": "1/50" } },
-        { "name": "Enhanced crystal weapon seed", "rates": { "normal": "1/2000", "corrupted": "1/400" } },
-        { "name": "Youngllef", "rates": { "normal": "1/2000", "corrupted": "1/800" }, "max": 1 },
-        { "name": "Gauntlet cape", "kind": "guaranteed" }
-      ]
+    {
+     "name": "Torag's helm",
+     "rate": "7/2448"
     },
-
-    "chambers_of_xeric": {
-      "name": "Chambers of Xeric", "type": "raid", "kph": 2.0, "confidence": "high", "templeEkc": 1700,
-      "raid": "cox",
-      "wiki": "https://oldschool.runescape.wiki/w/Ancient_chest",
-      "sources": { "normal": ["Chambers of Xeric"], "cm": ["Chambers of Xeric Challenge Mode", "Chambers of Xeric: Challenge Mode"] },
-      "note": "Unique chance = personal points / 8,676 per cent (cap 65.7%). Uniques split by weight (normal /60, CM /56, the August 2026 weights). Olmlet is 1/53 per unique. Dust and kit are CM-only and need a timed clear.",
-      "items": [
-        { "name": "Dexterous prayer scroll", "weight": { "normal": 14, "cm": 12 } },
-        { "name": "Arcane prayer scroll", "weight": { "normal": 14, "cm": 12 } },
-        { "name": "Twisted buckler", "weight": { "normal": 4, "cm": 4 } },
-        { "name": "Dragon hunter crossbow", "weight": { "normal": 4, "cm": 4 } },
-        { "name": "Dinh's bulwark", "weight": { "normal": 3, "cm": 3 } },
-        { "name": "Ancestral hat", "weight": { "normal": 4, "cm": 4 } },
-        { "name": "Ancestral robe top", "weight": { "normal": 4, "cm": 4 } },
-        { "name": "Ancestral robe bottom", "weight": { "normal": 4, "cm": 4 } },
-        { "name": "Dragon claws", "weight": { "normal": 3, "cm": 3 } },
-        { "name": "Elder maul", "weight": { "normal": 2, "cm": 2 } },
-        { "name": "Kodai insignia", "weight": { "normal": 2, "cm": 2 } },
-        { "name": "Twisted bow", "weight": { "normal": 2, "cm": 2 } },
-        { "name": "Olmlet", "special": "olmlet", "max": 1 },
-        { "name": "Metamorphic dust", "special": "cmDust" },
-        { "name": "Twisted ancestral colour kit", "special": "cmKit" },
-        { "name": "Ancient tablet", "kind": "guaranteed" },
-        { "name": "Dark journal", "kind": "guaranteed" }
-      ]
+    {
+     "name": "Torag's platebody",
+     "rate": "7/2448"
     },
-
-    "theatre_of_blood": {
-      "name": "Theatre of Blood", "type": "raid", "kph": 3.0, "confidence": "high", "templeEkc": 1908,
-      "raid": "tob",
-      "wiki": "https://oldschool.runescape.wiki/w/Monumental_chest",
-      "sources": { "normal": ["Theatre of Blood"], "hard": ["Theatre of Blood Hard Mode", "Theatre of Blood: Hard Mode"] },
-      "note": "Team gets a unique with chance 1/9.1 (normal) or 1/7.7 (hard); one player receives it, so the personal chance is that divided by team size (assumption, default 4). Sinhaza shroud tiers are claimed at 100/500/1000/1500/2000 completions: milestones, not drops.",
-      "milestones": [100, 500, 1000, 1500, 2000],
-      "items": [
-        { "name": "Avernic defender hilt", "weight": { "normal": 8, "hard": 7 } },
-        { "name": "Ghrazi rapier", "weight": { "normal": 2, "hard": 2 } },
-        { "name": "Sanguinesti staff (uncharged)", "weight": { "normal": 2, "hard": 2 }, "alias": ["Sanguinesti staff"] },
-        { "name": "Justiciar faceguard", "weight": { "normal": 2, "hard": 2 } },
-        { "name": "Justiciar chestguard", "weight": { "normal": 2, "hard": 2 } },
-        { "name": "Justiciar legguards", "weight": { "normal": 2, "hard": 2 } },
-        { "name": "Scythe of vitur (uncharged)", "weight": { "normal": 1, "hard": 1 }, "alias": ["Scythe of vitur"] },
-        { "name": "Lil' zik", "special": "zik", "max": 1, "alias": ["Lil Zik"] },
-        { "name": "Sanguine dust", "special": "hmDust" },
-        { "name": "Sanguine ornament kit", "special": "hmSangKit" },
-        { "name": "Holy ornament kit", "special": "hmHolyKit" },
-        { "name": "Vial of blood", "kind": "common" },
-        { "name": "Sinhaza shroud tier 1", "kind": "milestone", "at": 100 },
-        { "name": "Sinhaza shroud tier 2", "kind": "milestone", "at": 500 },
-        { "name": "Sinhaza shroud tier 3", "kind": "milestone", "at": 1000 },
-        { "name": "Sinhaza shroud tier 4", "kind": "milestone", "at": 1500 },
-        { "name": "Sinhaza shroud tier 5", "kind": "milestone", "at": 2000 }
-      ]
+    {
+     "name": "Torag's platelegs",
+     "rate": "7/2448"
     },
-
-    "tombs_of_amascut": {
-      "name": "Tombs of Amascut", "type": "raid", "kph": 1.71, "confidence": "partial", "templeEkc": 1186,
-      "raid": "toa",
-      "wiki": "https://oldschool.runescape.wiki/w/Chest_(Tombs_of_Amascut)",
-      "sources": { "normal": ["Tombs of Amascut"], "expert": ["Tombs of Amascut Expert Mode", "Tombs of Amascut: Expert Mode"] },
-      "note": "Unique chance = 1% per (10,500 - 20 x scaled raid level) points, capped at 55%. Weights are the base table (/24). Pet is 1% per (350,000 - 700 x raid level) points. Thread, jewels, breach and eye have pity scaling by KC. Icthlarin's shroud tiers are milestones; the crafting kit, ornament kit and phalanx are guaranteed at high raid levels. Points and raid level are assumptions you can change.",
-      "milestones": [100, 500, 1000, 1500, 2000],
-      "items": [
-        { "name": "Osmumten's fang", "weight": 7 },
-        { "name": "Lightbearer", "weight": 7 },
-        { "name": "Elidinis' ward", "weight": 3 },
-        { "name": "Masori mask", "weight": 2 },
-        { "name": "Masori body", "weight": 2 },
-        { "name": "Masori chaps", "weight": 2 },
-        { "name": "Tumeken's shadow (uncharged)", "weight": 1, "alias": ["Tumeken's shadow"] },
-        { "name": "Tumeken's guardian", "special": "toaPet", "max": 1 },
-        { "name": "Thread of Elidinis", "pity": { "start": "1/10", "end": "3/10", "atKc": 15 } },
-        { "name": "Jewel of the Sun", "pity": { "start": "1/50", "end": "3/50", "atKc": 75 } },
-        { "name": "Jewel of Amascut", "pity": { "start": "1/50", "end": "3/50", "atKc": 75 } },
-        { "name": "Breach of the scarab", "pity": { "start": "1/50", "end": "3/50", "atKc": 75 } },
-        { "name": "Eye of the corruptor", "pity": { "start": "1/50", "end": "3/50", "atKc": 75 } },
-        { "name": "Masori crafting kit", "kind": "common" },
-        { "name": "Menaphite ornament kit", "kind": "common" },
-        { "name": "Cursed phalanx", "kind": "common" },
-        { "name": "Cache of runes", "kind": "common" },
-        { "name": "Icthlarin's shroud (tier 1)", "kind": "milestone", "at": 100, "alias": ["Icthlarin's shroud tier 1"] },
-        { "name": "Icthlarin's shroud (tier 2)", "kind": "milestone", "at": 500, "alias": ["Icthlarin's shroud tier 2"] },
-        { "name": "Icthlarin's shroud (tier 3)", "kind": "milestone", "at": 1000, "alias": ["Icthlarin's shroud tier 3"] },
-        { "name": "Icthlarin's shroud (tier 4)", "kind": "milestone", "at": 1500, "alias": ["Icthlarin's shroud tier 4"] },
-        { "name": "Icthlarin's shroud (tier 5)", "kind": "milestone", "at": 2000, "alias": ["Icthlarin's shroud tier 5"] }
-      ]
+    {
+     "name": "Torag's hammers",
+     "rate": "7/2448"
     },
-
-    "beginner_treasure_trails": { "name": "Beginner Clues", "type": "clue", "kph": 60, "confidence": "approx", "templeEkc": 597, "sources": { "main": ["Clue scrolls (beginner)", "Beginner Clues", "Clue Scrolls Beginner"] }, "approx": { "slots": 16, "free": 0 } },
-    "easy_treasure_trails": { "name": "Easy Clues", "type": "clue", "kph": 50, "confidence": "approx", "templeEkc": 7907, "sources": { "main": ["Clue scrolls (easy)", "Easy Clues", "Clue Scrolls Easy"] }, "approx": { "slots": 131, "free": 0 } },
-    "medium_treasure_trails": { "name": "Medium Clues", "type": "clue", "kph": 30, "confidence": "approx", "templeEkc": 2076, "sources": { "main": ["Clue scrolls (medium)", "Medium Clues", "Clue Scrolls Medium"] }, "approx": { "slots": 116, "free": 0 } },
-    "hard_treasure_trails": { "name": "Hard Clues", "type": "clue", "kph": 3, "confidence": "approx", "templeEkc": 5484, "sources": { "main": ["Clue scrolls (hard)", "Hard Clues", "Clue Scrolls Hard"] }, "approx": { "slots": 125, "free": 0 } },
-    "elite_treasure_trails": { "name": "Elite Clues", "type": "clue", "kph": 1, "confidence": "approx", "templeEkc": 7469, "sources": { "main": ["Clue scrolls (elite)", "Elite Clues", "Clue Scrolls Elite"] }, "approx": { "slots": 91, "free": 0 } },
-    "master_treasure_trails": { "name": "Master Clues", "type": "clue", "kph": 0.25, "confidence": "approx", "templeEkc": 7532, "sources": { "main": ["Clue scrolls (master)", "Master Clues", "Clue Scrolls Master"] }, "approx": { "slots": 92, "free": 0 } },
-    "shared_treasure_trail_rewards": { "name": "Shared Clues", "type": "clue", "kph": 1, "confidence": "approx", "templeEkc": 1000, "sources": { "main": ["Clue scrolls (all)", "Clue Scrolls All"] }, "approx": { "slots": 61, "free": 0 }, "note": "Shared rewards come from every clue tier; KC is the total clues completed." }
+    {
+     "name": "Verac's helm",
+     "rate": "7/2448"
+    },
+    {
+     "name": "Verac's brassard",
+     "rate": "7/2448"
+    },
+    {
+     "name": "Verac's plateskirt",
+     "rate": "7/2448"
+    },
+    {
+     "name": "Verac's flail",
+     "rate": "7/2448"
+    },
+    {
+     "name": "Bolt rack",
+     "kind": "common"
+    }
+   ]
+  },
+  "bryophyta": {
+   "name": "Bryophyta",
+   "type": "boss",
+   "kph": 8,
+   "confidence": "high",
+   "templeEkc": 118,
+   "sources": {
+    "main": [
+     "Bryophyta"
+    ]
+   },
+   "items": [
+    {
+     "name": "Bryophyta's staff",
+     "rate": "1/118"
+    }
+   ]
+  },
+  "callisto_and_artio": {
+   "name": "Callisto and Artio",
+   "type": "boss",
+   "kph": 65,
+   "confidence": "high",
+   "templeEkc": 3173,
+   "wiki": "https://oldschool.runescape.wiki/w/Callisto",
+   "sources": {
+    "callisto": [
+     "Callisto"
+    ],
+    "artio": [
+     "Artio"
+    ]
+   },
+   "note": "Artio shares Callisto's drops at lower rates.",
+   "items": [
+    {
+     "name": "Claws of Callisto",
+     "rates": {
+      "callisto": "1/196",
+      "artio": "1/618"
+     }
+    },
+    {
+     "name": "Dragon 2h sword",
+     "rates": {
+      "callisto": "1/256",
+      "artio": "1/358"
+     },
+     "kind": "shared",
+     "sharedWith": "several Wilderness bosses and Kalphite Queen"
+    },
+    {
+     "name": "Dragon pickaxe",
+     "rates": {
+      "callisto": "1/256",
+      "artio": "1/358"
+     },
+     "kind": "shared",
+     "sharedWith": "Wilderness bosses, Kalphite Queen and King Black Dragon"
+    },
+    {
+     "name": "Voidwaker hilt",
+     "rates": {
+      "callisto": "1/360",
+      "artio": "1/912"
+     }
+    },
+    {
+     "name": "Tyrannical ring",
+     "rates": {
+      "callisto": "1/512",
+      "artio": "1/716"
+     }
+    },
+    {
+     "name": "Callisto cub",
+     "rates": {
+      "callisto": "1/1500",
+      "artio": "1/2800"
+     },
+     "max": 1
+    }
+   ]
+  },
+  "venenatis_and_spindel": {
+   "name": "Venenatis and Spindel",
+   "type": "boss",
+   "kph": 55,
+   "confidence": "high",
+   "templeEkc": 3173,
+   "wiki": "https://oldschool.runescape.wiki/w/Venenatis",
+   "sources": {
+    "venenatis": [
+     "Venenatis"
+    ],
+    "spindel": [
+     "Spindel"
+    ]
+   },
+   "items": [
+    {
+     "name": "Fangs of Venenatis",
+     "rates": {
+      "venenatis": "1/196",
+      "spindel": "1/618"
+     }
+    },
+    {
+     "name": "Dragon 2h sword",
+     "rates": {
+      "venenatis": "1/256",
+      "spindel": "1/358"
+     },
+     "kind": "shared",
+     "sharedWith": "several Wilderness bosses and Kalphite Queen"
+    },
+    {
+     "name": "Dragon pickaxe",
+     "rates": {
+      "venenatis": "1/256",
+      "spindel": "1/358"
+     },
+     "kind": "shared",
+     "sharedWith": "Wilderness bosses, Kalphite Queen and King Black Dragon"
+    },
+    {
+     "name": "Voidwaker gem",
+     "rates": {
+      "venenatis": "1/360",
+      "spindel": "1/912"
+     }
+    },
+    {
+     "name": "Treasonous ring",
+     "rates": {
+      "venenatis": "1/512",
+      "spindel": "1/716"
+     }
+    },
+    {
+     "name": "Venenatis spiderling",
+     "rates": {
+      "venenatis": "1/1500",
+      "spindel": "1/2800"
+     },
+     "max": 1
+    }
+   ]
+  },
+  "vetion_and_calvarion": {
+   "name": "Vet'ion and Calvar'ion",
+   "type": "boss",
+   "kph": 55,
+   "confidence": "high",
+   "templeEkc": 3173,
+   "wiki": "https://oldschool.runescape.wiki/w/Vet%27ion",
+   "sources": {
+    "vetion": [
+     "Vet'ion"
+    ],
+    "calvarion": [
+     "Calvar'ion"
+    ]
+   },
+   "items": [
+    {
+     "name": "Skull of Vet'ion",
+     "rates": {
+      "vetion": "1/196",
+      "calvarion": "1/618"
+     }
+    },
+    {
+     "name": "Dragon 2h sword",
+     "rates": {
+      "vetion": "1/256",
+      "calvarion": "1/358"
+     },
+     "kind": "shared",
+     "sharedWith": "several Wilderness bosses and Kalphite Queen"
+    },
+    {
+     "name": "Dragon pickaxe",
+     "rates": {
+      "vetion": "1/256",
+      "calvarion": "1/358"
+     },
+     "kind": "shared",
+     "sharedWith": "Wilderness bosses, Kalphite Queen and King Black Dragon"
+    },
+    {
+     "name": "Voidwaker blade",
+     "rates": {
+      "vetion": "1/360",
+      "calvarion": "1/912"
+     }
+    },
+    {
+     "name": "Ring of the gods",
+     "rates": {
+      "vetion": "1/512",
+      "calvarion": "1/716"
+     }
+    },
+    {
+     "name": "Vet'ion jr.",
+     "rates": {
+      "vetion": "1/1500",
+      "calvarion": "1/2800"
+     },
+     "max": 1,
+     "alias": [
+      "Vet'ion Jr"
+     ]
+    }
+   ]
+  },
+  "cerberus": {
+   "name": "Cerberus",
+   "type": "boss",
+   "kph": 65,
+   "confidence": "high",
+   "templeEkc": 3883,
+   "wiki": "https://oldschool.runescape.wiki/w/Cerberus",
+   "sources": {
+    "main": [
+     "Cerberus"
+    ]
+   },
+   "items": [
+    {
+     "name": "Primordial crystal",
+     "rate": "1/520"
+    },
+    {
+     "name": "Pegasian crystal",
+     "rate": "1/520"
+    },
+    {
+     "name": "Eternal crystal",
+     "rate": "1/520"
+    },
+    {
+     "name": "Smouldering stone",
+     "rate": "1/520"
+    },
+    {
+     "name": "Jar of souls",
+     "rate": "1/2000"
+    },
+    {
+     "name": "Hellpuppy",
+     "rate": "1/3000",
+     "max": 1
+    },
+    {
+     "name": "Key master teleport",
+     "kind": "guaranteed"
+    }
+   ]
+  },
+  "chaos_elemental": {
+   "name": "Chaos Elemental",
+   "type": "boss",
+   "kph": 60,
+   "confidence": "partial",
+   "templeEkc": 211.7,
+   "wiki": "https://oldschool.runescape.wiki/w/Chaos_Elemental",
+   "sources": {
+    "main": [
+     "Chaos Elemental"
+    ]
+   },
+   "note": "Temple's expected KC (211.7) is lower than the pet's 1/300, so Temple is evidently assuming something else (e.g. a slayer-task pet boost).",
+   "items": [
+    {
+     "name": "Dragon pickaxe",
+     "rate": "1/256",
+     "kind": "shared",
+     "sharedWith": "Wilderness bosses, Kalphite Queen and King Black Dragon"
+    },
+    {
+     "name": "Dragon 2h sword",
+     "rate": "2/128",
+     "kind": "shared",
+     "sharedWith": "several Wilderness bosses and Kalphite Queen"
+    },
+    {
+     "name": "Pet chaos elemental",
+     "rate": "1/300",
+     "max": 1,
+     "kind": "shared",
+     "sharedWith": "Chaos Elemental and Chaos Fanatic"
+    }
+   ]
+  },
+  "chaos_fanatic": {
+   "name": "Chaos Fanatic",
+   "type": "boss",
+   "kph": 100,
+   "confidence": "high",
+   "templeEkc": 384,
+   "wiki": "https://oldschool.runescape.wiki/w/Chaos_Fanatic",
+   "sources": {
+    "main": [
+     "Chaos Fanatic"
+    ]
+   },
+   "items": [
+    {
+     "name": "Odium shard 1",
+     "rate": "1/256"
+    },
+    {
+     "name": "Malediction shard 1",
+     "rate": "1/256"
+    },
+    {
+     "name": "Pet chaos elemental",
+     "rate": "1/1000",
+     "max": 1,
+     "kind": "shared",
+     "sharedWith": "Chaos Elemental and Chaos Fanatic"
+    }
+   ]
+  },
+  "crazy_archaeologist": {
+   "name": "Crazy Archaeologist",
+   "type": "boss",
+   "kph": 85,
+   "confidence": "high",
+   "templeEkc": 405,
+   "wiki": "https://oldschool.runescape.wiki/w/Crazy_archaeologist",
+   "sources": {
+    "main": [
+     "Crazy Archaeologist",
+     "Deranged Archaeologist"
+    ]
+   },
+   "items": [
+    {
+     "name": "Fedora",
+     "rate": "1/128"
+    },
+    {
+     "name": "Odium shard 2",
+     "rate": "1/256"
+    },
+    {
+     "name": "Malediction shard 2",
+     "rate": "1/256"
+    }
+   ]
+  },
+  "scorpia": {
+   "name": "Scorpia",
+   "type": "boss",
+   "kph": 130,
+   "confidence": "high",
+   "templeEkc": 2066,
+   "wiki": "https://oldschool.runescape.wiki/w/Scorpia",
+   "sources": {
+    "main": [
+     "Scorpia"
+    ]
+   },
+   "items": [
+    {
+     "name": "Dragon 2h sword",
+     "rate": "1/128",
+     "kind": "shared",
+     "sharedWith": "several Wilderness bosses and Kalphite Queen"
+    },
+    {
+     "name": "Odium shard 3",
+     "rate": "1/256"
+    },
+    {
+     "name": "Malediction shard 3",
+     "rate": "1/256"
+    },
+    {
+     "name": "Scorpia's offspring",
+     "rate": "1/2015.75",
+     "max": 1
+    }
+   ]
+  },
+  "commander_zilyana": {
+   "name": "Commander Zilyana",
+   "type": "boss",
+   "kph": 55,
+   "confidence": "high",
+   "templeEkc": 5087,
+   "wiki": "https://oldschool.runescape.wiki/w/Commander_Zilyana",
+   "sources": {
+    "main": [
+     "Commander Zilyana"
+    ]
+   },
+   "items": [
+    {
+     "name": "Saradomin sword",
+     "rate": "1/127"
+    },
+    {
+     "name": "Saradomin's light",
+     "rate": "1/254"
+    },
+    {
+     "name": "Armadyl crossbow",
+     "rate": "1/508"
+    },
+    {
+     "name": "Saradomin hilt",
+     "rate": "1/508"
+    },
+    {
+     "name": "Godsword shard 1",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Godsword shard 2",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Godsword shard 3",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Pet zilyana",
+     "rate": "1/5000",
+     "max": 1
+    }
+   ]
+  },
+  "general_graardor": {
+   "name": "General Graardor",
+   "type": "boss",
+   "kph": 55,
+   "confidence": "high",
+   "templeEkc": 5092,
+   "wiki": "https://oldschool.runescape.wiki/w/General_Graardor",
+   "sources": {
+    "main": [
+     "General Graardor"
+    ]
+   },
+   "items": [
+    {
+     "name": "Bandos chestplate",
+     "rate": "1/381"
+    },
+    {
+     "name": "Bandos tassets",
+     "rate": "1/381"
+    },
+    {
+     "name": "Bandos boots",
+     "rate": "1/381"
+    },
+    {
+     "name": "Bandos hilt",
+     "rate": "1/508"
+    },
+    {
+     "name": "Godsword shard 1",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Godsword shard 2",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Godsword shard 3",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Pet general graardor",
+     "rate": "1/5000",
+     "max": 1
+    }
+   ]
+  },
+  "kree_arra": {
+   "name": "Kree'arra",
+   "type": "boss",
+   "kph": 40,
+   "confidence": "high",
+   "templeEkc": 5092,
+   "wiki": "https://oldschool.runescape.wiki/w/Kree%27arra",
+   "sources": {
+    "main": [
+     "Kree'arra",
+     "Kree'Arra"
+    ]
+   },
+   "items": [
+    {
+     "name": "Armadyl helmet",
+     "rate": "1/381"
+    },
+    {
+     "name": "Armadyl chestplate",
+     "rate": "1/381"
+    },
+    {
+     "name": "Armadyl chainskirt",
+     "rate": "1/381"
+    },
+    {
+     "name": "Armadyl hilt",
+     "rate": "1/508"
+    },
+    {
+     "name": "Godsword shard 1",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Godsword shard 2",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Godsword shard 3",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Pet kree'arra",
+     "rate": "1/5000",
+     "max": 1
+    }
+   ]
+  },
+  "kril_tsutsaroth": {
+   "name": "K'ril Tsutsaroth",
+   "type": "boss",
+   "kph": 65,
+   "confidence": "high",
+   "templeEkc": 5083,
+   "wiki": "https://oldschool.runescape.wiki/w/K%27ril_Tsutsaroth",
+   "sources": {
+    "main": [
+     "K'ril Tsutsaroth",
+     "Kril Tsutsaroth"
+    ]
+   },
+   "items": [
+    {
+     "name": "Steam battlestaff",
+     "rate": "1/127"
+    },
+    {
+     "name": "Zamorakian spear",
+     "rate": "1/127"
+    },
+    {
+     "name": "Staff of the dead",
+     "rate": "1/508"
+    },
+    {
+     "name": "Zamorak hilt",
+     "rate": "1/508"
+    },
+    {
+     "name": "Godsword shard 1",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Godsword shard 2",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Godsword shard 3",
+     "rate": "1/762",
+     "kind": "shared",
+     "sharedWith": "all four God Wars bosses"
+    },
+    {
+     "name": "Pet k'ril tsutsaroth",
+     "rate": "1/5000",
+     "max": 1
+    }
+   ]
+  },
+  "corporeal_beast": {
+   "name": "Corporeal Beast",
+   "type": "boss",
+   "kph": 60,
+   "confidence": "high",
+   "templeEkc": 7095,
+   "wiki": "https://oldschool.runescape.wiki/w/Corporeal_Beast",
+   "sources": {
+    "main": [
+     "Corporeal Beast"
+    ]
+   },
+   "items": [
+    {
+     "name": "Spectral sigil",
+     "rate": "1/1365"
+    },
+    {
+     "name": "Arcane sigil",
+     "rate": "1/1365"
+    },
+    {
+     "name": "Elysian sigil",
+     "rate": "1/4095"
+    },
+    {
+     "name": "Spirit shield",
+     "rate": "8/512"
+    },
+    {
+     "name": "Holy elixir",
+     "rate": "3/512"
+    },
+    {
+     "name": "Jar of spirits",
+     "rate": "1/1000"
+    },
+    {
+     "name": "Pet dark core",
+     "rate": "1/5000",
+     "max": 1
+    }
+   ]
+  },
+  "dagannoth_kings": {
+   "name": "Dagannoth Kings",
+   "type": "boss",
+   "kph": 100,
+   "confidence": "high",
+   "templeEkc": 15017,
+   "wiki": "https://oldschool.runescape.wiki/w/Dagannoth_Rex",
+   "sources": {
+    "rex": [
+     "Dagannoth Rex"
+    ],
+    "prime": [
+     "Dagannoth Prime"
+    ],
+    "supreme": [
+     "Dagannoth Supreme"
+    ]
+   },
+   "note": "Each king has its own kill count and drop table; the dragon axe drops from all three. (The old data used the key 'dagganoth_kings', a typo that never matched Temple's category.)",
+   "items": [
+    {
+     "name": "Warrior ring",
+     "rates": {
+      "rex": "1/128"
+     }
+    },
+    {
+     "name": "Berserker ring",
+     "rates": {
+      "rex": "1/128"
+     }
+    },
+    {
+     "name": "Seers ring",
+     "rates": {
+      "prime": "1/128"
+     }
+    },
+    {
+     "name": "Mud battlestaff",
+     "rates": {
+      "prime": "1/128"
+     }
+    },
+    {
+     "name": "Archers ring",
+     "rates": {
+      "supreme": "1/128"
+     }
+    },
+    {
+     "name": "Seercull",
+     "rates": {
+      "supreme": "1/128"
+     }
+    },
+    {
+     "name": "Dragon axe",
+     "rates": {
+      "rex": "1/128",
+      "prime": "1/128",
+      "supreme": "1/128"
+     },
+     "kind": "shared",
+     "sharedWith": "Dagannoth Kings and Wintertodt"
+    },
+    {
+     "name": "Pet dagannoth rex",
+     "rates": {
+      "rex": "1/5000"
+     },
+     "max": 1
+    },
+    {
+     "name": "Pet dagannoth prime",
+     "rates": {
+      "prime": "1/5000"
+     },
+     "max": 1
+    },
+    {
+     "name": "Pet dagannoth supreme",
+     "rates": {
+      "supreme": "1/5000"
+     },
+     "max": 1
+    }
+   ]
+  },
+  "giant_mole": {
+   "name": "Giant Mole",
+   "type": "boss",
+   "kph": 100,
+   "confidence": "high",
+   "templeEkc": 3000,
+   "sources": {
+    "main": [
+     "Giant Mole"
+    ]
+   },
+   "items": [
+    {
+     "name": "Mole claw",
+     "kind": "guaranteed"
+    },
+    {
+     "name": "Mole skin",
+     "kind": "guaranteed"
+    },
+    {
+     "name": "Baby mole",
+     "rate": "1/3000",
+     "max": 1
+    }
+   ]
+  },
+  "grotesque_guardians": {
+   "name": "Grotesque Guardians",
+   "type": "boss",
+   "kph": 36,
+   "confidence": "high",
+   "templeEkc": 6143,
+   "wiki": "https://oldschool.runescape.wiki/w/Grotesque_Guardians",
+   "sources": {
+    "main": [
+     "Grotesque Guardians"
+    ]
+   },
+   "items": [
+    {
+     "name": "Black tourmaline core",
+     "rate": "2x1/1000"
+    },
+    {
+     "name": "Granite gloves",
+     "rate": "2x1/500"
+    },
+    {
+     "name": "Granite ring",
+     "rate": "2x1/500"
+    },
+    {
+     "name": "Granite hammer",
+     "rate": "2x1/750"
+    },
+    {
+     "name": "Jar of stone",
+     "rate": "1/5000"
+    },
+    {
+     "name": "Noon",
+     "rate": "1/3000",
+     "max": 1
+    },
+    {
+     "name": "Granite dust",
+     "kind": "guaranteed"
+    }
+   ]
+  },
+  "hespori": {
+   "name": "Hespori",
+   "type": "boss",
+   "kph": 90,
+   "confidence": "high",
+   "templeEkc": 36,
+   "sources": {
+    "main": [
+     "Hespori"
+    ]
+   },
+   "items": [
+    {
+     "name": "Bottomless compost bucket",
+     "rate": "1/35"
+    },
+    {
+     "name": "Attas seed",
+     "kind": "common"
+    },
+    {
+     "name": "Iasor seed",
+     "kind": "common"
+    },
+    {
+     "name": "Kronos seed",
+     "kind": "common"
+    }
+   ]
+  },
+  "kalphite_queen": {
+   "name": "Kalphite Queen",
+   "type": "boss",
+   "kph": 50,
+   "confidence": "high",
+   "templeEkc": 3801,
+   "wiki": "https://oldschool.runescape.wiki/w/Kalphite_Queen",
+   "sources": {
+    "main": [
+     "Kalphite Queen"
+    ]
+   },
+   "items": [
+    {
+     "name": "Dragon chainbody",
+     "rate": "1/128",
+     "kind": "shared",
+     "sharedWith": "Kalphite Queen and Thermonuclear smoke devil"
+    },
+    {
+     "name": "Dragon 2h sword",
+     "rate": "1/256",
+     "kind": "shared",
+     "sharedWith": "several Wilderness bosses and Kalphite Queen"
+    },
+    {
+     "name": "Dragon pickaxe",
+     "rate": "1/400",
+     "kind": "shared",
+     "sharedWith": "Wilderness bosses, Kalphite Queen and King Black Dragon"
+    },
+    {
+     "name": "KQ head",
+     "rate": "1/128"
+    },
+    {
+     "name": "KQ head (tattered)",
+     "kind": "derived"
+    },
+    {
+     "name": "Jar of sand",
+     "rate": "1/2000"
+    },
+    {
+     "name": "Kalphite princess",
+     "rate": "1/3000",
+     "max": 1
+    }
+   ]
+  },
+  "king_black_dragon": {
+   "name": "King Black Dragon",
+   "type": "boss",
+   "kph": 120,
+   "confidence": "high",
+   "templeEkc": 3005,
+   "wiki": "https://oldschool.runescape.wiki/w/King_Black_Dragon",
+   "sources": {
+    "main": [
+     "King Black Dragon"
+    ]
+   },
+   "items": [
+    {
+     "name": "Dragon pickaxe",
+     "rate": "1/1000",
+     "kind": "shared",
+     "sharedWith": "Wilderness bosses, Kalphite Queen and King Black Dragon"
+    },
+    {
+     "name": "Draconic visage",
+     "rate": "1/5000",
+     "kind": "shared",
+     "sharedWith": "King Black Dragon and Vorkath"
+    },
+    {
+     "name": "KBD heads",
+     "rate": "1/128"
+    },
+    {
+     "name": "Prince black dragon",
+     "rate": "1/3000",
+     "max": 1
+    }
+   ]
+  },
+  "kraken": {
+   "name": "Kraken",
+   "type": "boss",
+   "kph": 100,
+   "confidence": "high",
+   "templeEkc": 3307,
+   "wiki": "https://oldschool.runescape.wiki/w/Kraken",
+   "sources": {
+    "main": [
+     "Kraken"
+    ]
+   },
+   "items": [
+    {
+     "name": "Trident of the seas (full)",
+     "rate": "1/512",
+     "alias": [
+      "Trident of the seas"
+     ]
+    },
+    {
+     "name": "Kraken tentacle",
+     "rate": "1/400"
+    },
+    {
+     "name": "Jar of dirt",
+     "rate": "1/1000"
+    },
+    {
+     "name": "Pet kraken",
+     "rate": "1/3000",
+     "max": 1
+    }
+   ]
+  },
+  "thermonuclear_smoke_devil": {
+   "name": "Thermonuclear Smoke Devil",
+   "type": "boss",
+   "kph": 125,
+   "confidence": "high",
+   "templeEkc": 3826,
+   "wiki": "https://oldschool.runescape.wiki/w/Thermonuclear_smoke_devil",
+   "sources": {
+    "main": [
+     "Thermonuclear Smoke Devil"
+    ]
+   },
+   "items": [
+    {
+     "name": "Dragon chainbody",
+     "rate": "1/2000",
+     "kind": "shared",
+     "sharedWith": "Kalphite Queen and Thermonuclear smoke devil"
+    },
+    {
+     "name": "Smoke battlestaff",
+     "rate": "1/512",
+     "kind": "shared",
+     "sharedWith": "regular smoke devils"
+    },
+    {
+     "name": "Occult necklace",
+     "rate": "1/350"
+    },
+    {
+     "name": "Jar of smoke",
+     "rate": "1/2000"
+    },
+    {
+     "name": "Pet smoke devil",
+     "rate": "1/3000",
+     "max": 1
+    }
+   ]
+  },
+  "obor": {
+   "name": "Obor",
+   "type": "boss",
+   "kph": 8,
+   "confidence": "high",
+   "templeEkc": 118,
+   "sources": {
+    "main": [
+     "Obor"
+    ]
+   },
+   "items": [
+    {
+     "name": "Hill giant club",
+     "rate": "1/118"
+    }
+   ]
+  },
+  "sarachnis": {
+   "name": "Sarachnis",
+   "type": "boss",
+   "kph": 100,
+   "confidence": "high",
+   "templeEkc": 3812,
+   "wiki": "https://oldschool.runescape.wiki/w/Sarachnis",
+   "sources": {
+    "main": [
+     "Sarachnis"
+    ]
+   },
+   "items": [
+    {
+     "name": "Sarachnis cudgel",
+     "rate": "1/384"
+    },
+    {
+     "name": "Jar of eyes",
+     "rate": "1/2000"
+    },
+    {
+     "name": "Sraracha",
+     "rate": "1/3000",
+     "max": 1
+    },
+    {
+     "name": "Giant egg sac(full)",
+     "rate": "1/20",
+     "alias": [
+      "Giant egg sac"
+     ]
+    },
+    {
+     "name": "Pristine spider silk",
+     "rate": "1/50"
+    }
+   ]
+  },
+  "scurrius": {
+   "name": "Scurrius",
+   "type": "boss",
+   "kph": 60,
+   "confidence": "high",
+   "templeEkc": 3000,
+   "wiki": "https://oldschool.runescape.wiki/w/Scurrius",
+   "sources": {
+    "main": [
+     "Scurrius"
+    ]
+   },
+   "note": "Pet is MVP-only; this assumes the player is MVP (solo).",
+   "items": [
+    {
+     "name": "Scurrius' spine",
+     "rate": "1/33"
+    },
+    {
+     "name": "Scurry",
+     "rate": "1/3000",
+     "max": 1
+    }
+   ]
+  },
+  "skotizo": {
+   "name": "Skotizo",
+   "type": "boss",
+   "kph": 45,
+   "confidence": "high",
+   "templeEkc": 259,
+   "wiki": "https://oldschool.runescape.wiki/w/Skotizo",
+   "sources": {
+    "main": [
+     "Skotizo"
+    ]
+   },
+   "items": [
+    {
+     "name": "Dark claw",
+     "rate": "1/25"
+    },
+    {
+     "name": "Uncut onyx",
+     "rate": "1/1000",
+     "kind": "shared",
+     "sharedWith": "Zulrah, Skotizo and Zalcano"
+    },
+    {
+     "name": "Jar of darkness",
+     "rate": "1/200"
+    },
+    {
+     "name": "Skotos",
+     "rate": "1/65",
+     "max": 1
+    },
+    {
+     "name": "Dark totem base",
+     "rate": "3/128"
+    },
+    {
+     "name": "Dark totem middle",
+     "rate": "3/128"
+    },
+    {
+     "name": "Dark totem top",
+     "rate": "3/128"
+    }
+   ]
+  },
+  "vorkath": {
+   "name": "Vorkath",
+   "type": "boss",
+   "kph": 34,
+   "confidence": "partial",
+   "templeEkc": 6939,
+   "wiki": "https://oldschool.runescape.wiki/w/Vorkath%27s_head",
+   "sources": {
+    "main": [
+     "Vorkath"
+    ]
+   },
+   "note": "Vorkath's head is 1/50 and guaranteed by kill 50, so it is a pity item. The other rates (visages 1/5000, necklace 1/1000, jar/pet 1/3000) are from memory and not re-checked.",
+   "items": [
+    {
+     "name": "Vorkath's head",
+     "pity": {
+      "start": "1/50",
+      "end": "1/50",
+      "guaranteeAt": 50
+     }
+    },
+    {
+     "name": "Dragonbone necklace",
+     "rate": "1/1000"
+    },
+    {
+     "name": "Draconic visage",
+     "rate": "1/5000",
+     "kind": "shared",
+     "sharedWith": "King Black Dragon and Vorkath"
+    },
+    {
+     "name": "Skeletal visage",
+     "rate": "1/5000"
+    },
+    {
+     "name": "Jar of decay",
+     "rate": "1/3000"
+    },
+    {
+     "name": "Vorki",
+     "rate": "1/3000",
+     "max": 1
+    }
+   ]
+  },
+  "nex": {
+   "name": "Nex",
+   "type": "boss",
+   "kph": 2.87,
+   "confidence": "partial",
+   "templeEkc": 902,
+   "wiki": "https://oldschool.runescape.wiki/w/Nex",
+   "sources": {
+    "main": [
+     "Nex"
+    ]
+   },
+   "note": "Rates as listed on the wiki; team size, contribution and MVP change the real unique chance, which is not modelled.",
+   "items": [
+    {
+     "name": "Zaryte vambraces",
+     "rate": "1/172"
+    },
+    {
+     "name": "Nihil horn",
+     "rate": "1/258"
+    },
+    {
+     "name": "Torva full helm (damaged)",
+     "rate": "1/258",
+     "alias": [
+      "Torva full helm"
+     ]
+    },
+    {
+     "name": "Torva platebody (damaged)",
+     "rate": "1/258",
+     "alias": [
+      "Torva platebody"
+     ]
+    },
+    {
+     "name": "Torva platelegs (damaged)",
+     "rate": "1/258",
+     "alias": [
+      "Torva platelegs"
+     ]
+    },
+    {
+     "name": "Ancient hilt",
+     "rate": "1/516"
+    },
+    {
+     "name": "Nexling",
+     "rate": "1/500",
+     "max": 1
+    },
+    {
+     "name": "Nihil shard",
+     "kind": "common"
+    }
+   ]
+  },
+  "the_nightmare": {
+   "name": "The Nightmare",
+   "type": "boss",
+   "kph": 7.5,
+   "confidence": "partial",
+   "templeEkc": 5315,
+   "wiki": "https://oldschool.runescape.wiki/w/The_Nightmare",
+   "sources": {
+    "nightmare": [
+     "The Nightmare",
+     "Nightmare"
+    ],
+    "phosani": [
+     "Phosani's Nightmare"
+    ]
+   },
+   "note": "Nightmare rates improve with team size (wiki gives a range); the better-end (large team) figures are used. Phosani's rates are fixed. The pity-free Slepey tablet is common.",
+   "items": [
+    {
+     "name": "Inquisitor's mace",
+     "rates": {
+      "nightmare": "1/428.7",
+      "phosani": "31/35000"
+     }
+    },
+    {
+     "name": "Inquisitor's great helm",
+     "rates": {
+      "nightmare": "1/240.1",
+      "phosani": "1/700"
+     }
+    },
+    {
+     "name": "Inquisitor's hauberk",
+     "rates": {
+      "nightmare": "1/240.1",
+      "phosani": "1/700"
+     }
+    },
+    {
+     "name": "Inquisitor's plateskirt",
+     "rates": {
+      "nightmare": "1/240.1",
+      "phosani": "1/700"
+     }
+    },
+    {
+     "name": "Nightmare staff",
+     "rates": {
+      "nightmare": "1/171.5",
+      "phosani": "69/35000"
+     }
+    },
+    {
+     "name": "Eldritch orb",
+     "rates": {
+      "nightmare": "1/548.7",
+      "phosani": "1/1600"
+     }
+    },
+    {
+     "name": "Harmonised orb",
+     "rates": {
+      "nightmare": "1/548.7",
+      "phosani": "1/1600"
+     }
+    },
+    {
+     "name": "Volatile orb",
+     "rates": {
+      "nightmare": "1/548.7",
+      "phosani": "1/1600"
+     }
+    },
+    {
+     "name": "Little nightmare",
+     "rates": {
+      "nightmare": "1/800",
+      "phosani": "1/1400"
+     },
+     "max": 1
+    },
+    {
+     "name": "Jar of dreams",
+     "rates": {
+      "nightmare": "1/1900",
+      "phosani": "1/4000"
+     }
+    },
+    {
+     "name": "Parasitic egg",
+     "rates": {
+      "phosani": "1/200"
+     }
+    },
+    {
+     "name": "Slepey tablet",
+     "kind": "common"
+    }
+   ]
+  },
+  "phantom_muspah": {
+   "name": "Phantom Muspah",
+   "type": "boss",
+   "kph": 30,
+   "confidence": "partial",
+   "templeEkc": 2504,
+   "wiki": "https://oldschool.runescape.wiki/w/Phantom_Muspah",
+   "sources": {
+    "main": [
+     "Phantom Muspah"
+    ]
+   },
+   "note": "Shard/icon/cache rates are from the wiki; Saturated heart (1/150) and Muphin (1/2500) are from memory.",
+   "items": [
+    {
+     "name": "Venator shard",
+     "rate": "1/100"
+    },
+    {
+     "name": "Ancient icon",
+     "rate": "2/100"
+    },
+    {
+     "name": "Saturated heart",
+     "rate": "1/150"
+    },
+    {
+     "name": "Muphin",
+     "rate": "1/2500",
+     "max": 1
+    },
+    {
+     "name": "Frozen cache",
+     "kind": "common"
+    },
+    {
+     "name": "Charged ice",
+     "kind": "common"
+    }
+   ]
+  },
+  "royal_titans": {
+   "name": "The Royal Titans",
+   "type": "boss",
+   "kph": 30,
+   "confidence": "partial",
+   "templeEkc": 221,
+   "wiki": "https://oldschool.runescape.wiki/w/Royal_Titans",
+   "sources": {
+    "main": [
+     "The Royal Titans",
+     "Royal Titans"
+    ]
+   },
+   "note": "Rates assume full damage share on each titan. Prayer scrolls stop dropping once read.",
+   "items": [
+    {
+     "name": "Fire element staff crown",
+     "rate": "1/75"
+    },
+    {
+     "name": "Ice element staff crown",
+     "rate": "1/75"
+    },
+    {
+     "name": "Deadeye prayer scroll",
+     "rate": "1/75",
+     "max": 1
+    },
+    {
+     "name": "Mystic vigour prayer scroll",
+     "rate": "1/75",
+     "max": 1
+    },
+    {
+     "name": "Giantsoul amulet",
+     "rate": "2x1/16"
+    },
+    {
+     "name": "Bran",
+     "rate": "1/3000",
+     "max": 1
+    },
+    {
+     "name": "Desiccated page",
+     "kind": "common"
+    }
+   ]
+  },
+  "hueycoatl": {
+   "name": "The Hueycoatl",
+   "type": "boss",
+   "kph": 10,
+   "confidence": "partial",
+   "templeEkc": 480,
+   "wiki": "https://oldschool.runescape.wiki/w/The_Hueycoatl",
+   "sources": {
+    "main": [
+     "The Hueycoatl",
+     "Hueycoatl"
+    ]
+   },
+   "note": "Rates assume a solo kill. Hueycoatl hide is common.",
+   "items": [
+    {
+     "name": "Dragon hunter wand",
+     "rate": "1/105"
+    },
+    {
+     "name": "Tome of earth (empty)",
+     "rate": "1/90",
+     "alias": [
+      "Tome of earth"
+     ]
+    },
+    {
+     "name": "Huberte",
+     "rate": "1/400",
+     "max": 1
+    },
+    {
+     "name": "Hueycoatl hide",
+     "kind": "common"
+    },
+    {
+     "name": "Hueycoatl tail",
+     "kind": "common"
+    }
+   ]
+  },
+  "shellbane_gryphon": {
+   "name": "Shellbane Gryphon",
+   "type": "boss",
+   "kph": 50,
+   "confidence": "high",
+   "templeEkc": 3000,
+   "wiki": "https://oldschool.runescape.wiki/w/Shellbane_Gryphon",
+   "sources": {
+    "main": [
+     "Shellbane Gryphon"
+    ]
+   },
+   "items": [
+    {
+     "name": "Gull",
+     "rate": "1/3000",
+     "max": 1
+    },
+    {
+     "name": "Jar of feathers",
+     "rate": "1/2000"
+    },
+    {
+     "name": "Belle's folly (tarnished)",
+     "rate": "1/75",
+     "alias": [
+      "Belle's folly"
+     ]
+    },
+    {
+     "name": "Gryphon feather",
+     "kind": "guaranteed"
+    }
+   ]
+  },
+  "duke_sucellus": {
+   "name": "Duke Sucellus",
+   "type": "boss",
+   "kph": 30,
+   "confidence": "approx",
+   "templeEkc": 2734,
+   "sources": {
+    "main": [
+     "Duke Sucellus"
+    ]
+   },
+   "approx": {
+    "slots": 10,
+    "free": 7
+   }
+  },
+  "vardorvis": {
+   "name": "Vardorvis",
+   "type": "boss",
+   "kph": 37,
+   "confidence": "partial",
+   "templeEkc": 3419,
+   "wiki": "https://oldschool.runescape.wiki/w/Vardorvis",
+   "sources": {
+    "main": [
+     "Vardorvis"
+    ]
+   },
+   "note": "Normal-mode rates (awakened has a 3x unique table and is not tracked separately by the hiscores). The vestige needs three qualifying rolls. Blood quartz scales from 1/200 to 1/50 over the first 300 kills until the first drop. Strangled tablet's scaling is not documented, so it is treated as common.",
+   "groups": {
+    "ultor": {
+     "rate": "1/1088"
+    }
+   },
+   "items": [
+    {
+     "name": "Ultor vestige",
+     "group": "ultor",
+     "needs": 3
+    },
+    {
+     "name": "Executioner's axe head",
+     "rate": "1/1088"
+    },
+    {
+     "name": "Virtus mask",
+     "rate": "1/3264",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Virtus robe top",
+     "rate": "1/3264",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Virtus robe bottom",
+     "rate": "1/3264",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Chromium ingot",
+     "rate": "3/1088",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Awakener's orb",
+     "rate": "1/80.6",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Blood quartz",
+     "pity": {
+      "start": "1/200",
+      "end": "1/50",
+      "atKc": 300
+     }
+    },
+    {
+     "name": "Strangled tablet",
+     "kind": "common"
+    },
+    {
+     "name": "Butch",
+     "rate": "1/3000",
+     "max": 1
+    }
+   ]
+  },
+  "the_whisperer": {
+   "name": "The Whisperer",
+   "type": "boss",
+   "kph": 21,
+   "confidence": "partial",
+   "templeEkc": 2155,
+   "wiki": "https://oldschool.runescape.wiki/w/The_Whisperer",
+   "sources": {
+    "main": [
+     "The Whisperer",
+     "Whisperer"
+    ]
+   },
+   "note": "Normal-mode rates. The vestige needs three qualifying rolls. Shadow quartz scaling assumed to match blood quartz (1/200 to 1/50 over 300 kills).",
+   "groups": {
+    "bellator": {
+     "rate": "1/512"
+    }
+   },
+   "items": [
+    {
+     "name": "Bellator vestige",
+     "group": "bellator",
+     "needs": 3
+    },
+    {
+     "name": "Siren's staff",
+     "rate": "1/512"
+    },
+    {
+     "name": "Virtus mask",
+     "rate": "1/1536",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Virtus robe top",
+     "rate": "1/1536",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Virtus robe bottom",
+     "rate": "1/1536",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Chromium ingot",
+     "rate": "3/512",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Awakener's orb",
+     "rate": "1/34.5",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Shadow quartz",
+     "pity": {
+      "start": "1/200",
+      "end": "1/50",
+      "atKc": 300
+     }
+    },
+    {
+     "name": "Sirenic tablet",
+     "kind": "common"
+    },
+    {
+     "name": "Wisp",
+     "rate": "1/2000",
+     "max": 1
+    }
+   ]
+  },
+  "the_leviathan": {
+   "name": "The Leviathan",
+   "type": "boss",
+   "kph": 32,
+   "confidence": "partial",
+   "templeEkc": 2762,
+   "wiki": "https://oldschool.runescape.wiki/w/The_Leviathan",
+   "sources": {
+    "main": [
+     "The Leviathan",
+     "Leviathan"
+    ]
+   },
+   "note": "Normal-mode rates. The vestige needs three qualifying rolls. Quartz/tablet items are treated as common because their scaling was not available.",
+   "groups": {
+    "venator": {
+     "rate": "1/768"
+    }
+   },
+   "items": [
+    {
+     "name": "Venator vestige",
+     "group": "venator",
+     "needs": 3
+    },
+    {
+     "name": "Leviathan's lure",
+     "rate": "1/768"
+    },
+    {
+     "name": "Virtus mask",
+     "rate": "1/2304",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Virtus robe top",
+     "rate": "1/2304",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Virtus robe bottom",
+     "rate": "1/2304",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Chromium ingot",
+     "rate": "3/768",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Awakener's orb",
+     "rate": "1/53.6",
+     "kind": "shared",
+     "sharedWith": "all Desert Treasure II bosses"
+    },
+    {
+     "name": "Scarred tablet",
+     "kind": "common"
+    },
+    {
+     "name": "Lil'viathan",
+     "rate": "1/2500",
+     "max": 1
+    }
+   ]
+  },
+  "yama": {
+   "name": "Yama",
+   "type": "boss",
+   "kph": 20,
+   "confidence": "partial",
+   "templeEkc": 3339,
+   "wiki": "https://oldschool.runescape.wiki/w/Yama",
+   "sources": {
+    "main": [
+     "Yama"
+    ]
+   },
+   "note": "Only the soulflame horn, oathplate pieces and Yami were available; remaining slots are treated as common.",
+   "items": [
+    {
+     "name": "Soulflame horn",
+     "rate": "2/600"
+    },
+    {
+     "name": "Oathplate helm",
+     "rate": "1/600"
+    },
+    {
+     "name": "Oathplate chest",
+     "rate": "1/600"
+    },
+    {
+     "name": "Oathplate legs",
+     "rate": "1/600"
+    },
+    {
+     "name": "Yami",
+     "rate": "1/2500",
+     "max": 1
+    },
+    {
+     "name": "Dossier",
+     "kind": "common"
+    },
+    {
+     "name": "Forgotten lockbox",
+     "kind": "common"
+    },
+    {
+     "name": "Oathplate shards",
+     "kind": "common"
+    }
+   ]
+  },
+  "tempoross": {
+   "name": "Tempoross",
+   "type": "boss",
+   "kph": 85,
+   "confidence": "approx",
+   "templeEkc": 8466,
+   "sources": {
+    "main": [
+     "Tempoross"
+    ]
+   },
+   "note": "Reward rolls scale with points, which isn't visible in KC, so no per-item model.",
+   "approx": {
+    "slots": 12,
+    "free": 6
+   }
+  },
+  "wintertodt": {
+   "name": "Wintertodt",
+   "type": "boss",
+   "kph": 48,
+   "confidence": "approx",
+   "templeEkc": 5171,
+   "sources": {
+    "main": [
+     "Wintertodt"
+    ]
+   },
+   "note": "Rewards scale with points, so no per-item model.",
+   "approx": {
+    "slots": 10,
+    "free": 0
+   }
+  },
+  "zalcano": {
+   "name": "Zalcano",
+   "type": "boss",
+   "kph": 16,
+   "confidence": "partial",
+   "templeEkc": 2563,
+   "wiki": "https://oldschool.runescape.wiki/w/Zalcano",
+   "sources": {
+    "main": [
+     "Zalcano"
+    ]
+   },
+   "note": "Rates scale with contribution; the better end of the listed range is used for the shard.",
+   "items": [
+    {
+     "name": "Uncut onyx",
+     "rate": "1/8000",
+     "kind": "shared",
+     "sharedWith": "Zulrah, Skotizo and Zalcano"
+    },
+    {
+     "name": "Crystal tool seed",
+     "rate": "39/8000"
+    },
+    {
+     "name": "Zalcano shard",
+     "rate": "1/750"
+    },
+    {
+     "name": "Smolcano",
+     "rate": "1/2250",
+     "max": 1
+    }
+   ]
+  },
+  "sol_heredit": {
+   "name": "Fortis Colosseum",
+   "type": "boss",
+   "kph": 2.5,
+   "confidence": "approx",
+   "templeEkc": 139.7,
+   "sources": {
+    "main": [
+     "Sol Heredit",
+     "Fortis Colosseum"
+    ]
+   },
+   "note": "Unique rates depend on the wave reached and aren't published as per-item rates.",
+   "approx": {
+    "slots": 9,
+    "free": 2
+   }
+  },
+  "moons_of_peril": {
+   "name": "Moons of Peril",
+   "type": "boss",
+   "kph": 15,
+   "confidence": "partial",
+   "templeEkc": 500,
+   "wiki": "https://oldschool.runescape.wiki/w/Lunar_Chest",
+   "sources": {
+    "main": [
+     "Lunar Chest",
+     "Lunar Chests",
+     "Moons of Peril"
+    ]
+   },
+   "note": "Per chest: 1/56 per moon defeated for a piece of that moon's set, handed out without duplicates. Assumes all three moons per run, so each set pool is 1/56 per chest.",
+   "groups": {
+    "eclipse": {
+     "rate": "1/56"
+    },
+    "blood": {
+     "rate": "1/56"
+    },
+    "blue": {
+     "rate": "1/56"
+    }
+   },
+   "items": [
+    {
+     "name": "Eclipse atlatl",
+     "group": "eclipse",
+     "needs": 1
+    },
+    {
+     "name": "Eclipse moon helm",
+     "group": "eclipse",
+     "needs": 2
+    },
+    {
+     "name": "Eclipse moon chestplate",
+     "group": "eclipse",
+     "needs": 3
+    },
+    {
+     "name": "Eclipse moon tassets",
+     "group": "eclipse",
+     "needs": 4
+    },
+    {
+     "name": "Dual macuahuitl",
+     "group": "blood",
+     "needs": 1
+    },
+    {
+     "name": "Blood moon helm",
+     "group": "blood",
+     "needs": 2
+    },
+    {
+     "name": "Blood moon chestplate",
+     "group": "blood",
+     "needs": 3
+    },
+    {
+     "name": "Blood moon tassets",
+     "group": "blood",
+     "needs": 4
+    },
+    {
+     "name": "Blue moon spear",
+     "group": "blue",
+     "needs": 1
+    },
+    {
+     "name": "Blue moon helm",
+     "group": "blue",
+     "needs": 2
+    },
+    {
+     "name": "Blue moon chestplate",
+     "group": "blue",
+     "needs": 3
+    },
+    {
+     "name": "Blue moon tassets",
+     "group": "blue",
+     "needs": 4
+    }
+   ]
+  },
+  "the_fight_caves": {
+   "name": "The Fight Caves",
+   "type": "boss",
+   "kph": 2.5,
+   "confidence": "high",
+   "templeEkc": 67,
+   "wiki": "https://oldschool.runescape.wiki/w/TzTok-Jad",
+   "sources": {
+    "main": [
+     "TzTok-Jad",
+     "The Fight Caves",
+     "Fight Caves"
+    ]
+   },
+   "note": "Fire cape is guaranteed on completion. Pet is 1/200 off-task (1/100 on a TzHaar task, and sacrificing the cape gives another roll); off-task is assumed.",
+   "items": [
+    {
+     "name": "Fire cape",
+     "kind": "guaranteed"
+    },
+    {
+     "name": "Tzrek-jad",
+     "rate": "1/200",
+     "max": 1,
+     "alias": [
+      "TzRek-Jad"
+     ]
+    }
+   ]
+  },
+  "the_inferno": {
+   "name": "The Inferno",
+   "type": "boss",
+   "kph": 0.8,
+   "confidence": "high",
+   "templeEkc": 43,
+   "wiki": "https://oldschool.runescape.wiki/w/TzKal-Zuk",
+   "sources": {
+    "main": [
+     "TzKal-Zuk",
+     "The Inferno",
+     "Inferno"
+    ]
+   },
+   "note": "Infernal cape is guaranteed on completion. Pet is 1/100 (1/75 on a TzHaar task); off-task assumed.",
+   "items": [
+    {
+     "name": "Infernal cape",
+     "kind": "guaranteed"
+    },
+    {
+     "name": "Jal-nib-rek",
+     "rate": "1/100",
+     "max": 1
+    }
+   ]
+  },
+  "the_gauntlet": {
+   "name": "Gauntlet",
+   "type": "boss",
+   "kph": 7,
+   "confidence": "high",
+   "templeEkc": 934,
+   "wiki": "https://oldschool.runescape.wiki/w/The_Gauntlet",
+   "sources": {
+    "normal": [
+     "The Gauntlet",
+     "Gauntlet"
+    ],
+    "corrupted": [
+     "The Corrupted Gauntlet",
+     "Corrupted Gauntlet"
+    ]
+   },
+   "note": "Normal and corrupted runs have different rates. Gauntlet cape is guaranteed on a corrupted completion.",
+   "items": [
+    {
+     "name": "Crystal armour seed",
+     "rates": {
+      "normal": "1/120",
+      "corrupted": "1/50"
+     }
+    },
+    {
+     "name": "Crystal weapon seed",
+     "rates": {
+      "normal": "1/120",
+      "corrupted": "1/50"
+     }
+    },
+    {
+     "name": "Enhanced crystal weapon seed",
+     "rates": {
+      "normal": "1/2000",
+      "corrupted": "1/400"
+     }
+    },
+    {
+     "name": "Youngllef",
+     "rates": {
+      "normal": "1/2000",
+      "corrupted": "1/800"
+     },
+     "max": 1
+    },
+    {
+     "name": "Gauntlet cape",
+     "kind": "guaranteed"
+    }
+   ]
+  },
+  "chambers_of_xeric": {
+   "name": "Chambers of Xeric",
+   "type": "raid",
+   "kph": 2.0,
+   "confidence": "high",
+   "templeEkc": 1700,
+   "raid": "cox",
+   "wiki": "https://oldschool.runescape.wiki/w/Ancient_chest",
+   "sources": {
+    "normal": [
+     "Chambers of Xeric"
+    ],
+    "cm": [
+     "Chambers of Xeric Challenge Mode",
+     "Chambers of Xeric: Challenge Mode"
+    ]
+   },
+   "note": "Unique chance = personal points / 8,676 per cent (cap 65.7%). Uniques split by weight (normal /60, CM /56, the August 2026 weights). Olmlet is 1/53 per unique. Dust and kit are CM-only and need a timed clear.",
+   "items": [
+    {
+     "name": "Dexterous prayer scroll",
+     "weight": {
+      "normal": 14,
+      "cm": 12
+     }
+    },
+    {
+     "name": "Arcane prayer scroll",
+     "weight": {
+      "normal": 14,
+      "cm": 12
+     }
+    },
+    {
+     "name": "Twisted buckler",
+     "weight": {
+      "normal": 4,
+      "cm": 4
+     }
+    },
+    {
+     "name": "Dragon hunter crossbow",
+     "weight": {
+      "normal": 4,
+      "cm": 4
+     }
+    },
+    {
+     "name": "Dinh's bulwark",
+     "weight": {
+      "normal": 3,
+      "cm": 3
+     }
+    },
+    {
+     "name": "Ancestral hat",
+     "weight": {
+      "normal": 4,
+      "cm": 4
+     }
+    },
+    {
+     "name": "Ancestral robe top",
+     "weight": {
+      "normal": 4,
+      "cm": 4
+     }
+    },
+    {
+     "name": "Ancestral robe bottom",
+     "weight": {
+      "normal": 4,
+      "cm": 4
+     }
+    },
+    {
+     "name": "Dragon claws",
+     "weight": {
+      "normal": 3,
+      "cm": 3
+     }
+    },
+    {
+     "name": "Elder maul",
+     "weight": {
+      "normal": 2,
+      "cm": 2
+     }
+    },
+    {
+     "name": "Kodai insignia",
+     "weight": {
+      "normal": 2,
+      "cm": 2
+     }
+    },
+    {
+     "name": "Twisted bow",
+     "weight": {
+      "normal": 2,
+      "cm": 2
+     }
+    },
+    {
+     "name": "Olmlet",
+     "special": "olmlet",
+     "max": 1
+    },
+    {
+     "name": "Metamorphic dust",
+     "special": "cmDust"
+    },
+    {
+     "name": "Twisted ancestral colour kit",
+     "special": "cmKit"
+    },
+    {
+     "name": "Ancient tablet",
+     "kind": "guaranteed"
+    },
+    {
+     "name": "Dark journal",
+     "kind": "guaranteed"
+    }
+   ]
+  },
+  "theatre_of_blood": {
+   "name": "Theatre of Blood",
+   "type": "raid",
+   "kph": 3.0,
+   "confidence": "high",
+   "templeEkc": 1908,
+   "raid": "tob",
+   "wiki": "https://oldschool.runescape.wiki/w/Monumental_chest",
+   "sources": {
+    "normal": [
+     "Theatre of Blood"
+    ],
+    "hard": [
+     "Theatre of Blood Hard Mode",
+     "Theatre of Blood: Hard Mode"
+    ]
+   },
+   "note": "Team gets a unique with chance 1/9.1 (normal) or 1/7.7 (hard); one player receives it, so the personal chance is that divided by team size (assumption, default 4). Sinhaza shroud tiers are claimed at 100/500/1000/1500/2000 completions: milestones, not drops.",
+   "milestones": [
+    100,
+    500,
+    1000,
+    1500,
+    2000
+   ],
+   "items": [
+    {
+     "name": "Avernic defender hilt",
+     "weight": {
+      "normal": 8,
+      "hard": 7
+     }
+    },
+    {
+     "name": "Ghrazi rapier",
+     "weight": {
+      "normal": 2,
+      "hard": 2
+     }
+    },
+    {
+     "name": "Sanguinesti staff (uncharged)",
+     "weight": {
+      "normal": 2,
+      "hard": 2
+     },
+     "alias": [
+      "Sanguinesti staff"
+     ]
+    },
+    {
+     "name": "Justiciar faceguard",
+     "weight": {
+      "normal": 2,
+      "hard": 2
+     }
+    },
+    {
+     "name": "Justiciar chestguard",
+     "weight": {
+      "normal": 2,
+      "hard": 2
+     }
+    },
+    {
+     "name": "Justiciar legguards",
+     "weight": {
+      "normal": 2,
+      "hard": 2
+     }
+    },
+    {
+     "name": "Scythe of vitur (uncharged)",
+     "weight": {
+      "normal": 1,
+      "hard": 1
+     },
+     "alias": [
+      "Scythe of vitur"
+     ]
+    },
+    {
+     "name": "Lil' zik",
+     "special": "zik",
+     "max": 1,
+     "alias": [
+      "Lil Zik"
+     ]
+    },
+    {
+     "name": "Sanguine dust",
+     "special": "hmDust"
+    },
+    {
+     "name": "Sanguine ornament kit",
+     "special": "hmSangKit"
+    },
+    {
+     "name": "Holy ornament kit",
+     "special": "hmHolyKit"
+    },
+    {
+     "name": "Vial of blood",
+     "kind": "common"
+    },
+    {
+     "name": "Sinhaza shroud tier 1",
+     "kind": "milestone",
+     "at": 100
+    },
+    {
+     "name": "Sinhaza shroud tier 2",
+     "kind": "milestone",
+     "at": 500
+    },
+    {
+     "name": "Sinhaza shroud tier 3",
+     "kind": "milestone",
+     "at": 1000
+    },
+    {
+     "name": "Sinhaza shroud tier 4",
+     "kind": "milestone",
+     "at": 1500
+    },
+    {
+     "name": "Sinhaza shroud tier 5",
+     "kind": "milestone",
+     "at": 2000
+    }
+   ]
+  },
+  "tombs_of_amascut": {
+   "name": "Tombs of Amascut",
+   "type": "raid",
+   "kph": 1.71,
+   "confidence": "partial",
+   "templeEkc": 1186,
+   "raid": "toa",
+   "wiki": "https://oldschool.runescape.wiki/w/Chest_(Tombs_of_Amascut)",
+   "sources": {
+    "normal": [
+     "Tombs of Amascut"
+    ],
+    "expert": [
+     "Tombs of Amascut Expert Mode",
+     "Tombs of Amascut: Expert Mode"
+    ]
+   },
+   "note": "Unique chance = 1% per (10,500 - 20 x scaled raid level) points, capped at 55%. Weights are the base table (/24). Pet is 1% per (350,000 - 700 x raid level) points. Thread, jewels, breach and eye have pity scaling by KC. Icthlarin's shroud tiers are milestones; the crafting kit, ornament kit and phalanx are guaranteed at high raid levels. Points and raid level are assumptions you can change.",
+   "milestones": [
+    100,
+    500,
+    1000,
+    1500,
+    2000
+   ],
+   "items": [
+    {
+     "name": "Osmumten's fang",
+     "weight": 7
+    },
+    {
+     "name": "Lightbearer",
+     "weight": 7
+    },
+    {
+     "name": "Elidinis' ward",
+     "weight": 3
+    },
+    {
+     "name": "Masori mask",
+     "weight": 2
+    },
+    {
+     "name": "Masori body",
+     "weight": 2
+    },
+    {
+     "name": "Masori chaps",
+     "weight": 2
+    },
+    {
+     "name": "Tumeken's shadow (uncharged)",
+     "weight": 1,
+     "alias": [
+      "Tumeken's shadow"
+     ]
+    },
+    {
+     "name": "Tumeken's guardian",
+     "special": "toaPet",
+     "max": 1
+    },
+    {
+     "name": "Thread of Elidinis",
+     "pity": {
+      "start": "1/10",
+      "end": "3/10",
+      "atKc": 15
+     }
+    },
+    {
+     "name": "Jewel of the Sun",
+     "pity": {
+      "start": "1/50",
+      "end": "3/50",
+      "atKc": 75
+     }
+    },
+    {
+     "name": "Jewel of Amascut",
+     "pity": {
+      "start": "1/50",
+      "end": "3/50",
+      "atKc": 75
+     }
+    },
+    {
+     "name": "Breach of the scarab",
+     "pity": {
+      "start": "1/50",
+      "end": "3/50",
+      "atKc": 75
+     }
+    },
+    {
+     "name": "Eye of the corruptor",
+     "pity": {
+      "start": "1/50",
+      "end": "3/50",
+      "atKc": 75
+     }
+    },
+    {
+     "name": "Masori crafting kit",
+     "kind": "common"
+    },
+    {
+     "name": "Menaphite ornament kit",
+     "kind": "common"
+    },
+    {
+     "name": "Cursed phalanx",
+     "kind": "common"
+    },
+    {
+     "name": "Cache of runes",
+     "kind": "common"
+    },
+    {
+     "name": "Icthlarin's shroud (tier 1)",
+     "kind": "milestone",
+     "at": 100,
+     "alias": [
+      "Icthlarin's shroud tier 1"
+     ]
+    },
+    {
+     "name": "Icthlarin's shroud (tier 2)",
+     "kind": "milestone",
+     "at": 500,
+     "alias": [
+      "Icthlarin's shroud tier 2"
+     ]
+    },
+    {
+     "name": "Icthlarin's shroud (tier 3)",
+     "kind": "milestone",
+     "at": 1000,
+     "alias": [
+      "Icthlarin's shroud tier 3"
+     ]
+    },
+    {
+     "name": "Icthlarin's shroud (tier 4)",
+     "kind": "milestone",
+     "at": 1500,
+     "alias": [
+      "Icthlarin's shroud tier 4"
+     ]
+    },
+    {
+     "name": "Icthlarin's shroud (tier 5)",
+     "kind": "milestone",
+     "at": 2000,
+     "alias": [
+      "Icthlarin's shroud tier 5"
+     ]
+    }
+   ]
+  },
+  "beginner_treasure_trails": {
+   "name": "Beginner Clues",
+   "type": "clue",
+   "kph": 60,
+   "confidence": "approx",
+   "templeEkc": 597,
+   "sources": {
+    "main": [
+     "Clue scrolls (beginner)",
+     "Beginner Clues",
+     "Clue Scrolls Beginner"
+    ]
+   },
+   "approx": {
+    "slots": 16,
+    "free": 0
+   }
+  },
+  "easy_treasure_trails": {
+   "name": "Easy Clues",
+   "type": "clue",
+   "kph": 50,
+   "confidence": "approx",
+   "templeEkc": 7907,
+   "sources": {
+    "main": [
+     "Clue scrolls (easy)",
+     "Easy Clues",
+     "Clue Scrolls Easy"
+    ]
+   },
+   "approx": {
+    "slots": 131,
+    "free": 0
+   }
+  },
+  "medium_treasure_trails": {
+   "name": "Medium Clues",
+   "type": "clue",
+   "kph": 30,
+   "confidence": "approx",
+   "templeEkc": 2076,
+   "sources": {
+    "main": [
+     "Clue scrolls (medium)",
+     "Medium Clues",
+     "Clue Scrolls Medium"
+    ]
+   },
+   "approx": {
+    "slots": 116,
+    "free": 0
+   }
+  },
+  "hard_treasure_trails": {
+   "name": "Hard Clues",
+   "type": "clue",
+   "kph": 3,
+   "confidence": "approx",
+   "templeEkc": 5484,
+   "sources": {
+    "main": [
+     "Clue scrolls (hard)",
+     "Hard Clues",
+     "Clue Scrolls Hard"
+    ]
+   },
+   "approx": {
+    "slots": 125,
+    "free": 0
+   }
+  },
+  "elite_treasure_trails": {
+   "name": "Elite Clues",
+   "type": "clue",
+   "kph": 1,
+   "confidence": "approx",
+   "templeEkc": 7469,
+   "sources": {
+    "main": [
+     "Clue scrolls (elite)",
+     "Elite Clues",
+     "Clue Scrolls Elite"
+    ]
+   },
+   "approx": {
+    "slots": 91,
+    "free": 0
+   }
+  },
+  "master_treasure_trails": {
+   "name": "Master Clues",
+   "type": "clue",
+   "kph": 0.25,
+   "confidence": "approx",
+   "templeEkc": 7532,
+   "sources": {
+    "main": [
+     "Clue scrolls (master)",
+     "Master Clues",
+     "Clue Scrolls Master"
+    ]
+   },
+   "approx": {
+    "slots": 92,
+    "free": 0
+   }
+  },
+  "shared_treasure_trail_rewards": {
+   "name": "Shared Clues",
+   "type": "clue",
+   "kph": 1,
+   "confidence": "approx",
+   "templeEkc": 1000,
+   "sources": {
+    "main": [
+     "Clue scrolls (all)",
+     "Clue Scrolls All"
+    ]
+   },
+   "approx": {
+    "slots": 61,
+    "free": 0
+   },
+   "note": "Shared rewards come from every clue tier; KC is the total clues completed."
   }
+ }
 }

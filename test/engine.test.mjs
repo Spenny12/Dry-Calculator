@@ -94,3 +94,21 @@ test('overall score is bounded, ordered by luck and not inflated by activity cou
   assert.ok(lo >= 0 && hi <= 100);
   assert.ok(hi < 99.9 && lo > 0.1 || true);
 });
+
+test('shared items (also drop elsewhere) never change the luck score', () => {
+  const act = dataset.activities.alchemical_hydra;
+  const shared = act.items.filter((i) => i.kind === 'shared').map((i) => i.name);
+  assert.ok(shared.includes('Dragon thrownaxe') && shared.includes('Dragon knife'));
+  const mk = (n) => {
+    const names = act.items.map((i) => i.name);
+    return { counts: new Map(names.map((x) => [norm(x), shared.includes(x) ? n : 0])), obtained: 0, total: names.length, listComplete: true, namesAvailable: true };
+  };
+  const a = analyzeActivity(act, { id: 'h', kc: { main: 900 }, clog: mk(0), sims: 4000 });
+  const b = analyzeActivity(act, { id: 'h', kc: { main: 900 }, clog: mk(1054), sims: 4000 });
+  assert.equal(a.luck.percentile, b.luck.percentile);
+  assert.ok(b.free.find((f) => f.name === 'Dragon knife' && f.sharedWith));
+});
+
+test('items listed as shared in the dataset exist and are not rng', () => {
+  for (const [id, act] of Object.entries(dataset.activities)) for (const it of act.items || []) if (it.sharedWith) assert.equal(it.kind, 'shared', `${id}/${it.name}`);
+});

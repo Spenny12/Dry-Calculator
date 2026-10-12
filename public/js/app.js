@@ -142,7 +142,10 @@ function breakdown(r) {
     for (const i of r.items) h += `<tr><td>${esc(i.name)}</td><td class="n">1/${fmt(1 / (i.perKc || 1e-9), 0)}</td><td class="n">${fmt(i.expected, 2)}</td><td class="n">${i.observed ?? '–'}</td><td class="n">${i.pAtLeast == null ? '–' : fmt(i.pAtLeast * 100, 1) + '%'}</td></tr>`;
     h += '</tbody></table>';
   }
-  if (r.free.length) h += `<p class="muted">Not counted as luck: ${r.free.map((x) => esc(x.name) + (x.at ? ` (${x.at} kills)` : '')).join(', ')}.</p>`;
+  const shared = r.free.filter((x) => x.kind === 'shared');
+  const other = r.free.filter((x) => x.kind !== 'shared');
+  if (shared.length) h += `<p class="muted">Also drop elsewhere, so not scored: ${shared.map((x) => `${esc(x.name)}${x.count ? ` (have ${fmt(x.count, 0)})` : ''}${x.sharedWith ? ` – ${esc(x.sharedWith)}` : ''}`).join('; ')}.</p>`;
+  if (other.length) h += `<p class="muted">Not counted as luck: ${other.map((x) => esc(x.name) + (x.at ? ` (${x.at} kills)` : '')).join(', ')}.</p>`;
   if (r.wiki) h += `<p><a href="${esc(r.wiki)}" target="_blank" rel="noopener">Drop table on the wiki</a></p>`;
   return h + '</div>';
 }
