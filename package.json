@@ -1,0 +1,16 @@
+{
+  "name": "dry-calculator",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OSRS spoon/dry calculator, deployable on Cloudflare Pages",
+  "scripts": {
+    "dev": "wrangler pages dev public --port 8788",
+    "deploy": "wrangler pages deploy public --project-name dry-calculator",
+    "test": "node --test test/*.test.mjs",
+    "check-data": "node scripts/check-data.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

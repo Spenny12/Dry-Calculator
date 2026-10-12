@@ -1,0 +1,30 @@
+:root{--bg:#f6f4ef;--fg:#1d1d1b;--muted:#6b6a64;--panel:#fff;--line:#e2dfd6;--accent:#2f6f4f;--bar:#d9d5c8}
+@media (prefers-color-scheme:dark){:root{--bg:#17181a;--fg:#ecebe6;--muted:#9a9890;--panel:#202225;--line:#33363a;--accent:#6cc79a;--bar:#34373b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+header,main{max-width:1000px;margin:0 auto;padding:0 16px}
+header{padding-top:24px}h1{margin:0}.sub,.muted{color:var(--muted)}
+a{color:var(--accent)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:16px 0}
+textarea,input,select{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+input[type=checkbox]{width:auto}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:12px 0}
+.row label{display:flex;gap:8px;align-items:center}.row select{width:auto}
+button{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:9px 18px;font:inherit;cursor:pointer}
+button:disabled{opacity:.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.grid label{display:flex;flex-direction:column;gap:4px;font-size:13px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600}
+.table-wrap{overflow-x:auto}
+#tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+#tabs button{background:var(--bar);color:var(--fg)}#tabs button.on{background:var(--accent);color:#fff}
+.bar{position:relative;height:8px;background:var(--bar);border-radius:4px;min-width:90px}
+.bar i{position:absolute;top:-3px;width:3px;height:14px;background:var(--fg);border-radius:2px}
+.tag{font-size:12px;padding:1px 6px;border-radius:10px;background:var(--bar)}
+.sub-table{margin:6px 0 10px 12px;font-size:13px}
+.warn{color:#b26a00;font-size:13px}
+details>summary{cursor:pointer}
+.prose li{margin:4px 0}
+.err{color:#c0392b}
