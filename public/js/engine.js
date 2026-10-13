@@ -20,7 +20,7 @@
 
 import { resolveRaidItems, mergeAssumptions } from './raids.js';
 
-export const MODEL_VERSION = 'v12';
+export const MODEL_VERSION = 'v13';
 export const DEFAULT_SIMS = 20000;
 
 // ---------------------------------------------------------------------------
@@ -293,7 +293,8 @@ export function analyzeActivity(act, ctx) {
     slots: rawClog ? { obtained: rawClog.obtained, total: rawClog.total } : null,
     warnings: [], items: [], free: [], luck: null, expectedSlots: null,
   };
-  const seed = hashString(`${MODEL_VERSION}|${ctx.id}|${srcKeys.map((s) => nBy[s]).join(',')}|${N}`);
+  const mode = ctx.mode === 'drops' ? 'drops' : 'log';
+  const seed = hashString(`${MODEL_VERSION}|${mode}|${ctx.id}|${srcKeys.map((s) => nBy[s]).join(',')}|${N}`);
 
   // ---------------- approximate (equal-rate) model ----------------
   if (act.approx) {
@@ -321,6 +322,15 @@ export function analyzeActivity(act, ctx) {
   if (rawClog && !clog) base.warnings.push('Temple returned no item names for this category, so luck could not be scored.');
   const plain = [], groupMap = new Map(), pities = [];
   let vObs = 0;
+  // 'log' mode scores the collection log as a whole: having an item you were
+  // unlikely to have by now adds -ln(p); missing one you probably should have
+  // subtracts -ln(1-p). Duplicates don't count. Integer milli-units keep the
+  // observed and simulated sums exactly comparable.
+  const surprise = (p) => ({
+    a: Math.round(-1000 * Math.log(Math.min(Math.max(p, 1e-6), 1))),
+    b: Math.round(1000 * Math.log(Math.min(Math.max(1 - p, 1e-6), 1))),
+  });
+  const logScore = (have, sp) => (have ? sp.a : sp.b);
   let expectedDistinct = 0;
 
   const observedFor = (item) => {
@@ -368,8 +378,9 @@ export function analyzeActivity(act, ctx) {
       }
       const p1 = 1 - Math.exp(logNone);
       const w = Math.max(1, Math.round(10 * Math.sqrt(total / lambda)));
-      plain.push({ srcs, cap, w });
-      vObs += capped * w;
+      const sp = surprise(p1);
+      plain.push({ srcs, cap, w, p1, sp });
+      vObs += mode === 'log' ? logScore(count > 0, sp) : capped * w;
       expectedDistinct += p1;
       base.items.push({
         name: item.name, kind: 'plain', perKc: lambda / total, expected: lambda,
@@ -391,9 +402,10 @@ export function analyzeActivity(act, ctx) {
       }
       if (g.lambda <= 0) continue;
       const w = Math.max(1, Math.round(10 * Math.sqrt(item.needs * total / g.lambda)));
-      g.items.push({ needs: item.needs, w });
-      if (count > 0) vObs += w;
       const p1 = poissonAtLeast(item.needs, g.lambda);
+      const sp = surprise(p1);
+      g.items.push({ needs: item.needs, w, sp });
+      vObs += mode === 'log' ? logScore(count > 0, sp) : (count > 0 ? w : 0);
       expectedDistinct += p1;
       base.items.push({
         name: item.name, kind: 'group', perKc: g.lambda / total, expected: g.lambda / item.needs,
@@ -403,8 +415,9 @@ export function analyzeActivity(act, ctx) {
       const p1 = pityProbability(item.pity, total);
       const wait = pityMeanWait(item.pity);
       const w = Math.max(1, Math.round(10 * Math.sqrt(wait)));
-      pities.push({ p: p1, w });
-      if (count > 0) vObs += w;
+      const sp = surprise(p1);
+      pities.push({ p: p1, w, sp });
+      vObs += mode === 'log' ? logScore(count > 0, sp) : (count > 0 ? w : 0);
       expectedDistinct += p1;
       base.items.push({
         name: item.name, kind: 'pity', perKc: 1 / wait, expected: p1,
@@ -423,6 +436,18 @@ export function analyzeActivity(act, ctx) {
   const sims = new Float64Array(N);
   for (let i = 0; i < N; i++) {
     let v = 0;
+    if (mode === 'log') {
+      for (let a = 0; a < plain.length; a++) v += rng() < plain[a].p1 ? plain[a].sp.a : plain[a].sp.b;
+      for (let a = 0; a < groupList.length; a++) {
+        const g = groupList[a];
+        let e = 0;
+        for (let b = 0; b < g.srcs.length; b++) e += drawBinomial(g.srcs[b], rng);
+        for (let b = 0; b < g.items.length; b++) v += e >= g.items[b].needs ? g.items[b].sp.a : g.items[b].sp.b;
+      }
+      for (let a = 0; a < pities.length; a++) v += rng() < pities[a].p ? pities[a].sp.a : pities[a].sp.b;
+      sims[i] = v;
+      continue;
+    }
     for (let a = 0; a < plain.length; a++) {
       const c = plain[a];
       let k = 0;
@@ -443,7 +468,8 @@ export function analyzeActivity(act, ctx) {
   const u = percentileFromSims(sims, vObs);
   const zs = nullZStats(sims);
   base.luck = finishLuck(u, zs, N);
-  base.haul = { observed: vObs / 10, median: medianOf(sims) / 10 };
+  base.mode = mode;
+  if (mode === 'drops') base.haul = { observed: vObs / 10, median: medianOf(sims) / 10 };
   return base;
 }
 
@@ -470,12 +496,12 @@ function finishLuck(u, zs, N) {
 // does not grow with the number of activities the way a summed z-score does.
 //
 // Real accounts are not a random sample from the model: players stop farming a
-// boss once they have what they came for, so final hauls lean slightly lucky.
-// Simulating that stopping rule gives an average index of about +0.1, which is
-// also roughly what real accounts show once shared drops (whips, thrownaxes,
-// godsword shards...) are excluded. BASELINE centres the scale there; TAU is
-// the account-to-account spread. Both are calibration constants, not statistics.
-export const SCORE_BASELINE = 0.1;
+// boss once they have what they came for, so final logs lean lucky. Simulating
+// that stopping rule gives an average index between 0 (nobody stops early) and
+// about +0.45 (everyone stops the moment they get their target item). BASELINE
+// sits between the two; TAU is the account-to-account spread. Both are
+// calibration constants, not statistics: re-check them against real accounts.
+export const SCORE_BASELINE = 0.2;
 export const SCORE_TAU = 0.4;
 const CONF_WEIGHT = { high: 1, partial: 0.8, approx: 0.5 };
 
@@ -505,7 +531,7 @@ export function analyzeAll(dataset, perActivity, opts = {}) {
   for (const [id, act] of Object.entries(dataset.activities)) {
     const pa = perActivity[id];
     if (!pa) continue;
-    const r = analyzeActivity(act, { id, kc: pa.kc, clog: pa.clog, assumptions: opts.assumptions, sims: opts.sims });
+    const r = analyzeActivity(act, { id, kc: pa.kc, clog: pa.clog, assumptions: opts.assumptions, sims: opts.sims, mode: opts.mode });
     if (r) results.push(r);
   }
   return results;

@@ -113,3 +113,25 @@ test('shared items (also drop elsewhere) never change the luck score', () => {
 test('items listed as shared in the dataset exist and are not rng', () => {
   for (const [id, act] of Object.entries(dataset.activities)) for (const it of act.items || []) if (it.sharedWith) assert.equal(it.kind, 'shared', `${id}/${it.name}`);
 });
+
+test('early greenlog reads as lucky in log mode even with slow common uniques', () => {
+  const act = dataset.activities.zulrah;
+  const c = { 'Tanzanite fang': 3, 'Magic fang': 7, 'Serpentine visage': 5, 'Tanzanite mutagen': 1, 'Magma mutagen': 1, 'Jar of swamp': 1, 'Pet snakeling': 1, 'Uncut onyx': 19 };
+  const clog = { counts: new Map(Object.entries(c).map(([k, v]) => [norm(k), v])), obtained: 8, total: 8, listComplete: true, namesAvailable: true };
+  const log = analyzeActivity(act, { id: 'zulrah', kc: { main: 3489 }, clog, sims: 8000 });
+  const drops = analyzeActivity(act, { id: 'zulrah', kc: { main: 3489 }, clog, sims: 8000, mode: 'drops' });
+  assert.ok(log.luck.percentile > 90, `log ${log.luck.percentile}`);
+  assert.ok(drops.luck.percentile < 70, `drops ${drops.luck.percentile}`);
+});
+
+test('drops mode is also calibrated on simulated players', () => {
+  const act = dataset.activities.zulrah;
+  const rng = mulberry32(999);
+  const us = [];
+  for (let i = 0; i < 200; i++) {
+    const clog = simulatePlayer(act, 1500, rng);
+    us.push(analyzeActivity(act, { id: 'zulrah', kc: { main: 1500 }, clog, sims: 3000, mode: 'drops' }).luck.percentile / 100);
+  }
+  const mean = us.reduce((a, b) => a + b, 0) / us.length;
+  assert.ok(Math.abs(mean - 0.5) < 0.07, `mean ${mean}`);
+});

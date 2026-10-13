@@ -8,6 +8,7 @@ const players = new Map();
 let active = null;
 let filter = 'all';
 let sortBy = 'luck';
+let mode = 'log';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = (n, d = 1) => (n == null || Number.isNaN(n) ? '–' : Number(n).toLocaleString(undefined, { maximumFractionDigits: d }));
@@ -19,10 +20,11 @@ function load() {
     const s = JSON.parse(localStorage.getItem(LS) || '{}');
     if (s.players) $('#players').value = s.players;
     if (s.approx) $('#approx').checked = true;
+    if (s.mode === 'drops') setMode('drops');
   } catch { /* storage unavailable */ }
 }
 function save() {
-  try { localStorage.setItem(LS, JSON.stringify({ players: $('#players').value, approx: $('#approx').checked })); } catch { /* ignore */ }
+  try { localStorage.setItem(LS, JSON.stringify({ players: $('#players').value, approx: $('#approx').checked, mode })); } catch { /* ignore */ }
 }
 
 function assumptions() {
@@ -57,7 +59,7 @@ async function run(ev) {
     setStatus(`Scoring ${name} (${i + 1} of ${names.length})…`);
     try {
       const { stats, clog } = await fetchPlayer(name, dataset);
-      players.set(name, await analyse({ id: name, dataset, stats, clog, assumptions: assumptions(), includeApprox: $('#approx').checked, sims: 20000 }));
+      players.set(name, await analyse({ id: name, dataset, stats, clog, assumptions: assumptions(), includeApprox: $('#approx').checked, sims: 20000, mode }));
     } catch (e) {
       players.set(name, { error: friendly(e.message) });
     }
@@ -143,8 +145,9 @@ function breakdown(r) {
   if (r.note) h += `<p class="muted">${esc(r.note)}</p>`;
   for (const w of r.warnings) h += `<p class="warn">${esc(w)}</p>`;
   if (r.items.length) {
-    h += '<table><thead><tr><th>Item</th><th class="n">Rate</th><th class="n">Expected</th><th class="n">Have</th><th class="n">Chance of having this many</th></tr></thead><tbody>';
-    for (const i of r.items) h += `<tr><td>${esc(i.name)}</td><td class="n">1/${fmt(1 / (i.perKc || 1e-9), 0)}</td><td class="n">${fmt(i.expected, 2)}</td><td class="n">${i.observed ?? '–'}</td><td class="n">${i.pAtLeast == null ? '–' : fmt(i.pAtLeast * 100, 1) + '%'}</td></tr>`;
+    h += '<table><thead><tr><th>Item</th><th class="n">Rate</th><th class="n">Expected</th><th class="n">Have</th><th class="n">Chance to have by now</th><th class="n">Chance of this many or more</th></tr></thead><tbody>';
+    const pct = (x) => (x == null ? '–' : fmt(x * 100, 1) + '%');
+    for (const i of r.items) h += `<tr><td>${esc(i.name)}</td><td class="n">1/${fmt(1 / (i.perKc || 1e-9), 0)}</td><td class="n">${fmt(i.expected, 2)}</td><td class="n">${i.observed ?? '–'}</td><td class="n">${pct(i.pHave)}</td><td class="n">${pct(i.pAtLeast)}</td></tr>`;
     h += '</tbody></table>';
   }
   const shared = r.free.filter((x) => x.kind === 'shared');
@@ -169,6 +172,15 @@ function seg(id, attr, apply) {
 }
 seg('#filter', 'f', (v) => { filter = v; });
 seg('#sort', 's', (v) => { sortBy = v; });
+function setMode(m) {
+  mode = m;
+  for (const x of $('#mode').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x.dataset.m === m));
+}
+$('#mode').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  setMode(b.dataset.m); save();
+  if (players.size) run();
+});
 $('#form').addEventListener('submit', run);
 $('#players').addEventListener('input', save);
 $('#approx').addEventListener('change', save);

@@ -2,10 +2,10 @@ import { analyzeAll, summarize } from './engine.js';
 import { buildPlayerInputs } from './temple.js';
 
 self.onmessage = (ev) => {
-  const { id, dataset, stats, clog, assumptions, includeApprox, sims } = ev.data;
+  const { id, dataset, stats, clog, assumptions, includeApprox, sims, mode } = ev.data;
   try {
     const { perActivity, ehc, diagnostics } = buildPlayerInputs(dataset, stats, clog);
-    const results = analyzeAll(dataset, perActivity, { assumptions, sims });
+    const results = analyzeAll(dataset, perActivity, { assumptions, sims, mode });
     const summary = summarize(results, { includeApprox });
     self.postMessage({ id, ok: true, results, summary, ehc, diagnostics });
   } catch (e) {

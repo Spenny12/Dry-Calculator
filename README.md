@@ -10,8 +10,9 @@ Compares an OSRS player's collection log with the drops they should have by now,
 - **Monte Carlo null distribution** (20,000 seeded sims, in a Web Worker) gives a mid-p percentile.
 - **Groups** for shared pools: Hydra pieces, Araxxor, Abyssal Sire, Vestiges, Moons sets; **pity timers** for blood quartz, Vorkath's head, ToA thread/jewels.
 - **Raids** (`public/js/raids.js`): CoX, ToB, ToA unique chances from points / team size / raid level, adjustable in the UI. Shrouds are milestones.
-- **Overall score** is a 0–100 *spoon score* (higher = luckier, ~50 typical): the information-weighted mean of per-activity standardised luck, placed on a scale by two calibration constants (`SCORE_BASELINE` = 0.1, from simulating players who stop farming once they get the drop, and `SCORE_TAU` = 0.4, in `engine.js`). It no longer grows with the number of activities. The old summed z-score piled almost everyone near the top. The scale differs from the old app.
-- **Rarity weights** use the square root of the expected wait, so one pet no longer dominates an activity's haul.
+- **Overall score** is a 0–100 *spoon score* (higher = luckier, ~50 typical): the information-weighted mean of per-activity standardised luck, placed on a scale by two calibration constants (`SCORE_BASELINE` = 0.2, between a model-perfect account and simulated players who stop farming once they get the drop, and `SCORE_TAU` = 0.4, in `engine.js`). It no longer grows with the number of activities. The old summed z-score piled almost everyone near the top. The scale differs from the old app.
+- **Two scoring modes.** *Log slots* (default) scores the log as a whole: each item you have adds −ln(chance you'd have it by now), each item you're missing subtracts −ln(chance you wouldn't), duplicates ignored. An early greenlog therefore reads as lucky even when common uniques came slowly. *All drops* scores every drop including duplicates.
+- **Rarity weights** (all-drops mode) use the square root of the expected wait, so one pet no longer dominates an activity's haul.
 - Fixed a data typo (`dagganoth_kings`).
 
 ## Layout
