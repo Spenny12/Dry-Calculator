@@ -470,12 +470,12 @@ function finishLuck(u, zs, N) {
 // does not grow with the number of activities the way a summed z-score does.
 //
 // Real accounts are not a random sample from the model: players stop farming a
-// boss once they have what they came for, so final hauls lean lucky, and some
-// rates/KC are imperfect. BASELINE is the average L seen on the first four real
-// test accounts (rough, ~0.8) and TAU the account-to-account spread around it.
-// Both are calibration constants, not statistics; re-fit them with more data.
-// ---------------------------------------------------------------------------
-export const SCORE_BASELINE = 0.8;
+// boss once they have what they came for, so final hauls lean slightly lucky.
+// Simulating that stopping rule gives an average index of about +0.1, which is
+// also roughly what real accounts show once shared drops (whips, thrownaxes,
+// godsword shards...) are excluded. BASELINE centres the scale there; TAU is
+// the account-to-account spread. Both are calibration constants, not statistics.
+export const SCORE_BASELINE = 0.1;
 export const SCORE_TAU = 0.4;
 const CONF_WEIGHT = { high: 1, partial: 0.8, approx: 0.5 };
 
@@ -496,7 +496,7 @@ export function summarize(results, opts = {}) {
   const index = wSum > 0 ? wsSum / wSum : 0;
   const se = wSum > 0 ? Math.sqrt(w2Sum) / wSum : 1;
   const spread = Math.sqrt(se * se + SCORE_TAU * SCORE_TAU);
-  const score = Math.round(normCdf((index - SCORE_BASELINE) / spread) * 1000) / 10;
+  const score = used ? Math.round(normCdf((index - SCORE_BASELINE) / spread) * 1000) / 10 : null;
   return { score, index, se, used, bands, spooned: bands.spooned + bands.lucky, dry: bands.dry + bands['very-dry'] };
 }
 

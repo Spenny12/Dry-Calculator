@@ -64,7 +64,7 @@ async function run(ev) {
   }
   setStatus('');
   $('#run').disabled = false;
-  active = [...players].filter(([, v]) => !v.error).sort((a, b) => b[1].summary.score - a[1].summary.score)[0]?.[0] || null;
+  active = [...players].filter(([, v]) => !v.error).sort((a, b) => (b[1].summary.score ?? -1) - (a[1].summary.score ?? -1))[0]?.[0] || null;
   render();
   $('#board').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -85,18 +85,23 @@ function strip(results, big) {
 }
 
 function render() {
-  const ok = [...players].filter(([, v]) => !v.error).sort((a, b) => b[1].summary.score - a[1].summary.score);
+  const ok = [...players].filter(([, v]) => !v.error).sort((a, b) => (b[1].summary.score ?? -1) - (a[1].summary.score ?? -1));
   const bad = [...players].filter(([, v]) => v.error);
   $('#board').hidden = false;
   $('#ladder').innerHTML = ok.map(([n, v], i) => `
     <li><button class="ladder__row" data-p="${esc(n)}" ${n === active ? 'aria-current="true"' : ''}>
       <span class="ladder__rank">${i + 1}</span>
-      <span class="ladder__name">${esc(n)}<span class="ladder__meta">${v.summary.used} activities${v.ehc ? ` · ${fmt(v.ehc, 0)} EHC` : ''}</span></span>
+      <span class="ladder__name">${esc(n)}<span class="ladder__meta">${v.summary.used ? `${v.summary.used} activities` : noData(v)}${v.ehc ? ` · ${fmt(v.ehc, 0)} EHC` : ''}</span></span>
       ${strip(v.results)}
       <span class="score"><span class="score__n">${fmt(v.summary.score, 0)}</span><span class="score__l">spoon score</span></span>
     </button></li>`).join('');
   $('#failed').innerHTML = bad.map(([n, v]) => `<li><b>${esc(n)}</b>: ${esc(v.error)}</li>`).join('');
   renderPlayer();
+}
+
+function noData(v) {
+  if (v.diagnostics?.clogError) return 'Collection log unavailable';
+  return v.results.length ? 'No collection log synced to Temple' : 'No tracked boss kills';
 }
 
 function renderPlayer() {
